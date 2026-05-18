@@ -1042,8 +1042,8 @@
         }
 
         function respawnPlayer() {
-            const startX = world.x + world.width / 2 - player.width / 2;
-            const startY = world.y + world.height - player.height - 20;
+            const startX = world.spawnPoint ? (world.x + world.spawnPoint.x) : (world.x + world.width / 2 - player.width / 2);
+            const startY = world.spawnPoint ? (world.y + world.spawnPoint.y) : (world.y + world.height - player.height - 20);
 
             if (viewMode === 'topdown') {
                 player.x = startX;
@@ -1221,9 +1221,12 @@
             let ex, ey, ew, eh;
             const currentWidth = (viewMode === 'topdown') ? world.width : world.height;
             if (viewMode === 'topdown') {
-                ex = world.x + world.width / 2 - 40; ey = world.y - 20; ew = 80; eh = 20.5;
+                const gX = world.goalPoint ? world.goalPoint.x : (world.width / 2 - 40);
+                const gW = world.goalPoint ? world.goalPoint.width : 80;
+                ex = world.x + gX; ey = world.y - 20; ew = gW; eh = 20.5;
             } else {
-                ex = world.x + world.height - 0.5; ey = world.y + (world.height - 80) / 2; ew = 20; eh = 80;
+                const gW = world.goalPoint ? world.goalPoint.width : 80;
+                ex = world.x + world.height - 0.5; ey = world.y + (world.height - gW) / 2; ew = 20; eh = gW;
             }
 
             if (player.x < ex + ew && player.x + player.width > ex && player.y < ey + eh && player.y + player.height > ey) {

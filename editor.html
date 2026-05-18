@@ -382,6 +382,26 @@
     </div>
 
     <div class="panel-section">
+        <h3>🚩 起終點設定 (上邊終點)</h3>
+        <div class="prop-row">
+            <span class="prop-label">出生點 X</span>
+            <input type="number" id="spawn-x" class="prop-input" oninput="updateSpawnGoal()">
+        </div>
+        <div class="prop-row">
+            <span class="prop-label">出生點 Y</span>
+            <input type="number" id="spawn-y" class="prop-input" oninput="updateSpawnGoal()">
+        </div>
+        <div class="prop-row" style="margin-top: 10px;">
+            <span class="prop-label" style="color: #ffcc00;">🌟 終點 X (頂部)</span>
+            <input type="number" id="goal-x" class="prop-input" oninput="updateSpawnGoal()">
+        </div>
+        <div class="prop-row">
+            <span class="prop-label" style="color: #ffcc00;">終點寬度</span>
+            <input type="number" id="goal-w" class="prop-input" oninput="updateSpawnGoal()">
+        </div>
+    </div>
+
+    <div class="panel-section">
         <h3>物件屬性</h3>
         <div id="no-selection-msg" style="color: rgba(255,255,255,0.3); font-size: 13px; font-style: italic;">尚未選取任何物件</div>
         <div id="selected-props" style="display: none;">
@@ -449,6 +469,14 @@
     let obstacles = [];
     let selectedIndex = -1;
     
+    let spawnPoint = { x: 380, y: 540 }; // 相對於 world.x, world.y 的相對座標
+    let goalPoint = { x: 360, width: 80 }; // 相對 X 座標與寬度 (Y固定在上邊 world.y)
+
+    function syncWorldSpawnGoal() {
+        world.spawnPoint = spawnPoint;
+        world.goalPoint = goalPoint;
+    }
+
     let viewMode = 'topdown'; 
     let activeTool = 'drag'; 
     
@@ -611,21 +639,21 @@
         let ex, ey, ew, eh;
 
         if (viewMode === 'topdown') {
-            // 上帝視角：出生點在地圖正下方中央
-            sx = world.x + world.width / 2 - sw / 2;
-            sy = world.y + world.height - sh - 20;
-            // 終點在地圖正上方中央
-            ex = world.x + world.width / 2 - 40;
+            // 上帝視角：使用相對座標 spawnPoint 與 goalPoint
+            sx = world.x + spawnPoint.x;
+            sy = world.y + spawnPoint.y;
+            // 終點在上邊 (world.y)
+            ex = world.x + goalPoint.x;
             ey = world.y - 20;
-            ew = 80; eh = 20.5;
+            ew = goalPoint.width; eh = 20.5;
         } else {
             // 側面視角：出生點在地圖左下方
             sx = world.x + 20;
             sy = world.y + world.height - sh;
             // 終點在地圖最右側中央
             ex = world.x + world.height - 0.5;
-            ey = world.y + (world.height - 80) / 2;
-            ew = 20; eh = 80;
+            ey = world.y + (world.height - goalPoint.width) / 2;
+            ew = 20; eh = goalPoint.width;
         }
 
         // 繪製出生點 (綠色光暈與文字)
@@ -834,9 +862,30 @@
         requestRender();
     }
 
+    function updateSpawnGoal() {
+        if (document.activeElement.id.startsWith('spawn') || document.activeElement.id.startsWith('goal')) {
+            spawnPoint.x = parseFloat(document.getElementById('spawn-x').value) || 0;
+            spawnPoint.y = parseFloat(document.getElementById('spawn-y').value) || 0;
+            goalPoint.x = parseFloat(document.getElementById('goal-x').value) || 0;
+            goalPoint.width = parseFloat(document.getElementById('goal-w').value) || 80;
+            syncWorldSpawnGoal();
+            draw();
+        }
+    }
+
+    function initSpawnGoalUI() {
+        if (document.activeElement.className !== 'prop-input') {
+            document.getElementById('spawn-x').value = Math.round(spawnPoint.x);
+            document.getElementById('spawn-y').value = Math.round(spawnPoint.y);
+            document.getElementById('goal-x').value = Math.round(goalPoint.x);
+            document.getElementById('goal-w').value = Math.round(goalPoint.width);
+        }
+    }
+
     function updateUI() {
         updatePropertyPanel();
         updateLayerList();
+        initSpawnGoalUI();
     }
 
     function updatePropertyPanel() {
@@ -895,6 +944,7 @@
     function deleteSelected() { if (selectedIndex !== -1) { saveState(); obstacles.splice(selectedIndex, 1); selectedIndex = -1; updateUI(); draw(); } }
     function newLevel() { if (confirm("確定清空嗎？")) { saveState(); obstacles = []; selectedIndex = -1; draw(); } }
     function exportJSON() {
+        syncWorldSpawnGoal();
         const str = JSON.stringify({ world, obstacles }, null, 2);
         const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([str], {type: "application/json"}));
         a.download = "level.json"; a.click();
@@ -907,6 +957,10 @@
                 saveState();
                 const data = JSON.parse(re.target.result);
                 world = data.world; obstacles = data.obstacles;
+                if (world.spawnPoint) spawnPoint = world.spawnPoint;
+                if (world.goalPoint) goalPoint = world.goalPoint;
+                syncWorldSpawnGoal();
+                updateUI();
                 draw();
             };
             reader.readAsText(e.target.files[0]);
@@ -914,6 +968,7 @@
         input.click();
     }
     function testLevel() {
+        syncWorldSpawnGoal();
         const levelData = JSON.stringify({ world, obstacles });
         localStorage.setItem('customLevelData', levelData);
         window.open('GAME.html?custom=true', '_blank');
@@ -955,6 +1010,9 @@
                 if (!error && data && data.world && data.obstacles) {
                     Object.assign(world, data.world);
                     obstacles.push(...data.obstacles);
+                    if (world.spawnPoint) spawnPoint = world.spawnPoint;
+                    if (world.goalPoint) goalPoint = world.goalPoint;
+                    syncWorldSpawnGoal();
                     selectedIndex = -1;
                     updateUI();
                     draw();
@@ -1080,6 +1138,7 @@
     }
 
     async function openPublishModal() {
+        syncWorldSpawnGoal();
         const connected = await initSupabase();
         if (!connected) {
             openSupabaseConfig();
@@ -1156,6 +1215,7 @@
         }
     }
     function openOfficialPublishModal() {
+        syncWorldSpawnGoal();
         document.getElementById('official-publish-modal').style.display = 'flex';
     }
 
