@@ -438,10 +438,27 @@
         const gravity = 0.6;
 
         // 1. 定義輔助函數
-        function generateObstacles() {
-            if (currentLevel === -1) return;
-            obstacles.length = 0;
+        async function generateObstacles() {
+            if (currentLevel === -1) return; // 社群自訂關卡保持不變
 
+            // 優先嘗試從 Supabase 雲端讀取官方主線關卡
+            try {
+                await initSupabase();
+                if (supabaseClient && currentLevel > 0) {
+                    const { data, error } = await supabaseClient.from('official_levels').select('*').eq('level_num', currentLevel).single();
+                    if (!error && data && data.world && data.obstacles) {
+                        obstacles.length = 0;
+                        Object.assign(world, data.world);
+                        obstacles.push(...data.obstacles);
+                        if (viewInfo && !viewInfo.innerText.includes('遊玩')) {
+                            viewInfo.innerText = `目前視角：上帝視角 (按 E 切換) | 主線關卡：第 ${currentLevel} 關 - ${data.name}`;
+                        }
+                        return;
+                    }
+                }
+            } catch(e) { console.warn("讀取雲端主線失敗，降級使用內建預設關卡", e); }
+
+            obstacles.length = 0;
             const wx = world.x, wy = world.y, ww = world.width, wh = world.height;
 
             if (currentLevel === 0) {
@@ -997,16 +1014,18 @@
 
 
         // 封裝關卡切換的初始化邏輯
-        function setupLevelTransition() {
+        async function setupLevelTransition() {
             // 先重置一些關鍵狀態
             player.standingOn = null;
             player.elevatedFromSide = false;
             player.autoMove = null;
             player.vy = 0;
 
-            generateObstacles();
+            await generateObstacles();
             viewMode = 'topdown';
-            if (viewInfo) viewInfo.innerText = `目前視角：上帝視角 (按 E 切換)`;
+            if (viewInfo && !viewInfo.innerText.includes('主線關卡')) {
+                viewInfo.innerText = `目前視角：上帝視角 (按 E 切換)`;
+            }
 
             const editBtn = document.getElementById('edit-level-btn');
             if (editBtn) editBtn.style.display = 'block';

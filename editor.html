@@ -341,6 +341,7 @@
         </select>
         <div style="width: 1px; height: 30px; background: var(--border);"></div>
         <button class="btn" style="border-color: #00ffcc; color: #00ffcc; background: #0a1a1f; font-weight: bold;" onclick="openPublishModal()">☁️ 發布至雲端 (Supabase)</button>
+        <button class="btn" style="border-color: #ff3366; color: #ff3366; background: #1f0a10; font-weight: bold;" onclick="openOfficialPublishModal()">👑 發布為主線關卡 (需密碼)</button>
     </div>
     <div style="display: flex; gap: 10px;">
         <button class="btn" id="view-toggle" onclick="toggleEditorView()">目前視角：上帝視角</button>
@@ -892,12 +893,29 @@
         input.addEventListener('focus', () => saveState());
     });
 
-    function loadOfficial(levelStr) {
+    async function loadOfficial(levelStr) {
         const lvl = parseInt(levelStr);
         if (!lvl) return;
         saveState();
         obstacles = [];
         const wx = world.x, wy = world.y, ww = world.width, wh = world.height;
+
+        // 優先嘗試從 Supabase 雲端讀取主線關卡設定
+        try {
+            await initSupabase();
+            if (supabaseClient) {
+                const { data, error } = await supabaseClient.from('official_levels').select('*').eq('level_num', lvl).single();
+                if (!error && data && data.world && data.obstacles) {
+                    Object.assign(world, data.world);
+                    obstacles.push(...data.obstacles);
+                    selectedIndex = -1;
+                    updateUI();
+                    draw();
+                    alert(`✅ 已成功從雲端載入最新主線關卡：第 ${lvl} 關 (${data.name})`);
+                    return;
+                }
+            }
+        } catch(e) { console.warn("雲端主線關卡讀取失敗，降級使用內建預設關卡", e); }
 
         if (lvl === 1) {
             obstacles.push({ x: wx + 50,  y: wy + 80,  baseWidth: 200, baseHeight: 120, baseDepth: 80,  color: '#4a6080', type: 'obstacle' });
@@ -1090,7 +1108,74 @@
             publishBtn.disabled = false;
         }
     }
+    function openOfficialPublishModal() {
+        document.getElementById('official-publish-modal').style.display = 'flex';
+    }
+
+    function closeOfficialPublishModal() {
+        document.getElementById('official-publish-modal').style.display = 'none';
+    }
+
+    async function publishOfficialLevel() {
+        const level_num = document.getElementById('official-level-num').value.trim();
+        const name = document.getElementById('official-name').value.trim();
+        const password = document.getElementById('official-password').value;
+
+        if (!level_num || !name || !password) {
+            alert("請填寫關卡編號、關卡名稱與管理員密碼！");
+            return;
+        }
+
+        const btn = document.getElementById('official-submit-btn');
+        btn.innerText = "👑 正在驗證並發布...";
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/publish_official', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ level_num, name, world, obstacles, password })
+            });
+
+            const result = await res.json();
+            if (!res.ok) {
+                throw new Error(result.error || "發布失敗");
+            }
+
+            alert(`👑 官方主線發布成功！\n已成功更新主線第 ${level_num} 關：${name}\n玩家在遊戲中切換至此關時將自動遊玩最新版本！`);
+            closeOfficialPublishModal();
+        } catch(e) {
+            alert("發布主線失敗: " + e.message);
+        } finally {
+            btn.innerText = "🚀 確定發布主線";
+            btn.disabled = false;
+        }
+    }
 </script>
+
+<!-- 發布主線關卡 Modal -->
+<div id="official-publish-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 10002; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+    <div style="background: #1f1418; border: 2px solid #ff3366; border-radius: 12px; padding: 30px; width: 450px; box-shadow: 0 0 40px rgba(255,51,102,0.4);">
+        <h2 style="margin-top: 0; color: #ff3366;">👑 發布官方主線關卡</h2>
+        <p style="color: #aaa; font-size: 14px;">此功能將直接更新或擴充遊戲的官方主線地圖 (Level 1 ~ N)，僅限管理員操作。</p>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; color: #fff;">📌 主線關卡編號 (數字)</label>
+            <input id="official-level-num" type="number" min="1" max="100" placeholder="例如：11 (或覆蓋舊關卡 5)" style="width: 100%; padding: 10px; background: #0c0507; border: 1px solid #555; color: #fff; border-radius: 6px;">
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; color: #fff;">🏷️ 關卡名稱</label>
+            <input id="official-name" type="text" placeholder="例如：極限岩漿試煉" style="width: 100%; padding: 10px; background: #0c0507; border: 1px solid #555; color: #fff; border-radius: 6px;">
+        </div>
+        <div style="margin-bottom: 25px;">
+            <label style="display: block; margin-bottom: 5px; color: #fff;">🔑 管理員密碼 (Admin Password)</label>
+            <input id="official-password" type="password" placeholder="請輸入管理員專屬密碼" style="width: 100%; padding: 10px; background: #0c0507; border: 1px solid #555; color: #fff; border-radius: 6px;">
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="btn" style="padding: 10px 20px; background: #333; color: #fff; border: none; border-radius: 6px; cursor: pointer;" onclick="closeOfficialPublishModal()">取消</button>
+            <button id="official-submit-btn" class="btn" style="padding: 10px 20px; background: #ff3366; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 0 15px rgba(255,51,102,0.5);" onclick="publishOfficialLevel()">🚀 確定發布主線</button>
+        </div>
+    </div>
+</div>
 
 <!-- 發布關卡 Modal -->
 <div id="publish-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center;">
