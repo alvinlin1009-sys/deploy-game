@@ -587,8 +587,9 @@
                 obstacles.push({ x: wx + 660, y: wy + 80,  baseWidth: 60,  baseHeight: 120, baseDepth: 500, color: '#aa3333' });
             }
 
-            // 若方塊位於該位置，改為標記「站在障礙物上」而非彈開
+            // 若方塊位於該位置且不是岩漿，改為標記「站在障礙物上」而非彈開
             for (let i = 0; i < obstacles.length; i++) {
+                if (obstacles[i].type === 'lava') continue;
                 let o = getObsRect(obstacles[i]);
                 if (!o) continue;
                 if (player.x < o.x + o.w && player.x + player.width > o.x &&
@@ -1061,8 +1062,9 @@
             player.elevatedFromSide = false;
             player.standingOn = null;
 
-            // 立即尋找起點平台 (getObsRect 會根據目前的 viewMode 回傳矩形)
+            // 立即尋找起點平台 (getObsRect 會根據目前的 viewMode 回傳矩形，排除岩漿)
             for (let i = 0; i < obstacles.length; i++) {
+                if (obstacles[i].type === 'lava') continue;
                 let o = getObsRect(obstacles[i]);
                 if (o && player.x < o.x + o.w && player.x + player.width > o.x &&
                     player.y < o.y + o.h && player.y + player.height > o.y) {
@@ -1319,7 +1321,19 @@
                 if (Math.abs(player.reboundX) < 0.1) player.reboundX = 0;
             }
 
+            // 優先檢查是否碰觸到自訂岩漿物件 (Lava)
             for (let i = 0; i < obstacles.length; i++) {
+                if (obstacles[i].type === 'lava') {
+                    let o = getObsRect(obstacles[i]);
+                    if (o && player.x < o.x + o.w && player.x + player.width > o.x && player.y < o.y + o.h && player.y + player.height > o.y) {
+                        if (!player.isDemoProtected) playerDie();
+                        return;
+                    }
+                }
+            }
+
+            for (let i = 0; i < obstacles.length; i++) {
+                if (obstacles[i].type === 'lava') continue;
                 let o = getObsRect(obstacles[i]);
                 if (!o) continue;
                 // 如果正站在該障礙物上方，忽略碰撞（改由後方的邊界鎖定邏輯處理）
@@ -1338,6 +1352,7 @@
             }
 
             for (let i = 0; i < obstacles.length; i++) {
+                if (obstacles[i].type === 'lava') continue;
                 let o = getObsRect(obstacles[i]);
                 if (!o) continue;
                 if (viewMode === 'topdown' && player.elevatedFromSide && i === player.standingOn) continue;
@@ -1514,7 +1529,7 @@
             for (const obs of obstacles) {
                 let o = getVisualRectForMode(obs, mode, currentLockedX);
                 if (!o || o.x === undefined) continue;
-                ctx.fillStyle = obs.color || '#777';
+                ctx.fillStyle = (obs.type === 'lava') ? '#ff3300' : (obs.color || '#777');
                 ctx.fillRect(o.x, o.y, o.w, o.h);
             }
 

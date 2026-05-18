@@ -925,7 +925,9 @@
             const y = Math.min(createStart.y, cur.y);
             const w = Math.max(10, Math.abs(createStart.x - cur.x));
             const d = Math.max(10, Math.abs(createStart.y - cur.y));
-            obstacles.push({ x, y, baseWidth: w, baseDepth: d, baseHeight: 120, color: '#777777', type: 'obstacle' });
+            const curType = document.getElementById('obj-type').value || 'obstacle';
+            const curColor = (curType === 'lava') ? '#ff3300' : '#777777';
+            obstacles.push({ x, y, baseWidth: w, baseDepth: d, baseHeight: 120, color: curColor, type: curType });
             selectedIndex = obstacles.length - 1;
         }
         isPanning = isDragging = isCreating = isResizing = isDraggingSpawn = isDraggingGoal = false;
@@ -1013,7 +1015,20 @@
     function updateSelected() {
         if (selectedIndex === -1) return;
         const obs = obstacles[selectedIndex];
+        const oldType = obs.type;
         obs.type = document.getElementById('obj-type').value;
+        
+        if (oldType !== obs.type) {
+            if (obs.type === 'lava') {
+                obs.color = '#ff3300';
+                document.getElementById('obj-color').value = '#ff3300';
+            } else {
+                obs.color = '#777777';
+                document.getElementById('obj-color').value = '#777777';
+            }
+        } else {
+            obs.color = document.getElementById('obj-color').value;
+        }
         
         obs.x = parseFloat(document.getElementById('obj-x').value);
         obs.y = parseFloat(document.getElementById('obj-y').value);
@@ -1021,7 +1036,6 @@
         obs.baseDepth = parseFloat(document.getElementById('obj-d').value);
         obs.baseHeight = parseFloat(document.getElementById('obj-h').value);
         obs.baseZ = parseFloat(document.getElementById('obj-z').value) || 0;
-        obs.color = document.getElementById('obj-color').value;
         obs.requireX = document.getElementById('obj-require-x').checked;
         updateUI();
     }
