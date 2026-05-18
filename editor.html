@@ -619,9 +619,45 @@
         obstacles.forEach((obs, index) => {
             const r = getProjectedRect(obs, viewMode);
             ctx.save();
-            ctx.fillStyle = (obs.type === 'lava') ? '#ff3300' : (obs.color || '#777');
-            ctx.globalAlpha = (selectedIndex === index) ? 1.0 : (viewMode === 'sideview' ? 0.5 : 0.7);
-            ctx.fillRect(r.x, r.y, r.w, r.h);
+            
+            if (viewMode === 'sideview') {
+                // 1. 深度陰影增強 (Depth Shading)：越靠近螢幕 (obs.y 越小) 越亮，越深越暗
+                const depthRatio = Math.max(0.2, 1 - ((obs.y - world.y) / world.height)); // 0.2 ~ 1.0
+                ctx.fillStyle = (obs.type === 'lava') ? '#ff3300' : (obs.color || '#777');
+                ctx.globalAlpha = (selectedIndex === index) ? 1.0 : (0.3 + depthRatio * 0.55);
+
+                // 2. 繪製底部投影陰影 (Ground Shadow)
+                ctx.save();
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                ctx.fillRect(r.x, world.y + world.height - 4, r.w, 4);
+                ctx.restore();
+
+                ctx.fillRect(r.x, r.y, r.w, r.h);
+
+                // 3. 智能引導參考線 (Guide Lines) - 顯示高度對齊線與標尺數值
+                if (selectedIndex === index) {
+                    ctx.save();
+                    ctx.strokeStyle = '#00ffcc';
+                    ctx.lineWidth = 1.5 / camera.zoom;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    // 水平對齊線至左邊界
+                    ctx.moveTo(world.x, r.y); ctx.lineTo(r.x, r.y);
+                    // 垂直對齊線至地面
+                    ctx.moveTo(r.x + r.w/2, r.y + r.h); ctx.lineTo(r.x + r.w/2, world.y + world.height);
+                    ctx.stroke();
+                    ctx.restore();
+                    
+                    ctx.fillStyle = '#00ffcc';
+                    ctx.font = `bold ${Math.max(11, 12/camera.zoom)}px sans-serif`;
+                    ctx.fillText(`高: ${obs.baseHeight} | 離地: ${obs.baseZ || 0}`, r.x + 5, r.y - 6);
+                }
+            } else {
+                ctx.fillStyle = (obs.type === 'lava') ? '#ff3300' : (obs.color || '#777');
+                ctx.globalAlpha = (selectedIndex === index) ? 1.0 : 0.7;
+                ctx.fillRect(r.x, r.y, r.w, r.h);
+            }
+
             if (selectedIndex === index && activeTool === 'edit') {
                 ctx.strokeStyle = '#fff';
                 ctx.lineWidth = 3 / camera.zoom;
