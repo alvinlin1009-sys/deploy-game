@@ -605,6 +605,53 @@
             ctx.restore();
         });
 
+        // 繪製出生點 (Spawn Point) 與終點 (Goal / Exit)
+        ctx.save();
+        let sx, sy, sw = 40, sh = 40;
+        let ex, ey, ew, eh;
+
+        if (viewMode === 'topdown') {
+            // 上帝視角：出生點在地圖正下方中央
+            sx = world.x + world.width / 2 - sw / 2;
+            sy = world.y + world.height - sh - 20;
+            // 終點在地圖正上方中央
+            ex = world.x + world.width / 2 - 40;
+            ey = world.y - 20;
+            ew = 80; eh = 20.5;
+        } else {
+            // 側面視角：出生點在地圖左下方
+            sx = world.x + 20;
+            sy = world.y + world.height - sh;
+            // 終點在地圖最右側中央
+            ex = world.x + world.height - 0.5;
+            ey = world.y + (world.height - 80) / 2;
+            ew = 20; eh = 80;
+        }
+
+        // 繪製出生點 (綠色光暈與文字)
+        ctx.fillStyle = 'rgba(0, 255, 128, 0.3)';
+        ctx.strokeStyle = '#00ff80';
+        ctx.lineWidth = 2 / camera.zoom;
+        ctx.fillRect(sx, sy, sw, sh);
+        ctx.strokeRect(sx, sy, sw, sh);
+        ctx.fillStyle = '#00ff80';
+        ctx.font = `bold ${Math.max(12, 14/camera.zoom)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText("🚩 出生點", sx + sw / 2, sy - 8);
+
+        // 繪製終點 (金黃色光暈與文字)
+        ctx.fillStyle = 'rgba(255, 204, 0, 0.3)';
+        ctx.strokeStyle = '#ffcc00';
+        ctx.lineWidth = 2 / camera.zoom;
+        ctx.fillRect(ex, ey, ew, eh);
+        ctx.strokeRect(ex, ey, ew, eh);
+        ctx.fillStyle = '#ffcc00';
+        ctx.font = `bold ${Math.max(12, 14/camera.zoom)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText("🌟 終點出口", ex + ew / 2, ey - 8);
+
+        ctx.restore();
+
         if (isCreating && viewMode === 'topdown') {
             ctx.fillStyle = 'rgba(0, 255, 204, 0.3)';
             const cur = snap(screenToWorld(lastMouse.x, lastMouse.y));
