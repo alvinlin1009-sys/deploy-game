@@ -3,21 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>二點五維度關卡開發暨管理系統 | e 化開發者工作室</title>
+    <title>2.5D 關卡編輯器 | 遊戲工作室</title>
     <style>
         :root {
-            --roc-blue: #003366;
-            --roc-red: #cc0000;
-            --roc-yellow: #ffff00;
-            --roc-cyan: #00ffff;
-            --roc-gold: #ffcc00;
-            --bg-dark: #0f151d;
-            --bg-panel: linear-gradient(to bottom, hsl(210 100% 18%), hsl(210 100% 12%));
-            --accent: #ffff00;
-            --accent-glow: rgba(255, 255, 0, 0.4);
-            --text: #ffffff;
-            --border: #c0c0c0;
-            --card-bg: #111822;
+            --bg-dark: #0a0a0c;
+            --bg-panel: rgba(20, 20, 25, 0.9);
+            --accent: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.4);
+            --text: #e0e0e0;
+            --border: rgba(255, 255, 255, 0.1);
+            --card-bg: #1a1a20;
         }
 
         * {
@@ -30,231 +25,269 @@
             padding: 0;
             background-color: var(--bg-dark);
             color: var(--text);
-            font-family: 'PMingLiU', 'MingLiU', 'DFKai-SB', "Microsoft JhengHei", Tahoma, Arial, sans-serif;
+            font-family: 'Segoe UI', "Microsoft JhengHei", Roboto, sans-serif;
             overflow: hidden;
             display: flex;
             height: 100vh;
         }
 
         /* 驗證前隱藏編輯器組件 */
-        #toolbar, #sidebar, #main-view { display: flex !important; }
-        .auth-unlocked #toolbar, .auth-unlocked #sidebar, .auth-unlocked #main-view { display: flex !important; }
-        .auth-unlocked #main-view { display: block !important; }
+        #toolbar, #sidebar, #main-view {
+            display: flex !important;
+        }
+
+        .auth-unlocked #toolbar, 
+        .auth-unlocked #sidebar, 
+        .auth-unlocked #main-view {
+            display: flex !important;
+        }
+
+        .auth-unlocked #main-view {
+            display: block !important;
+        }
 
         /* --- 密碼鎖門已禁用 --- */
-        #login-gate { display: none !important; }
+        #login-gate {
+            display: none !important;
+        }
 
         #login-box {
             background: var(--bg-panel);
             padding: 40px;
-            border-radius: 0;
-            border: 4px ridge var(--border);
+            border-radius: 20px;
+            border: 1px solid var(--border);
             text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            width: 350px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            backdrop-filter: blur(20px);
+            width: 320px;
         }
 
         #login-box h2 {
             margin: 0 0 20px;
-            color: var(--roc-yellow);
+            color: var(--accent);
             letter-spacing: 2px;
-            font-size: 20px;
-            font-family: 'DFKai-SB', serif;
-            border-bottom: 3px double var(--roc-yellow);
-            padding-bottom: 10px;
+            font-size: 18px;
         }
 
         #pass-input {
             width: 100%;
             padding: 12px;
-            background: #001122;
-            border: 2px solid var(--border);
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
             color: #fff;
             text-align: center;
             font-size: 18px;
             margin-bottom: 20px;
             outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #pass-input:focus {
+            border-color: var(--accent);
         }
 
         #login-btn {
             width: 100%;
             padding: 12px;
-            background: var(--roc-yellow);
-            border: 3px outset #ffffff;
-            color: #000033;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            color: #000;
             font-weight: bold;
-            font-family: 'PMingLiU', serif;
             cursor: pointer;
+            transition: transform 0.2s;
         }
 
-        .error-msg { color: #ff4444; font-size: 14px; margin-top: 10px; opacity: 0; font-weight: bold; }
+        #login-btn:active {
+            transform: scale(0.95);
+        }
+
+        .error-msg {
+            color: #ff4444;
+            font-size: 12px;
+            margin-top: 10px;
+            opacity: 0;
+        }
 
         /* --- 佈局 --- */
         #toolbar {
             position: fixed;
             top: 0; left: 0; right: 0;
-            height: 65px;
-            background: linear-gradient(to bottom, #003366, #001122);
-            border-bottom: 4px ridge var(--border);
+            height: 60px;
+            background: var(--bg-panel);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             padding: 0 20px;
             z-index: 100;
             justify-content: space-between;
-            box-shadow: 0 3px 5px rgba(0,0,0,0.8);
         }
 
         #sidebar {
-            width: 350px !important;
-            min-width: 350px !important;
-            max-width: 350px !important;
-            background: linear-gradient(to bottom, hsl(210 50% 15%), hsl(210 50% 10%));
-            border-right: 4px ridge var(--border);
-            margin-top: 65px;
+            width: 340px !important;
+            min-width: 340px !important;
+            max-width: 340px !important;
+            background: var(--bg-panel);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--border);
+            margin-top: 60px;
             display: flex !important;
             flex-direction: column;
             padding: 20px;
             overflow-y: auto;
             z-index: 50;
-            box-shadow: 3px 0 5px rgba(0,0,0,0.5);
         }
 
         #main-view {
             flex-grow: 1;
-            margin-top: 65px;
+            margin-top: 60px;
             position: relative;
-            background-color: #080f14;
-            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 0);
+            background-image: 
+                radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
             background-size: 50px 50px;
         }
 
-        canvas { display: block; }
+        canvas {
+            display: block;
+        }
 
-        /* --- UI 元件 - 老 Windows XP 浮雕按鈕 --- */
+        /* --- UI 元件 --- */
         .btn {
-            background: linear-gradient(to bottom, #e0e0e0, #888888);
-            border: 3px outset #ffffff;
-            color: #000033;
-            padding: 8px 15px;
-            border-radius: 0;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 15px;
-            font-weight: bold;
-            font-family: 'PMingLiU', 'MingLiU', serif;
-            transition: all 0.1s;
+            font-size: 14px;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
-            gap: 6px;
-            box-shadow: 2px 2px 3px rgba(0,0,0,0.8);
+            gap: 8px;
         }
 
-        .btn:hover { background: linear-gradient(to bottom, #ffffff, #aaaaaa); color: #000000; }
-        .btn:active { border-style: inset; box-shadow: 1px 1px 1px rgba(0,0,0,0.8); transform: translate(1px, 1px); }
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
 
         .btn.primary {
-            background: linear-gradient(to bottom, #ffffcc, #cccc00);
-            border: 3px outset #ffffff;
-            color: #333300;
+            background: var(--accent);
+            color: #000;
+            font-weight: bold;
+            border: none;
         }
-        .btn.primary:hover { background: linear-gradient(to bottom, #ffffff, #eeee00); }
-
-        .btn.btn-gold {
-            background: linear-gradient(to bottom, #ffcc00, #996600);
-            border: 3px outset #ffff66;
-            color: #331100;
-        }
-        .btn.btn-gold:hover { background: linear-gradient(to bottom, #ffff33, #bb8800); }
 
         .tool-btn {
-            background: linear-gradient(to bottom, #335577, #112233);
-            border: 3px outset #6688aa;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
             color: var(--text);
-            padding: 10px 5px;
-            border-radius: 0;
+            padding: 12px 5px;
+            border-radius: 6px;
             cursor: pointer;
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 5px;
-            font-size: 13px;
-            font-family: 'PMingLiU', serif;
-            font-weight: bold;
-            box-shadow: 2px 2px 3px rgba(0,0,0,0.8);
+            font-size: 12px;
+            transition: all 0.2s;
         }
 
-        .tool-btn:hover { background: linear-gradient(to bottom, #446688, #223344); }
         .tool-btn.active {
-            background: linear-gradient(to bottom, #cccc00, #888800);
-            border: 3px inset #ffff00;
-            color: #000000;
-            box-shadow: none;
+            background: var(--accent-glow);
+            border-color: var(--accent);
+            color: var(--accent);
         }
 
         .panel-section {
-            margin-bottom: 25px;
-            background: rgba(0,0,0,0.3);
-            border: 2px solid #446688;
-            padding: 15px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+            margin-bottom: 24px;
         }
 
         .panel-section h3 {
-            font-size: 16px;
-            font-family: 'DFKai-SB', serif;
-            color: var(--roc-yellow);
-            margin: 0 0 15px 0;
-            border-bottom: 2px solid var(--roc-yellow);
-            padding-bottom: 5px;
-            text-shadow: 1px 1px 1px #000;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 4px;
         }
 
-        .prop-row { display: flex; align-items: center; margin-bottom: 12px; gap: 10px; }
-        .prop-label { width: 105px; font-size: 14px; font-weight: bold; color: var(--roc-yellow); font-family: 'PMingLiU', serif; }
+        .prop-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .prop-label {
+            width: 90px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+        }
+
         .prop-input {
             flex-grow: 1;
-            background: #001122;
-            border: 2px inset var(--border);
+            background: #121216;
+            border: 1px solid var(--border);
             color: #fff;
             padding: 6px 10px;
-            border-radius: 0;
-            font-size: 14px;
-            font-family: Tahoma, sans-serif;
+            border-radius: 4px;
+            font-size: 13px;
             width: 100%;
         }
-        .prop-input:focus { outline: none; border-color: var(--roc-yellow); background: #002244; }
 
-        #layer-list { list-style: none; padding: 0; margin: 0; }
+        .prop-input:focus {
+            outline: 2px solid var(--accent);
+            border-color: var(--accent);
+        }
+
+        #layer-list {
+            list-style: none; padding: 0; margin: 0;
+        }
+
         .layer-item {
-            padding: 8px 12px;
-            background: linear-gradient(to bottom, #224466, #112233);
-            border: 2px outset #446688;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
             margin-bottom: 6px;
-            font-size: 14px;
-            font-family: 'PMingLiU', serif;
+            font-size: 13px;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 2px 2px 3px rgba(0,0,0,0.5);
+            transition: 0.2s;
         }
-        .layer-item:hover { background: linear-gradient(to bottom, #336699, #113355); }
-        .layer-item.selected { background: linear-gradient(to bottom, #cccc00, #888800); border: 2px inset #ffff00; color: #000; font-weight: bold; }
+
+        .layer-item:hover { background: rgba(255, 255, 255, 0.08); }
+        .layer-item.selected { background: var(--accent-glow); border: 1px solid var(--accent); }
 
         #view-overlay {
             position: fixed; bottom: 20px; right: 20px;
-            padding: 10px 20px;
-            background: linear-gradient(to bottom, #003366, #001122);
-            border: 3px ridge var(--border);
-            font-size: 15px; font-weight: bold; font-family: 'PMingLiU', serif;
-            color: var(--roc-yellow);
-            pointer-events: none; z-index: 1000; box-shadow: 2px 2px 5px rgba(0,0,0,0.8);
+            padding: 12px 18px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 10px;
+            font-size: 13px;
+            pointer-events: none;
+            border: 1px solid var(--border);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
         }
 
-        .color-preview { width: 20px; height: 20px; border: 2px solid #fff; }
-        #login-gate.hidden { opacity: 0; visibility: hidden; }
+        .color-preview {
+            width: 18px; height: 18px; border-radius: 3px; }
+        #login-gate.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
     </style>
     <script>
+        // 密碼驗證已禁用 - 直接打開編輯器
         function unlock() {
             document.addEventListener('DOMContentLoaded', () => {
                 document.body.classList.add('auth-unlocked');
@@ -262,69 +295,75 @@
                 if (gate) gate.classList.add('hidden');
             });
         }
-        function tryLogin() {}
+
+        function tryLogin() {
+            // 密碼功能已禁用，此處留空或直接呼叫 unlock
+        }
+
+        // 立即解鎖
         unlock();
     </script>
 </head>
 <body>
+    <!-- 密碼登入層 -->
     <div id="login-gate">
         <div id="login-box">
-            <h2>【管理登錄窗口】</h2>
-            <input type="password" id="pass-input" placeholder="Enter Password">
-            <button id="login-btn">憑證核驗 (VERIFY)</button>
+            <h2>EDITOR ACCESS</h2>
+            <input type="password" id="pass-input" placeholder="Enter Password" onkeydown="if(event.key==='Enter') tryLogin()">
+            <button id="login-btn" onclick="tryLogin()">VERIFY IDENTITY</button>
             <div class="error-msg">INVALID ACCESS KEY</div>
         </div>
     </div>
 
 <div id="toolbar">
     <div style="display: flex; gap: 15px; align-items: center;">
-        <div style="font-weight: 900; font-size: 20px; color: var(--roc-yellow); font-family: 'DFKai-SB', serif; text-shadow: 2px 2px 2px #000; border-bottom: 2px solid var(--roc-yellow); padding-bottom: 2px;">◆ 開發者工作室</div>
-        <div style="width: 2px; height: 35px; background: var(--border); border-right: 1px solid #000;"></div>
-        <button class="btn" onclick="newLevel()">【新建】e 化地圖專案</button>
-        <button class="btn" onclick="exportJSON()">【導出】表單與附件匯出</button>
-        <button class="btn" onclick="importJSON()">【導入】外部數據登錄</button>
-        <button class="btn btn-gold" onclick="copyLevelCode()">【複製】密碼憑證字串</button>
+        <div style="font-weight: 900; font-size: 20px; color: var(--accent); letter-spacing: 2px;">開發者工作室</div>
+        <div style="width: 1px; height: 30px; background: var(--border);"></div>
+        <button class="btn" onclick="newLevel()">新建關卡</button>
+        <button class="btn" onclick="exportJSON()">導出 JSON</button>
+        <button class="btn" onclick="importJSON()">導入 JSON</button>
+        <button class="btn" style="border-color: #ffaa00; color: #ffaa00;" onclick="copyLevelCode()">複製關卡代碼</button>
     </div>
     <div style="display: flex; gap: 10px;">
-        <button class="btn" id="view-toggle" onclick="toggleEditorView()">【監控視角】上帝平面視角</button>
-        <button class="btn primary" onclick="testLevel()">會員身分驗證登錄暨 e 化實機檢測窗口</button>
+        <button class="btn" id="view-toggle" onclick="toggleEditorView()">目前視角：上帝視角</button>
+        <button class="btn primary" onclick="testLevel()">進入測試遊戲</button>
     </div>
 </div>
 
 <div id="sidebar">
     <div class="panel-section">
-        <h3>【操作模式切換專區】</h3>
+        <h3>操作模式</h3>
         <div style="display: flex; gap: 8px;">
-            <button class="tool-btn active" id="tool-place" onclick="setTool('place')">
-                <span>➕</span>放置作業
+            <button class="tool-btn" id="tool-place" onclick="setTool('place')">
+                <span>➕</span>放置
             </button>
             <button class="tool-btn" id="tool-drag" onclick="setTool('drag')">
-                <span>🖐️</span>拖曳微調
+                <span>🖐️</span>拖曳
             </button>
             <button class="tool-btn" id="tool-edit" onclick="setTool('edit')">
-                <span>📐</span>規格檢驗
+                <span>📐</span>編輯
             </button>
         </div>
     </div>
 
     <div class="panel-section">
-        <h3>【畫布基礎規格設定】</h3>
+        <h3>畫布設定</h3>
         <div class="prop-row">
-            <span class="prop-label">畫布寬度 (W)</span>
+            <span class="prop-label">畫布寬度</span>
             <input type="number" id="world-w" class="prop-input" value="800" oninput="updateWorld()">
         </div>
         <div class="prop-row">
-            <span class="prop-label">畫布深度 (D)</span>
+            <span class="prop-label">畫布深度</span>
             <input type="number" id="world-h" class="prop-input" value="600" oninput="updateWorld()">
         </div>
         <div class="prop-row">
-            <span class="prop-label">網格對齊 (Grid)</span>
+            <span class="prop-label">網格對齊</span>
             <input type="number" id="grid-size" class="prop-input" value="25" oninput="draw()">
         </div>
     </div>
 
     <div class="panel-section">
-        <h3>【已選取物件屬性登錄】</h3>
+        <h3>物件屬性</h3>
         <div id="no-selection-msg" style="color: rgba(255,255,255,0.3); font-size: 13px; font-style: italic;">尚未選取任何物件</div>
         <div id="selected-props" style="display: none;">
             <div class="prop-row">
@@ -724,7 +763,7 @@
 
     function toggleEditorView() {
         viewMode = (viewMode === 'topdown' ? 'sideview' : 'topdown');
-        document.getElementById('view-toggle').innerText = `【監控視角】${viewMode === 'topdown' ? '上帝平面視角' : '側面切片預覽'}`;
+        document.getElementById('view-toggle').innerText = `目前視角：${viewMode === 'topdown' ? '上帝視角' : '側面預覽'}`;
         updateUI();
         requestRender();
     }
@@ -765,7 +804,7 @@
             const li = document.createElement('li');
             li.className = 'layer-item' + (selectedIndex === i ? ' selected' : '');
             const emoji = obs.type === 'lava' ? '🔥' : '📦';
-            li.innerHTML = `<span>${emoji} ${obs.type === 'lava' ? '岩漿地帶' : '標準障礙物'} #${i}</span>`;
+            li.innerHTML = `<span>${emoji} ${obs.type === 'lava' ? '岩漿' : '障礙物'} #${i}</span>`;
             li.onclick = () => { selectedIndex = i; draw(); };
             list.appendChild(li);
         });
@@ -788,7 +827,7 @@
     }
 
     function deleteSelected() { if (selectedIndex !== -1) { saveState(); obstacles.splice(selectedIndex, 1); selectedIndex = -1; updateUI(); draw(); } }
-    function newLevel() { if (confirm("【系統確認】是否確定清空當前專案資料並啟動新建作業？")) { saveState(); obstacles = []; selectedIndex = -1; draw(); } }
+    function newLevel() { if (confirm("確定清空嗎？")) { saveState(); obstacles = []; selectedIndex = -1; draw(); } }
     function exportJSON() {
         const str = JSON.stringify({ world, obstacles }, null, 2);
         const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([str], {type: "application/json"}));
@@ -807,15 +846,6 @@
             reader.readAsText(e.target.files[0]);
         };
         input.click();
-    }
-    function copyLevelCode() {
-        const data = JSON.stringify({ world, obstacles });
-        const code = btoa(unescape(encodeURIComponent(data)));
-        navigator.clipboard.writeText(code).then(() => {
-            alert("【系統通知】關卡密碼憑證字串已成功複製至剪貼簿！請妥善保管並於遊戲主程式登錄。");
-        }).catch(err => {
-            prompt("【系統通知】請手動複製以下關卡密碼憑證字串：", code);
-        });
     }
     function testLevel() {
         const levelData = JSON.stringify({ world, obstacles });
