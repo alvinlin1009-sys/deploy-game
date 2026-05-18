@@ -252,10 +252,12 @@
     <canvas id="gameCanvas"></canvas>
 
     <!-- 新增：DOM 自動演示 UI -->
-    <div id="demo-controls" style="position: absolute; top: 20px; right: 20px; z-index: 9999;">
+    <div id="demo-controls" style="position: absolute; top: 20px; right: 20px; z-index: 9999; display: flex; gap: 10px; flex-direction: column; align-items: flex-end;">
         <button id="run-demo-btn" onclick="runDomDemo()"
             style="padding: 12px 20px; background: #00ffcc; color: #000; border: 2px solid #000; cursor: pointer; border-radius: 8px; font-weight: bold; box-shadow: 0 4px #008866; display: block;">[
             Dom 自動演示測試 ]</button>
+        <button id="edit-level-btn" onclick="editCurrentLevel()"
+            style="padding: 12px 20px; background: #ffaa00; color: #000; border: 2px solid #000; cursor: pointer; border-radius: 8px; font-weight: bold; box-shadow: 0 4px #aa6600; display: none;">✏️ 編輯本關 (按 M 鍵)</button>
     </div>
 
     <script>
@@ -591,6 +593,8 @@
                 showDialogContent(); // 顯示對應的教學內容
                 dialogOverlay.classList.remove('hidden');
                 document.getElementById('run-demo-btn').style.display = 'block';
+                const editBtn = document.getElementById('edit-level-btn');
+                if (editBtn) editBtn.style.display = 'block';
             }, 500);
         }
 
@@ -784,13 +788,17 @@
                 return;
             }
 
-            // 4. 【測試用】按 L 直接進下一關
+            // 4. 【測試用】按 L 直接進下一關；按 M 編輯本關
             if (e.key === 'l' || e.key === 'L') {
                 if (!isStartScreen && !isVictory) {
                     currentLevel++;
                     if (currentLevel > maxLevel) currentLevel = maxLevel;
                     setupLevelTransition();
                 }
+                return;
+            }
+            if (e.key === 'm' || e.key === 'M') {
+                editCurrentLevel();
                 return;
             }
 
@@ -997,8 +1005,18 @@
             viewMode = 'topdown';
             if (viewInfo) viewInfo.innerText = `目前視角：上帝視角 (按 E 切換)`;
 
+            const editBtn = document.getElementById('edit-level-btn');
+            if (editBtn) editBtn.style.display = 'block';
+
             // 每一關都執行安全重生檢測
             respawnPlayer();
+        }
+
+        function editCurrentLevel() {
+            if (isStartScreen) return;
+            const levelData = JSON.stringify({ world, obstacles });
+            localStorage.setItem('customLevelData', levelData);
+            window.open('editor.html?loadCustom=true', '_blank');
         }
 
         function respawnPlayer() {

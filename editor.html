@@ -323,6 +323,20 @@
         <button class="btn" onclick="exportJSON()">導出 JSON</button>
         <button class="btn" onclick="importJSON()">導入 JSON</button>
         <button class="btn" style="border-color: #ffaa00; color: #ffaa00;" onclick="copyLevelCode()">複製關卡代碼</button>
+        <div style="width: 1px; height: 30px; background: var(--border);"></div>
+        <select id="official-level-select" class="btn" style="background: #1a1a24; color: #00ffcc; border-color: #00ffcc; font-weight: bold; padding: 6px 12px;" onchange="loadOfficial(this.value)">
+            <option value="">📂 載入遊戲內建關卡...</option>
+            <option value="1">Level 1: 踏石問路</option>
+            <option value="2">Level 2: 高台跳躍</option>
+            <option value="3">Level 3: 兩視角切換</option>
+            <option value="4">Level 4: 階梯天堂</option>
+            <option value="5">Level 5: 岩漿跳島 🔥</option>
+            <option value="6">Level 6: 隱形橋</option>
+            <option value="7">Level 7: 岩漿迷城 🔥</option>
+            <option value="8">Level 8: 雙重謎題</option>
+            <option value="9">Level 9: 熔岩跑酷 🔥</option>
+            <option value="10">Level 10: 終極次元 🔥</option>
+        </select>
     </div>
     <div style="display: flex; gap: 10px;">
         <button class="btn" id="view-toggle" onclick="toggleEditorView()">目前視角：上帝視角</button>
@@ -872,6 +886,97 @@
     // 自動為所有屬性框加上 focus 時儲存狀態，以便復原
     document.querySelectorAll('.prop-input').forEach(input => {
         input.addEventListener('focus', () => saveState());
+    });
+
+    function loadOfficial(levelStr) {
+        const lvl = parseInt(levelStr);
+        if (!lvl) return;
+        saveState();
+        obstacles = [];
+        const wx = world.x, wy = world.y, ww = world.width, wh = world.height;
+
+        if (lvl === 1) {
+            obstacles.push({ x: wx + 50,  y: wy + 80,  baseWidth: 200, baseHeight: 120, baseDepth: 80,  color: '#4a6080', type: 'obstacle' });
+            obstacles.push({ x: wx + 120, y: wy + 220, baseWidth: 400, baseHeight: 120, baseDepth: 60,  color: '#3d7055', type: 'obstacle' });
+            obstacles.push({ x: wx + 560, y: wy + 100, baseWidth: 120, baseHeight: 120, baseDepth: 120, color: '#6a4070', type: 'obstacle' });
+            obstacles.push({ x: wx + 500, y: wy + 350, baseWidth: 180, baseHeight: 120, baseDepth: 130, color: '#70603a', type: 'obstacle' });
+            obstacles.push({ x: wx + 50,  y: wy + 400, baseWidth: 130, baseHeight: 120, baseDepth: 100, color: '#4a6080', type: 'obstacle' });
+        } else if (lvl === 2) {
+            obstacles.push({ x: wx + 200, y: wy + 80, baseWidth: 80, baseHeight: 350, baseDepth: 500, color: '#5566aa', type: 'obstacle' });
+            obstacles.push({ x: wx + 380, y: wy + 100, baseWidth: 180, baseHeight: 180, baseDepth: 400, color: '#3d9055', type: 'obstacle' });
+            obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 80,  baseHeight: 100, baseDepth: 500, color: '#665544', type: 'obstacle' });
+        } else if (lvl === 3) {
+            obstacles.push({ x: wx + 80,  y: wy + 180, baseWidth: 550, baseHeight: 120, baseDepth: 80,  color: '#aa5533', type: 'obstacle' });
+            obstacles.push({ x: wx + 350, y: wy + 80,  baseWidth: 80,  baseHeight: 200, baseDepth: 100, color: '#3388aa', type: 'obstacle' });
+            obstacles.push({ x: wx + 520, y: wy + 80,  baseWidth: 120, baseHeight: 80,  baseDepth: 350, color: '#559933', type: 'obstacle' });
+            obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 80,  baseHeight: 120, baseDepth: 100, color: '#887733', type: 'obstacle' });
+        } else if (lvl === 4) {
+            obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 150, baseHeight: 80,  baseDepth: 180, color: '#7755aa', type: 'obstacle' });
+            obstacles.push({ x: wx + 260, y: wy + 80,  baseWidth: 150, baseHeight: 160, baseDepth: 180, color: '#5577aa', type: 'obstacle' });
+            obstacles.push({ x: wx + 440, y: wy + 80,  baseWidth: 150, baseHeight: 260, baseDepth: 180, color: '#3399aa', type: 'obstacle' });
+            obstacles.push({ x: wx + 80,  y: wy + 350, baseWidth: 520, baseHeight: 80,  baseDepth: 80,  color: '#556655', type: 'obstacle' });
+            obstacles.push({ x: wx + 620, y: wy + 150, baseWidth: 60,  baseHeight: 250, baseDepth: 350, color: '#773333', type: 'obstacle' });
+        } else if (lvl === 5) {
+            obstacles.push({ x: wx + 300, y: wy + 480, baseWidth: 180, baseHeight: 120, baseDepth: 100, color: '#888866', type: 'obstacle' });
+            obstacles.push({ x: wx + 100, y: wy + 300, baseWidth: 120, baseHeight: 140, baseDepth: 120, color: '#668866', type: 'obstacle' });
+            obstacles.push({ x: wx + 350, y: wy + 200, baseWidth: 100, baseHeight: 160, baseDepth: 100, color: '#668866', type: 'obstacle' });
+            obstacles.push({ x: wx + 560, y: wy + 300, baseWidth: 130, baseHeight: 140, baseDepth: 120, color: '#668866', type: 'obstacle' });
+            obstacles.push({ x: wx + 300, y: wy + 80,  baseWidth: 200, baseHeight: 120, baseDepth: 150, color: '#aaaa44', type: 'obstacle' });
+            obstacles.push({ x: wx + 50,  y: wy + 50,  baseWidth: ww,  baseHeight: wh,  baseDepth: wh,  color: '#ff3300', type: 'lava' });
+        } else if (lvl === 6) {
+            obstacles.push({ x: wx + 100, y: wy + 80,  baseWidth: 80,  baseHeight: 120, baseDepth: 450, color: '#6644aa', type: 'obstacle' });
+            obstacles.push({ x: wx + 620, y: wy + 80,  baseWidth: 80,  baseHeight: 120, baseDepth: 450, color: '#6644aa', type: 'obstacle' });
+            obstacles.push({ x: wx + 180, y: wy + 280, baseWidth: 440, baseHeight: 300, baseDepth: 20,  color: '#44aaaa', type: 'obstacle' });
+            obstacles.push({ x: wx + 300, y: wy + 420, baseWidth: 200, baseHeight: 120, baseDepth: 120, color: '#554433', type: 'obstacle' });
+        } else if (lvl === 7) {
+            obstacles.push({ x: wx + 50,  y: wy + 470, baseWidth: 700, baseHeight: 120, baseDepth: 80,  color: '#557744', type: 'obstacle' });
+            obstacles.push({ x: wx + 50,  y: wy + 80,  baseWidth: 120, baseHeight: 120, baseDepth: 390, color: '#557744', type: 'obstacle' });
+            obstacles.push({ x: wx + 200, y: wy + 200, baseWidth: 120, baseHeight: 120, baseDepth: 270, color: '#446655', type: 'obstacle' });
+            obstacles.push({ x: wx + 350, y: wy + 80,  baseWidth: 120, baseHeight: 120, baseDepth: 270, color: '#446655', type: 'obstacle' });
+            obstacles.push({ x: wx + 500, y: wy + 200, baseWidth: 120, baseHeight: 120, baseDepth: 270, color: '#557744', type: 'obstacle' });
+            obstacles.push({ x: wx + 630, y: wy + 80,  baseWidth: 120, baseHeight: 120, baseDepth: 390, color: '#557744', type: 'obstacle' });
+            obstacles.push({ x: wx + 50,  y: wy + 50,  baseWidth: ww,  baseHeight: wh,  baseDepth: wh,  color: '#ff3300', type: 'lava' });
+        } else if (lvl === 8) {
+            obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 500, baseHeight: 120, baseDepth: 60,  color: '#5566cc', type: 'obstacle' });
+            obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 60,  baseHeight: 120, baseDepth: 380, color: '#5566cc', type: 'obstacle' });
+            obstacles.push({ x: wx + 250, y: wy + 200, baseWidth: 200, baseHeight: 280, baseDepth: 200, color: '#cc6633', type: 'obstacle' });
+            obstacles.push({ x: wx + 560, y: wy + 160, baseWidth: 60,  baseHeight: 120, baseDepth: 340, color: '#5566cc', type: 'obstacle' });
+            obstacles.push({ x: wx + 80,  y: wy + 460, baseWidth: 640, baseHeight: 120, baseDepth: 60,  color: '#334455', type: 'obstacle' });
+        } else if (lvl === 9) {
+            obstacles.push({ x: wx + 300, y: wy + 430, baseWidth: 180, baseHeight: 130, baseDepth: 120, color: '#888855', type: 'obstacle' });
+            obstacles.push({ x: wx + 100, y: wy + 350, baseWidth: 100, baseHeight: 150, baseDepth: 80,  color: '#6688aa', type: 'obstacle' });
+            obstacles.push({ x: wx + 550, y: wy + 260, baseWidth: 100, baseHeight: 170, baseDepth: 80,  color: '#6688aa', type: 'obstacle' });
+            obstacles.push({ x: wx + 200, y: wy + 160, baseWidth: 100, baseHeight: 190, baseDepth: 80,  color: '#6688aa', type: 'obstacle' });
+            obstacles.push({ x: wx + 450, y: wy + 80,  baseWidth: 120, baseHeight: 210, baseDepth: 100, color: '#aabb44', type: 'obstacle' });
+            obstacles.push({ x: wx + 300, y: wy + 80,  baseWidth: 120, baseHeight: 220, baseDepth: 90,  color: '#ffcc44', type: 'obstacle' });
+            obstacles.push({ x: wx + 50,  y: wy + 50,  baseWidth: ww,  baseHeight: wh,  baseDepth: wh,  color: '#ff3300', type: 'lava' });
+        } else if (lvl === 10) {
+            obstacles.push({ x: wx + 330, y: wy + 420, baseWidth: 140, baseHeight: 130, baseDepth: 130, color: '#888855', type: 'obstacle' });
+            obstacles.push({ x: wx + 80,  y: wy + 300, baseWidth: 200, baseHeight: 120, baseDepth: 100, color: '#5577bb', type: 'obstacle' });
+            obstacles.push({ x: wx + 540, y: wy + 300, baseWidth: 180, baseHeight: 120, baseDepth: 100, color: '#5577bb', type: 'obstacle' });
+            obstacles.push({ x: wx + 200, y: wy + 180, baseWidth: 160, baseHeight: 250, baseDepth: 120, color: '#cc5533', type: 'obstacle' });
+            obstacles.push({ x: wx + 440, y: wy + 180, baseWidth: 160, baseHeight: 200, baseDepth: 120, color: '#cc5533', type: 'obstacle' });
+            obstacles.push({ x: wx + 280, y: wy + 80,  baseWidth: 240, baseHeight: 320, baseDepth: 100, color: '#ffcc00', type: 'obstacle' });
+            obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 60,  baseHeight: 120, baseDepth: 500, color: '#aa3333', type: 'obstacle' });
+            obstacles.push({ x: wx + 660, y: wy + 80,  baseWidth: 60,  baseHeight: 120, baseDepth: 500, color: '#aa3333', type: 'obstacle' });
+            obstacles.push({ x: wx + 50,  y: wy + 50,  baseWidth: ww,  baseHeight: wh,  baseDepth: wh,  color: '#ff3300', type: 'lava' });
+        }
+        selectedIndex = -1;
+        updateUI();
+        draw();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        if (location.search.includes('loadCustom=true')) {
+            const rawData = localStorage.getItem('customLevelData');
+            if (rawData) {
+                try {
+                    const data = JSON.parse(rawData);
+                    world = data.world; obstacles = data.obstacles;
+                    draw();
+                } catch(e) { console.error("載入自訂關卡失敗", e); }
+            }
+        }
     });
 </script>
 </body>
