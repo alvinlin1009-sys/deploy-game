@@ -1,0 +1,6 @@
+{
+  "name": "25dgame",
+  "rewrites": [
+    { "source": "/", "destination": "/GAME.html" }
+  ]
+}
