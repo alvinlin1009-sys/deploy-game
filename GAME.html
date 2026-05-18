@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2.5D Dimensional Shift | 跨維度冒險</title>
+    
+    <!-- SEO & Metadata -->
+    <meta name="description" content="一款獨特的 2.5D 視角切換冒險遊戲。在上帝視角與側面視角之間切換，破解空間謎題，挑戰維度邊界。">
+    <meta name="keywords" content="2.5D, Game, Perspective Shift, Web Game, HTML5, JavaScript, 空間解謎, 獨立遊戲">
+    <meta name="author" content="Alvin & Antigravity">
+    
+    <!-- Social Media Tags (Open Graph) -->
+    <meta property="og:title" content="2.5D Dimensional Shift | 跨維度冒險">
+    <meta property="og:description" content="切換視角，顛覆空間！你能挑戰 2.5D 的極限嗎？">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    
+    <!-- PWA & Mobile Optimization -->
+    <meta name="theme-color" content="#00ffcc">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&family=Outfit:wght@300;700&display=swap" rel="stylesheet">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌀</text></svg>">
+    <style>
+        :root {
+            --accent: #00ffcc;
+            --bg: #0f0f12;
+            --text: #ffffff;
+            --panel-bg: rgba(15, 15, 18, 0.8);
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--bg);
+            font-family: 'Inter', "Microsoft JhengHei", sans-serif;
+            color: var(--text);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* 視角狀態提示 */
+        #view-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: rgba(0, 255, 204, 0.2);
+            color: #00ffcc;
+            border: 1px solid #00ffcc;
+            border-radius: 5px;
+            font-family: sans-serif;
+            z-index: 5;
+        }
+
+        /* 遊戲開始畫面 */
+        #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            transition: opacity 0.5s;
+        }
+
+        #game-title {
+            font-size: clamp(60px, 15vw, 120px);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+            margin: 0;
+            letter-spacing: 0.15em;
+            font-style: italic;
+            text-transform: uppercase;
+            animation: titlePulse 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes titlePulse {
+            from {
+                transform: scale(1);
+                text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc;
+            }
+
+            to {
+                transform: scale(1.05);
+                text-shadow: 0 0 20px #00ffcc, 0 0 40px #00ffcc, 0 0 60px #00ffcc;
+            }
+        }
+
+        #game-subtitle {
+            color: #00ffcc;
+            font-family: sans-serif;
+            margin-bottom: 50px;
+            letter-spacing: 5px;
+            opacity: 0.8;
+        }
+
+        #start-btn {
+            padding: 15px 60px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #00ffcc;
+            background: rgba(0, 255, 204, 0.1);
+            border: 2px solid #00ffcc;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #start-btn:hover {
+            background: #00ffcc;
+            color: #000;
+            box-shadow: 0 0 30px #00ffcc;
+            transform: translateY(-3px);
+        }
+
+        #skip-btn {
+            margin-top: 20px;
+            padding: 10px 30px;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.5);
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #skip-btn:hover {
+            color: #fff;
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* RPG 對話框 */
+        #dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 50px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        #dialog-box {
+            width: 85%;
+            max-width: 800px;
+            background: rgba(20, 20, 20, 0.95);
+            border: 4px solid #00ffcc;
+            border-radius: 10px;
+            padding: 25px;
+            color: white;
+            font-family: sans-serif;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        #dialog-footer {
+            text-align: right;
+            font-size: 14px;
+            color: #00ffcc;
+            margin-top: 15px;
+            animation: blink 1.2s infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* 嘗試操作階段的樣式：背景全透明，對話框變淡 */
+        #dialog-overlay.trying-action {
+            background: rgba(0, 0, 0, 0);
+        }
+
+        #dialog-overlay.trying-action #dialog-box {
+            background: rgba(20, 20, 20, 0.4);
+            border-color: rgba(0, 255, 204, 0.4);
+        }
+
+        #dialog-overlay.trying-action #dialog-content {
+            opacity: 0.2;
+            /* 教學文字變淡 */
+        }
+
+        #dialog-overlay.trying-action #dialog-footer {
+            opacity: 1;
+            /* 提示文字保持明亮 */
+            color: #00ffcc;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="view-info">目前視角：上帝視角 (按 E 切換)</div>
+
+    <div id="start-screen">
+        <h1 id="game-title">2.5D</h1>
+        <div id="game-subtitle">DIMENSIONAL SHIFT</div>
+        <button id="start-btn" onclick="enterGame()">進入遊戲</button>
+        <button id="skip-btn" onclick="skipTutorial()">跳過教學關卡</button>
+        <button id="skip-btn" style="margin-top: 10px; color: #ffaa00; border-color: #ffaa00;" onclick="loadLevelCode()">輸入關卡代碼</button>
+    </div>
+
+    <div id="dialog-overlay" class="hidden">
+        <div id="dialog-box">
+            <div id="dialog-content">
+                <!-- 內容將由 JavaScript 動態設定 -->
+                ● <b>WASD</b> 移動角色。<br>
+                ● 按 <b>E 鍵</b> 切換上帝/側面視角。<br>
+                ● 側面視角下：W 跳躍、S 蹲下。<br>
+                ● 按「空白鍵」或點擊此處開始。
+            </div>
+            <div id="dialog-footer">▼ 按下空白鍵繼續</div>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- 新增：DOM 自動演示 UI -->
+    <div id="demo-controls" style="position: absolute; top: 20px; right: 20px; z-index: 9999;">
+        <button id="run-demo-btn" onclick="runDomDemo()"
+            style="padding: 12px 20px; background: #00ffcc; color: #000; border: 2px solid #000; cursor: pointer; border-radius: 8px; font-weight: bold; box-shadow: 0 4px #008866; display: block;">[
+            Dom 自動演示測試 ]</button>
+    </div>
+
+    <script>
+        // 診斷工具：捕捉執行期錯誤並顯示
+        window.onerror = function (msg, url, line, col, error) {
+            alert("遊戲錯誤: " + msg + "\n行號: " + line + "\n內容: " + (error ? error.stack : ""));
+            return false;
+        };
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const viewInfo = document.getElementById('view-info');
+        const dialogOverlay = document.getElementById('dialog-overlay');
+        const dialogContent = document.getElementById('dialog-content');
+        const dialogFooter = document.getElementById('dialog-footer');
+
+        // --- 【強化版】Dom 自動測試演示功能 ---
+        async function runDomDemo() {
+            const btn = document.getElementById('run-demo-btn');
+            btn.disabled = true; btn.style.background = "#777"; btn.innerText = "Dom 正在表演...";
+
+            const press = (key, ms) => new Promise(res => { keys[key] = true; setTimeout(() => { keys[key] = false; res(); }, ms); });
+            const wait = (ms) => new Promise(res => setTimeout(res, ms));
+
+            try {
+                // 0. 強制重置到起點安全位置，並開啟演示保護
+                player.x = world.x + world.width / 2 - 15;
+                player.y = world.y + world.height - 80;
+                player.isDemoProtected = true; // 新增：演示保護標記
+                if (viewMode !== 'topdown') toggleView();
+                await wait(1000);
+
+                // 1. 上帝視角：微調到起跳點
+                await press('w', 200);
+                await press('a', 150);
+                await wait(500);
+
+                // 2. 切換側面視角
+                toggleView(); await wait(1200);
+
+                // 3. 第一跳：跳向左方平台 2
+                keys['a'] = true;
+                await press('w', 100);
+                await wait(1100);
+                keys['a'] = false;
+                await wait(800);
+
+                // 4. 第二跳：跳向右方平台 3
+                keys['d'] = true;
+                await press('w', 100);
+                await wait(1000);
+                keys['d'] = false;
+                await wait(800);
+
+                // 5. 第三跳：跳向終點平台
+                keys['d'] = true;
+                await press('w', 100);
+                await wait(1200);
+                keys['d'] = false;
+                await wait(1000);
+
+                // 6. 切回上帝視角，大步走向終點
+                toggleView(); await wait(1000);
+                await press('w', 1500);
+
+                btn.innerText = "Dom 完勝過關！";
+            } catch (e) {
+                console.error(e);
+                btn.innerText = "演示中斷";
+            } finally {
+                player.isDemoProtected = false;
+                btn.disabled = false;
+                btn.style.background = "#00ffcc";
+                setTimeout(() => btn.innerText = "[ Dom 自動演示測試 ]", 3000);
+            }
+        }
+
+        // 初始化畫布大小
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // 定義遊戲世界邊界與外觀屬性
+        const world = {
+            x: 50,
+            y: 50,
+            width: 800,
+            height: 600,
+            borderColor: '#00ffcc',
+            borderWidth: 2
+        };
+
+        const obstacles = [];
+        const NUM_OBSTACLES = 8;
+
+        // 角色屬性
+        const player = {
+            x: world.x + world.width / 2 - 15,
+            y: world.y + world.height / 2,
+            width: 30, height: 30, baseHeight: 30,
+            color: '#00ffcc',
+            speed: 5,
+            vx: 0, vy: 0,
+            jumpPower: -14,
+            onGround: false,
+            touchingWallLeft: false, touchingWallRight: false,
+            autoMove: null, isCrouching: false,
+            reboundX: 0, wallJumpTimer: 0,
+            lastWallSide: null,
+            lockedX: 0,
+            elevatedFromSide: false,
+            standingOn: null,
+            isClinging: false,
+            clingSide: null,
+            clingingX: 0,
+            clingingY: 0,
+            coyoteTimer: 0, // 新增：土狼時間計時器
+            tutorialJumped: false, // 教學：是否已跳躍
+            isDying: false, // 新增：是否正在進行死亡動畫
+            deathAnimTimer: 0 // 新增：死亡動畫計時器
+        };
+
+        let audioCtx = null; // 用於播放音效
+        let shakeAmount = 0; // 螢幕震動強度
+        let deathFlashOpacity = 0; // 死亡紅閃效果不透明度
+
+        function playTone(freq, duration, type = 'sine') {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) { console.log("音效播放失敗", e); }
+        }
+
+        function playerDie() {
+            if (player.isDying) return;
+            player.isDying = true;
+            player.deathAnimTimer = 0;
+            shakeAmount = 15; // 觸發強烈震動
+            deathFlashOpacity = 0.6; // 觸發紅色閃爍
+            playTone(150, 0.4, 'triangle'); // 播放低沈的死亡音效
+
+            // 停止目前的自動移動
+            player.autoMove = null;
+        }
+
+        let isStartScreen = true; // 是否顯示開始畫面
+        let isDialogOpen = false;
+        let isTransitioning = false;
+        let transitionT = 0;
+        const transitionDuration = 0.8; // 動畫持續秒數
+        let lastTimestamp = 0;
+        let transitionStartPlayer = { x: player.x, y: player.y };
+        let transitionEndPlayer = { x: player.x, y: player.y };
+        let transitionOldView = 'topdown';
+        let isDimmed = false; // 對話框是否變淡 (嘗試操作中)
+        let currentLevel = 0; // 當前關卡
+        const maxLevel = 1; // 最大關卡
+        const lavaLevels = []; // 哪些關卡有岩漿地板
+        let isVictory = false; // 是否已通關
+
+        let dialogStep = 0; // 0: 無對話框, 1: 冒險者指南, 2: 視角切換教學
+        let viewMode = 'topdown';
+        const gravity = 0.6;
+
+        // 1. 定義輔助函數
+        function generateObstacles() {
+            if (currentLevel === -1) return;
+            obstacles.length = 0;
+
+            if (currentLevel === 0) {
+                const showTutorialBox = (dialogStep > 5) || (dialogStep === 5 && isDimmed) || (dialogStep === 0 && !isDialogOpen && !isStartScreen);
+                if (showTutorialBox) {
+                    obstacles.push({ x: world.x + world.width / 2 - 50, y: world.y + 120, baseWidth: 100, baseHeight: 120, baseDepth: 100, color: '#777' });
+                }
+            } else if (currentLevel === 1) {
+                // 第 1 關：基礎跳躍
+                obstacles.push({ x: world.x + 350, y: world.y + 50, baseWidth: 100, baseHeight: 150, baseDepth: 50, color: '#777' });
+                obstacles.push({ x: world.x + 100, y: world.y + 350, baseWidth: 120, baseHeight: 80, baseDepth: 120, color: '#558877' });
+                obstacles.push({ x: world.x + 500, y: world.y + 200, baseWidth: 150, baseHeight: 120, baseDepth: 150, color: '#885577' });
+            }
+            
+            // 【最終修正】安全起步墊 (此處已移除 Level 2-10，故不再需要安全墊邏輯)
+            // if ([2, 4, 6, 7, 8, 9, 10].includes(currentLevel)) { ... }
+
+            // 若方塊位於該位置，改為標記「站在障礙物上」而非彈開
+            for (let i = 0; i < obstacles.length; i++) {
+                let o = getObsRect(obstacles[i]);
+                if (!o) continue;
+                if (player.x < o.x + o.w && player.x + player.width > o.x &&
+                    player.y < o.y + o.h && player.y + player.height > o.y) {
+                    player.elevatedFromSide = true;
+                    player.standingOn = i;
+                }
+            }
+        }
+
+        // 3. 最後才執行初始化呼叫
+        generateObstacles();
+
+        function enterGame() {
+            isStartScreen = false;
+            const startScreen = document.getElementById('start-screen');
+            startScreen.style.opacity = '0';
+            setTimeout(() => {
+                startScreen.classList.add('hidden');
+                isDialogOpen = true;
+                dialogStep = 1; // 進入遊戲後，顯示第一階段教學
+                showDialogContent(); // 顯示對應的教學內容
+                dialogOverlay.classList.remove('hidden');
+                document.getElementById('run-demo-btn').style.display = 'block';
+            }, 500);
+        }
+
+
+        function skipTutorial() {
+            isStartScreen = false;
+            const startScreen = document.getElementById('start-screen');
+            startScreen.style.opacity = '0';
+            setTimeout(() => {
+                startScreen.classList.add('hidden');
+                dialogOverlay.classList.add('hidden');
+                isDialogOpen = false;
+                currentLevel = 1; // 直接進入第一關
+                setupLevelTransition();
+            }, 500);
+        }
+
+        function loadLevelCode() {
+            const code = prompt("請貼入關卡代碼：");
+            if (!code) return;
+            try {
+                // 解碼 Base64 (支援 UTF-8)
+                const data = JSON.parse(decodeURIComponent(escape(atob(code))));
+                
+                // 注入地圖數據
+                Object.assign(world, data.world);
+                obstacles.length = 0;
+                obstacles.push(...data.obstacles);
+                
+                // 介面切換
+                isStartScreen = false;
+                document.getElementById('start-screen').classList.add('hidden');
+                dialogOverlay.classList.add('hidden');
+                
+                // 標記為自定義關卡並啟動
+                currentLevel = -1; 
+                isDialogOpen = false;
+                setupLevelTransition();
+            } catch (e) {
+                alert("代碼無效，請確認是否完整複製！");
+            }
+        }
+
+        const TUTORIAL_CHARACTER_NAME = "快龍";
+
+        function getDialogueText(step) {
+            switch (step) {
+                case 1:
+                    return {
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>歡迎來到2.5D的世界！`,
+                        footer: `▼ 點擊以繼續`
+                    };
+                case 2:
+                    return {
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>目前你使用的是上帝視角，移動看看吧！`,
+                        footer: `▼ 點擊以繼續`
+                    };
+                case 3:
+                    return {
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>按下 <b>E 鍵</b> 即可切換視角，試試看吧！`,
+                        footer: `▼ 點擊以繼續`
+                    };
+                case 4:
+                    return {
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>在側面視角模式中，你的上下鍵會改為跳躍和蹲下。跳躍看看吧！`,
+                        footer: `▼ 點擊以繼續`
+                    };
+                case 5:
+                    return {
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>現在給你一個箱子，跳上去試試！`,
+                        footer: `▼ 點擊以繼續`
+                    };
+                case 6:
+                    return {
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>現在切換看看視角`,
+                        footer: `▼ 點擊以繼續`
+                    };
+                case 7:
+                    return {
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>沒錯！你出現在箱子上了！<br>你可以直接<b>走出箱子範圍</b>即可降落到地面。`,
+                        footer: `▼ 點擊以繼續`
+                    };
+                case 8:
+                    return {
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>側面視角會將你所在的那一行障礙物高低顯示出來，這麼說有點難懂，玩下去就懂啦！`,
+                        footer: `▼ 點擊以繼續`
+                    };
+                case 9:
+                    return {
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>現在，繞過箱子通關吧，玩得開心！`,
+                        footer: `▼ 點擊以繼續`
+                    };
+                default:
+                    return { content: "", footer: "" };
+            }
+        }
+
+        // 根據 dialogStep 顯示不同的教學內容
+        function showVictoryScreen() {
+            isVictory = true;
+            isDialogOpen = true;
+            dialogOverlay.classList.remove('hidden');
+            dialogContent.innerHTML = `
+            <h2 style="color: #ffcc00; font-size: 2em; margin-bottom: 15px;">🏆 恭喜晉升大師！</h2>
+            <p>你已經成功征服了全部 10 個關卡，展現了卓越的空間邏輯與操作技巧。</p>
+            <p>這個世界的所有秘密都逃不過你的視線！</p>
+        `;
+            dialogFooter.innerHTML = '<button onclick="location.reload()">再玩一次</button>';
+        }
+
+        function showDialogContent() {
+            const dialogue = getDialogueText(dialogStep);
+            dialogContent.innerHTML = dialogue.content;
+
+            // 確保在教學步驟中正確生成障礙物
+            generateObstacles();
+
+            // 更新對話框外觀 (isDimmed 代表進入嘗試操作階段)
+            if (isDimmed) {
+                dialogOverlay.classList.add('trying-action');
+                // 根據步驟決定淡化時的腳註
+                if (dialogStep === 2) dialogFooter.innerHTML = `▼ 點擊以繼續`;
+                else if (dialogStep === 3) dialogFooter.innerHTML = `(請按下 E 切換視角)`;
+                else if (dialogStep === 4) dialogFooter.innerHTML = `(請跳躍)`;
+                else if (dialogStep === 5) dialogFooter.innerHTML = `(請跳到箱子上)`;
+                else if (dialogStep === 6) dialogFooter.innerHTML = `(請按下 E 切換視角)`;
+                else if (dialogStep === 7) dialogFooter.innerHTML = `(請直接走出箱子範圍)`;
+            } else {
+                dialogOverlay.classList.remove('trying-action');
+                dialogFooter.innerHTML = dialogue.footer;
+
+                // 第 8 步：展示紅線切片，但不自動切換視角
+                if (dialogStep === 8) {
+                    dialogFooter.innerHTML = "▼ 點擊以繼續";
+                }
+            }
+        }
+
+        const keys = {};
+        window.addEventListener('keydown', e => {
+            const isControlKey = e.key === ' ' || e.key === 'Enter';
+
+            // 1. 對話框深色時，除了繼續鍵，阻斷所有輸入
+            if (isDialogOpen && !isDimmed) {
+                if (isControlKey) {
+                    e.preventDefault();
+                    closeDialog();
+                }
+                return;
+            }
+
+            // 2. 教學嘗試階段，空白/Enter 用於回到對話
+            if (isDialogOpen && isDimmed && isControlKey) {
+                e.preventDefault();
+                closeDialog();
+                return;
+            }
+
+            // 3. 視角切換控制
+            if (e.key === 'e' || e.key === 'E') {
+                if (isVictory) return;
+                const allowedToggleSteps = [3, 6];
+                if (!isDialogOpen || (isDialogOpen && isDimmed && allowedToggleSteps.includes(dialogStep))) {
+                    if (!isTransitioning && !player.isDying) toggleView();
+                }
+                return;
+            }
+
+            // 4. 【測試用】按 L 直接進下一關
+            if (e.key === 'l' || e.key === 'L') {
+                if (!isStartScreen && !isVictory) {
+                    currentLevel++;
+                    if (currentLevel > maxLevel) currentLevel = maxLevel;
+                    setupLevelTransition();
+                }
+                return;
+            }
+
+            // 4. 嘗試階段的按鍵過濾
+            if (isDialogOpen && isDimmed) {
+                if (dialogStep === 2) {
+                    const isMoveKey = ['w', 'a', 's', 'd', 'W', 'A', 'S', 'D', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key);
+                    if (!isMoveKey) return;
+                }
+                if ((e.key === 'x' || e.key === 'X') && dialogStep !== 7) return;
+            }
+
+            keys[e.key] = true;
+        });
+        window.addEventListener('keyup', e => keys[e.key] = false);
+        window.addEventListener('blur', () => {
+            for (let k in keys) keys[k] = false;
+            player.autoMove = null; player.wallJumpTimer = 0; player.lastWallSide = null;
+        });
+        dialogOverlay.addEventListener('click', closeDialog);
+
+        function closeDialog() {
+            // 關閉或切換對話時，清除目前的按鍵狀態，防止角色在深色對話框時自動滑動
+            for (let k in keys) keys[k] = false;
+            player.autoMove = null;
+
+            if (dialogStep === 1) {
+                dialogStep = 2;
+            } else if (dialogStep === 2) {
+                // 上帝視角移動教學：點擊變淡 -> 點擊變深並進入下一步
+                if (!isDimmed) {
+                    isDimmed = true;
+                } else {
+                    isDimmed = false;
+                    dialogStep = 3;
+                }
+            } else if (dialogStep === 3) {
+                if (!isDimmed) isDimmed = true;
+            } else if (dialogStep === 4) {
+                // 側面跳躍教學：點擊變淡 -> 透過跳躍動作變深進入下一步
+                if (!isDimmed) {
+                    isDimmed = true;
+                    player.tutorialJumped = false;
+                }
+            } else if (dialogStep === 5) {
+                if (!isDimmed) {
+                    isDimmed = true;
+                    generateObstacles(); // 在此時生成教學用的箱子
+                }
+            } else if (dialogStep === 6) {
+                if (!isDimmed) isDimmed = true;
+            } else if (dialogStep === 7) {
+                if (!isDimmed) isDimmed = true;
+            } else if (dialogStep === 8) {
+                // 第 8 步：點擊即可繼續，如果目前在側面視角則自動切回上帝視角
+                if (viewMode === 'sideview' && !isTransitioning) {
+                    toggleView();
+                }
+                dialogStep = 9;
+            } else if (dialogStep === 9) {
+                isDialogOpen = false;
+                dialogOverlay.classList.add('hidden');
+                player.elevatedFromSide = false; // 確保玩家不再被視為站在箱子上
+                player.standingOn = null;
+                dialogStep = 0;
+            }
+            showDialogContent();
+        }
+
+        function toggleView() {
+            const oldX = player.x;
+            const oldY = player.y;
+            const oldViewMode = viewMode;
+
+            // 紀錄轉換前狀態用於動畫
+            transitionStartPlayer = { x: oldX, y: oldY };
+            transitionOldView = oldViewMode;
+            // 只有從上帝視角轉到側面視角才播放動畫，反過來則直接跳轉
+            if (oldViewMode === 'topdown') {
+                isTransitioning = true;
+                transitionT = 0;
+            } else {
+                isTransitioning = false;
+                transitionT = 1;
+            }
+
+            viewMode = (oldViewMode === 'topdown') ? 'sideview' : 'topdown';
+            viewInfo.innerText = `目前視角：${viewMode === 'topdown' ? '上帝視角' : '側面視角'} (按 E 切換)`;
+
+            // 教學特定邏輯：偵測視角切換
+            if (isDialogOpen && isDimmed) {
+                if (dialogStep === 3 && !player.tutorialViewToggled) {
+                    player.tutorialViewToggled = true;
+                    isDimmed = false;
+                    dialogStep = 4;
+                    showDialogContent();
+                } else if (dialogStep === 6 && viewMode === 'topdown') {
+                    isDimmed = false;
+                    dialogStep = 7;
+                    showDialogContent();
+                }
+            }
+            // --- 視角切換核心邏輯 ---
+            if (oldViewMode === 'topdown') {
+                // 從 上帝視角 (XZ) 轉到 側面視角 (ZY)
+                player.lockedX = oldX; 
+                const zRel = oldY - world.y;
+
+                // 側視圖的 X 軸其實是 Topdown 的 Y 軸 (Z軸)
+                // 修正：使用 world.height 確保 Z 軸長度一致
+                player.x = world.x + (world.height - zRel - player.width);
+
+                // 處理高度 Y：如果原本是在箱子上，切換後應維持在該箱子的高度
+                if (player.elevatedFromSide && player.standingOn !== null) {
+                    const obs = obstacles[player.standingOn];
+                    player.y = world.y + world.height - obs.baseHeight - player.height;
+                } else {
+                    player.y = world.y + world.height - player.height;
+                }
+            } else {
+                // 從 ZY (Sideview) 轉回 XZ (Topdown)
+                const sideRelX = oldX - world.x;
+                const heightAboveGround = (world.y + world.height) - (oldY + player.height);
+
+                player.x = player.lockedX; // 恢復 X 軸
+                // 逆推 Z 軸位置 (Topdown 的 Y)
+                player.y = world.y + (world.height - sideRelX - player.width);
+
+                // 【修復】原本的攀附邏輯會誤將碰到箱子邊緣的玩家傳送到世界邊界，現在改為僅限世界邊界
+                if (player.touchingWallLeft || player.touchingWallRight) {
+                    // 檢查是否真的接近世界邊界 (左右各 5 像素內)
+                    const isAtWorldLeft = (viewMode === 'sideview' && oldX <= world.x + 5);
+                    const isAtWorldRight = (viewMode === 'sideview' && oldX + player.width >= world.x + world.height - 5);
+
+                    if (isAtWorldLeft || isAtWorldRight) {
+                        player.isClinging = true;
+                        player.clingSide = isAtWorldLeft ? 'bottom' : 'top';
+                        player.clingingX = player.x;
+                        player.clingingY = (player.clingSide === 'bottom') ? (world.y + world.height - player.height) : world.y;
+                        player.reboundX = 0;
+                    }
+                }
+
+                // 如果在側視圖時有高度，切換後標記為「站在箱子上」
+                if (heightAboveGround > 1) {
+                    player.elevatedFromSide = true;
+                    player.standingOn = null;
+                    // 【優化】重新掃描當前位置下方是哪個箱子，加入 2 像素的小誤差容許量
+                    for (let i = 0; i < obstacles.length; i++) {
+                        let o = getObsRect(obstacles[i]);
+                        if (o && player.x < o.x + o.w + 2 && player.x + player.width > o.x - 2 &&
+                            player.y < o.y + o.h + 2 && player.y + player.height > o.y - 2) {
+                            player.standingOn = i;
+                            break;
+                        }
+                    }
+                    if (player.standingOn === null) player.elevatedFromSide = false;
+                } else {
+                    player.elevatedFromSide = false;
+                    player.standingOn = null;
+                }
+            }
+
+            player.vy = 0;
+            player.height = player.baseHeight;
+            player.isCrouching = false;
+            player.reboundX = 0;
+            player.wallJumpTimer = 0;
+            player.lastWallSide = null;
+            if (viewMode === 'sideview') player.isClinging = false;
+
+            // 紀錄轉換後預期位置
+            transitionEndPlayer = { x: player.x, y: player.y };
+        }
+
+        function getObsRect(obs) {
+            if (!obs) return null;
+            if (viewMode === 'topdown') {
+                return { x: obs.x, y: obs.y, w: obs.baseWidth, h: obs.baseDepth };
+            } else {
+                if (player.lockedX + player.width > obs.x && player.lockedX < obs.x + obs.baseWidth) {
+                    return {
+                        // 修正：側面投影寬度應對應上帝視角的高度 (Z軸)
+                        x: world.x + world.height - (obs.y - world.y) - obs.baseDepth,
+                        y: world.y + world.height - obs.baseHeight,
+                        w: obs.baseDepth,
+                        h: obs.baseHeight
+                    };
+                }
+                return null;
+            }
+        }
+
+
+        // 封裝關卡切換的初始化邏輯
+        function setupLevelTransition() {
+            // 先重置一些關鍵狀態
+            player.standingOn = null;
+            player.elevatedFromSide = false;
+            player.autoMove = null;
+            player.vy = 0;
+
+            generateObstacles();
+            viewMode = 'topdown';
+            if (viewInfo) viewInfo.innerText = `目前視角：上帝視角 (按 E 切換)`;
+
+            // 每一關都執行安全重生檢測
+            respawnPlayer();
+        }
+
+        function respawnPlayer() {
+            const startX = world.x + world.width / 2 - player.width / 2;
+            const startY = world.y + world.height - player.height - 20;
+
+            if (viewMode === 'topdown') {
+                player.x = startX;
+                player.y = startY;
+            } else {
+                // 在側面模式下，設定正確的 Z 軸視覺位置與鎖定位置 (X 軸)
+                player.lockedX = startX;
+                const zRel = startY - world.y;
+                player.x = world.x + (world.height - zRel - player.width);
+                player.y = world.y + world.height - player.height;
+            }
+
+            player.vy = 0;
+            player.elevatedFromSide = false;
+            player.standingOn = null;
+
+            // 立即尋找起點平台 (getObsRect 會根據目前的 viewMode 回傳矩形)
+            for (let i = 0; i < obstacles.length; i++) {
+                let o = getObsRect(obstacles[i]);
+                if (o && player.x < o.x + o.w && player.x + player.width > o.x &&
+                    player.y < o.y + o.h && player.y + player.height > o.y) {
+                    player.elevatedFromSide = true;
+                    player.standingOn = i;
+
+                    // 【關鍵修復】如果是在側面模式且踏在平台上，強制將高度設為平台頂端
+                    // 否則在岩漿關卡會因為碰到「地板」而立即觸發死亡循環
+                    if (viewMode === 'sideview') {
+                        player.y = o.y - player.height;
+                        player.onGround = true;
+                        player.vy = 0;
+                    }
+                    break;
+                }
+            }
+        }
+
+        // 更新邏輯
+        function update(dt) {
+            if (isStartScreen) return;
+
+            // 【新增】處理螢幕震動與紅閃冷卻
+            if (shakeAmount > 0) {
+                shakeAmount *= 0.9;
+                if (shakeAmount < 0.1) shakeAmount = 0;
+            }
+            if (deathFlashOpacity > 0) {
+                deathFlashOpacity -= dt * 1.5;
+                if (deathFlashOpacity < 0) deathFlashOpacity = 0;
+            }
+
+            // 【新增】處理死亡動畫計時
+            if (player.isDying) {
+                player.deathAnimTimer += dt;
+                if (player.deathAnimTimer >= 0.8) {
+                    player.isDying = false;
+                    player.deathAnimTimer = 0;
+                    respawnPlayer();
+                }
+                return; // 死亡期間停止所有物理與輸入
+            }
+
+            // 【新增】處理視角切換動畫進度
+            if (isTransitioning) {
+                transitionT += dt / transitionDuration;
+                if (transitionT >= 1) {
+                    transitionT = 1;
+                    isTransitioning = false;
+                }
+                return; // 切換期間不跑物理邏輯
+            }
+
+            if (isDialogOpen) {
+                // 如果對話框深色且不是嘗試階段，完全停止物理
+                if (!isDimmed) return;
+
+                // 在淡化模式 (嘗試中) 偵測動作
+                if (dialogStep === 2 && !player.tutorialMoved) {
+                    if (viewMode === 'topdown' && (
+                        keys['a'] || keys['A'] || keys['ArrowLeft'] ||
+                        keys['d'] || keys['D'] || keys['ArrowRight'] ||
+                        keys['w'] || keys['W'] || keys['ArrowUp'] ||
+                        keys['s'] || keys['S'] || keys['ArrowDown']
+                    )) {
+                        player.tutorialMoved = true;
+                    }
+                }
+
+                if (dialogStep === 4) {
+                    // 1. 偵測跳躍開始 (在地面按下跳躍鍵)
+                    if (!player.tutorialJumped) {
+                        if (viewMode === 'sideview' && (keys['w'] || keys['W'] || keys['ArrowUp']) && player.onGround) {
+                            player.tutorialJumped = true;
+                        }
+                    }
+                    // 2. 偵測跳躍結束 (落地)
+                    else if (player.onGround) {
+                        isDimmed = false;
+                        dialogStep = 5;
+                        showDialogContent();
+                    }
+                }
+
+                if (dialogStep === 5 && isDimmed) {
+                    // 偵測是否跳上箱子 (在側面視角且不在地面高度)
+                    if (viewMode === 'sideview' && player.onGround && player.y < world.y + world.height - player.height - 10) {
+                        isDimmed = false;
+                        dialogStep = 6;
+                        showDialogContent();
+                    }
+                }
+
+                if (dialogStep === 7 && isDimmed) {
+                    // 偵測是否已跳下箱子 (原本在箱子上，按下 X 後由物理邏輯將 elevatedFromSide 重置為 false)
+                    if (viewMode === 'topdown' && !player.elevatedFromSide) {
+                        isDimmed = false;
+                        dialogStep = 8;
+                        showDialogContent();
+                    }
+                }
+
+                // 只有在對話框開啟時，且不是動作教學步驟，才阻斷物理更新
+                const actionSteps = [2, 3, 4, 5, 6, 7];
+                if (isDialogOpen && !actionSteps.includes(dialogStep)) return;
+            }
+
+            if (isVictory) return;
+
+            // 【新增】死亡判定 (地板是岩漿)
+            if (lavaLevels.includes(currentLevel)) {
+                let isOnFloor = false;
+                if (viewMode === 'sideview') {
+                    if (player.y + player.height >= world.y + world.height - 2) isOnFloor = true;
+                } else {
+                    // 上帝模式下，如果沒有 standingOn (沒站在東西上) 就是在岩漿上
+                    if (!player.elevatedFromSide) isOnFloor = true;
+                }
+
+                if (isOnFloor) {
+                    if (!player.isDemoProtected) playerDie();
+                    return;
+                }
+            }
+
+            // 更新土狼時間：若在地面則重置計時器，若在空中則遞減
+            if (player.onGround) {
+                player.coyoteTimer = 8; // 給予 8 個影格的寬限期 (約 0.13 秒)
+            } else if (player.coyoteTimer > 0) {
+                player.coyoteTimer--;
+            }
+
+            // 1. 跳躍輸入偵測
+            if (viewMode === 'sideview' && (keys['w'] || keys['W'] || keys['ArrowUp'])) {
+                if (player.coyoteTimer > 0) {
+                    player.vy = player.jumpPower;
+                    player.onGround = false;
+                    player.coyoteTimer = 0; // 觸發跳躍後立即歸零，防止二段跳
+                    // 教學特定邏輯：偵測跳躍 (已在上方處理)
+                    player.lastWallSide = null;
+                } else if (player.touchingWallLeft && player.lastWallSide !== 'left') {
+                    player.vy = player.jumpPower; player.reboundX = player.speed * 2.5; player.wallJumpTimer = 15; player.lastWallSide = 'left';
+                } else if (player.touchingWallRight && player.lastWallSide !== 'right') {
+                    player.vy = player.jumpPower; player.reboundX = -player.speed * 2.5; player.wallJumpTimer = 15; player.lastWallSide = 'right';
+                }
+            }
+
+            const oldPlayerX = player.x;
+            const oldPlayerY = player.y;
+            const oldPlayerHeight = player.height;
+            player.touchingWallLeft = false;
+            player.touchingWallRight = false;
+
+            const hasInput = Object.values(keys).some(v => v === true);
+            if (hasInput) player.autoMove = null;
+
+            let ex, ey, ew, eh;
+            const currentWidth = (viewMode === 'topdown') ? world.width : world.height;
+            if (viewMode === 'topdown') {
+                ex = world.x + world.width / 2 - 40; ey = world.y - 20; ew = 80; eh = 20.5;
+            } else {
+                ex = world.x + world.height - 0.5; ey = world.y + (world.height - 80) / 2; ew = 20; eh = 80;
+            }
+
+            if (player.x < ex + ew && player.x + player.width > ex && player.y < ey + eh && player.y + player.height > ey) {
+                // 在教學期間，若不是正在讓玩家「嘗試過關」的步驟，不觸發換關
+                const tutorialAllowedSteps = [0, 9]; // 教學結束後或最後一步
+                if (isDialogOpen && !tutorialAllowedSteps.includes(dialogStep)) {
+                    // 暫不處理
+                } else {
+                    if (currentLevel < maxLevel) {
+                        currentLevel++;
+                        setupLevelTransition();
+                    } else if (!isVictory) {
+                        showVictoryScreen();
+                    }
+                    return; // 換關後不繼續處理當前影格
+                }
+            }
+
+
+            let moveX = 0, moveY = 0;
+            if (keys['a'] || keys['A'] || keys['ArrowLeft']) moveX = -1;
+            if (keys['d'] || keys['D'] || keys['ArrowRight']) moveX = 1;
+            if (keys['w'] || keys['W'] || keys['ArrowUp']) moveY = -1;
+            if (keys['s'] || keys['S'] || keys['ArrowDown']) moveY = 1;
+
+            if (moveX === 0 && moveY === 0 && player.autoMove) {
+                moveX = player.autoMove.x; moveY = player.autoMove.y;
+            }
+
+            // 處理上帝模式下的「下牆」邏輯 (攀附世界邊界)
+            if (player.isClinging && viewMode === 'topdown') {
+                const moveOff = (player.clingSide === 'bottom' && moveY < 0) || (player.clingSide === 'top' && moveY > 0);
+                if (moveOff) {
+                    player.isClinging = false;
+                    player.autoMove = null;
+                } else {
+                    // 攀附時禁止 Y 軸輸入 (除非是為了脫離)，但允許 X 軸移動以便沿牆滑行
+                    moveY = 0;
+                }
+            } else if (player.elevatedFromSide && viewMode === 'topdown' && player.standingOn !== null) {
+                // 上帝模式下站在障礙物上的釋放邏輯
+                const targetObs = obstacles[player.standingOn];
+                const o = targetObs ? getObsRect(targetObs) : null;
+                if (o) {
+                    // 檢查是否完全走出範圍
+                    const isOutside = player.x + player.width < o.x || player.x > o.x + o.w || 
+                                     player.y + player.height < o.y || player.y > o.y + o.h;
+                    
+                    if (isOutside) {
+                        player.elevatedFromSide = false;
+                        player.standingOn = null;
+                        player.autoMove = null;
+                    }
+                } else {
+                    player.elevatedFromSide = false;
+                    player.standingOn = null;
+                }
+            }
+
+            if (player.wallJumpTimer > 0) { moveX = 0; player.wallJumpTimer--; }
+
+            if (viewMode === 'sideview') {
+                if (keys['s'] || keys['S'] || keys['ArrowDown']) {
+                    if (!player.isCrouching) {
+                        player.y += (player.baseHeight * 0.4);
+                        player.height = player.baseHeight * 0.6;
+                        player.isCrouching = true;
+                    }
+                } else if (player.isCrouching) {
+                    let canStand = true;
+                    const py = player.y - (player.baseHeight * 0.4);
+                    for (const obs of obstacles) {
+                        let o = getObsRect(obs);
+                        if (!o) continue;
+                        if (player.x < o.x + o.w && player.x + player.width > o.x && py < o.y + o.h && py + player.baseHeight > o.y) canStand = false;
+                    }
+                    if (canStand) { player.y = py; player.height = player.baseHeight; player.isCrouching = false; }
+                }
+                player.vy += gravity;
+            }
+
+            player.x += (moveX * player.speed) + player.reboundX;
+            if (viewMode === 'topdown') player.y += moveY * player.speed;
+            else player.y += player.vy;
+
+            if (player.reboundX !== 0) {
+                player.reboundX *= 0.8;
+                if (Math.abs(player.reboundX) < 0.1) player.reboundX = 0;
+            }
+
+            for (let i = 0; i < obstacles.length; i++) {
+                let o = getObsRect(obstacles[i]);
+                if (!o) continue;
+                // 如果正站在該障礙物上方，忽略碰撞（改由後方的邊界鎖定邏輯處理）
+                if (viewMode === 'topdown' && player.elevatedFromSide && i === player.standingOn) {
+                    continue;
+                }
+                if (player.x < o.x + o.w && player.x + player.width > o.x && oldPlayerY < o.y + o.h && oldPlayerY + oldPlayerHeight > o.y) {
+                    if (oldPlayerX + player.width <= o.x) { player.x = o.x - player.width; player.touchingWallRight = true; }
+                    else { player.x = o.x + o.w; player.touchingWallLeft = true; }
+                }
+            }
+
+            player.onGround = false;
+            if (viewMode === 'sideview' && player.y + player.height > world.y + world.height) {
+                player.y = world.y + world.height - player.height; player.vy = 0; player.onGround = true;
+            }
+
+            for (let i = 0; i < obstacles.length; i++) {
+                let o = getObsRect(obstacles[i]);
+                if (!o) continue;
+                if (viewMode === 'topdown' && player.elevatedFromSide && i === player.standingOn) continue;
+                if (player.y < o.y + o.h && player.y + player.height > o.y && player.x < o.x + o.w && player.x + player.width > o.x) {
+                    if (viewMode === 'topdown') player.y = (oldPlayerY + oldPlayerHeight <= o.y) ? o.y - player.height : o.y + o.h;
+                    else {
+                        if (oldPlayerY + oldPlayerHeight <= o.y) { player.y = o.y - player.height; player.vy = 0; player.onGround = true; }
+                        else if (oldPlayerY >= o.y + o.h - 5) { player.y = o.y + o.h; player.vy = 0; }
+                    }
+                }
+            }
+
+            if (player.x < world.x) { player.x = world.x; player.touchingWallLeft = true; }
+            if (player.x + player.width > world.x + currentWidth) { player.x = world.x + currentWidth - player.width; player.touchingWallRight = true; }
+            if (player.y < world.y) player.y = world.y;
+            if (player.y + player.height > world.y + world.height) { player.y = world.y + world.height - player.height; if (viewMode === 'sideview') player.onGround = true; }
+
+            // 【關鍵鎖定】在上帝模式下，不再強制限制座標在障礙物範圍內 (已改為自由走動脫離)
+            if (player.elevatedFromSide && viewMode === 'topdown' && player.standingOn === null) {
+                player.elevatedFromSide = false;
+            }
+
+            // 【關鍵修復】在所有碰撞檢查完成後，若處於攀附狀態，強制鎖定 Y 座標
+            if (player.isClinging && viewMode === 'topdown') {
+                player.y = player.clingingY;
+                player.clingingX = player.x; // 同步更新鎖定的 X 位置
+            }
+
+            if (viewMode === 'sideview' && (keys['w'] || keys['W'] || keys['ArrowUp'])) {
+                if (player.onGround) { player.vy = player.jumpPower; player.onGround = false; player.lastWallSide = null; }
+                else if (player.touchingWallLeft && player.lastWallSide !== 'left') {
+                    player.vy = player.jumpPower; player.reboundX = player.speed * 2.5; player.wallJumpTimer = 15; player.lastWallSide = 'left';
+                } else if (player.touchingWallRight && player.lastWallSide !== 'right') {
+                    player.vy = player.jumpPower; player.reboundX = -player.speed * 2.5; player.wallJumpTimer = 15; player.lastWallSide = 'right';
+                }
+            }
+            if (player.onGround) player.lastWallSide = null;
+        }
+
+        // 繪製畫面
+        function draw() {
+            if (!ctx || !canvas) return; // 防禦性檢查
+            ctx.save();
+            if (shakeAmount > 0) {
+                ctx.translate((Math.random() - 0.5) * shakeAmount, (Math.random() - 0.5) * shakeAmount);
+            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const t = isTransitioning ? transitionT : 1;
+
+            // 分解動畫階段
+            const scanPhaseEnd = 0.3;
+            let scanProgress = 0;
+            let flipProgress = 0;
+
+            if (t < scanPhaseEnd) {
+                scanProgress = t / scanPhaseEnd;
+            } else {
+                scanProgress = 1;
+                const rawFlip = (t - scanPhaseEnd) / (1 - scanPhaseEnd);
+                flipProgress = 1 - Math.pow(1 - rawFlip, 3); // Ease-out 效果
+            }
+
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < canvas.width; x += 50) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+            for (let y = 0; y < canvas.height; y += 50) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+
+            // 計算基準線位置 (Side-view 的切片 X 座標)
+            const sliceX = ((transitionOldView === 'topdown') ? transitionStartPlayer.x : transitionEndPlayer.x) + player.width / 2;
+
+            // 1. 繪製掃描線效果 (Phase 1)
+            if (isTransitioning && t < scanPhaseEnd + 0.2) {
+                ctx.save();
+                ctx.strokeStyle = '#00ffcc';
+                ctx.lineWidth = 4;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#00ffcc';
+                ctx.beginPath();
+                ctx.moveTo(sliceX, world.y);
+                ctx.lineTo(sliceX, world.y + world.height * scanProgress);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // 2. 繪製背景與翻轉效果
+            if (flipProgress < 1) {
+                ctx.save();
+                if (isTransitioning && t >= scanPhaseEnd) {
+                    ctx.globalAlpha = 1 - flipProgress;
+                    const s = 1 - flipProgress * 0.2;
+                    ctx.translate(canvas.width / 2, canvas.height / 2);
+                    ctx.scale(s, s);
+                    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+                }
+                drawStaticScene(transitionOldView, isTransitioning ? transitionStartPlayer : player);
+                ctx.restore();
+            }
+
+            // 3. 繪製翻轉中的新視角 (Phase 2)
+            if (isTransitioning && t >= scanPhaseEnd) {
+                ctx.save();
+                const flipScale = Math.sin(flipProgress * Math.PI / 2);
+                ctx.globalAlpha = flipProgress;
+                ctx.translate(sliceX, 0);
+                ctx.scale(flipScale, 1);
+                ctx.translate(-sliceX, 0);
+                drawStaticScene(viewMode, transitionEndPlayer);
+                ctx.restore();
+            } else if (!isTransitioning) {
+                drawStaticScene(viewMode, player);
+            }
+
+            // 繪製紅色閃爍效果罩
+            if (deathFlashOpacity > 0) {
+                ctx.fillStyle = `rgba(255, 0, 0, ${deathFlashOpacity})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            ctx.restore();
+        }
+
+        // 抽離靜態繪圖邏輯
+        function drawStaticScene(mode, pPos) {
+            const gapSize = 80;
+            const currentWidth = (mode === 'topdown') ? world.width : world.height;
+            const currentLockedX = (mode === 'topdown') ? pPos.x : player.lockedX;
+
+            // 【視覺效果】(此處已移除 Level 2 岩漿效果)
+
+            // 修正：在第 8 步顯示紅色切片線，讓玩家理解側面視角的切點
+            if (dialogStep === 8 && mode === 'topdown') {
+                ctx.save();
+                ctx.strokeStyle = '#ff3333';
+                ctx.lineWidth = 4;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#ff0000';
+                ctx.beginPath();
+                let cx = pPos.x + player.width / 2;
+                ctx.moveTo(cx, world.y);
+                ctx.lineTo(cx, world.y + world.height);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // 繪製關卡浮水印 (Level 1, 2...)
+            if (currentLevel >= 1) {
+                ctx.save();
+                ctx.font = "bold 300px sans-serif";
+                ctx.fillStyle = "rgba(0, 255, 204, 0.05)";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "bottom";
+                ctx.fillText(currentLevel, world.x + world.width / 2, world.y + world.height - 20);
+                ctx.restore();
+            }
+
+            for (const obs of obstacles) {
+                let o = getVisualRectForMode(obs, mode, currentLockedX);
+                if (!o || o.x === undefined) continue;
+                ctx.fillStyle = obs.color || '#777';
+                ctx.fillRect(o.x, o.y, o.w, o.h);
+            }
+
+            ctx.strokeStyle = world.borderColor; ctx.lineWidth = world.borderWidth;
+            ctx.beginPath();
+            if (mode === 'topdown') {
+                ctx.moveTo(world.x, world.y + world.height);
+                ctx.lineTo(world.x, world.y);
+                const gx = world.x + world.width / 2 - gapSize / 2;
+                ctx.lineTo(gx, world.y); ctx.moveTo(gx + gapSize, world.y);
+                ctx.lineTo(world.x + world.width, world.y);
+                ctx.lineTo(world.x + world.width, world.y + world.height);
+                ctx.lineTo(world.x, world.y + world.height);
+            } else {
+                ctx.moveTo(world.x, world.y);
+                ctx.lineTo(world.x, world.y + world.height);
+                ctx.lineTo(world.x + world.height, world.y + world.height);
+                const gy = world.y + (world.height - gapSize) / 2;
+                ctx.lineTo(world.x + world.height, gy + gapSize); ctx.moveTo(world.x + world.height, gy);
+                ctx.lineTo(world.x + world.height, world.y);
+                ctx.lineTo(world.x, world.y);
+            }
+            ctx.stroke();
+
+            ctx.fillStyle = "#ffff00"; ctx.shadowBlur = 20; ctx.shadowColor = "#ffff00";
+            if (mode === 'topdown') ctx.fillRect(world.x + world.width / 2 - gapSize / 2, world.y - 8, gapSize, 8);
+            else ctx.fillRect(world.x + world.height, world.y + (world.height - gapSize) / 2, 8, gapSize);
+
+            ctx.fillStyle = pPos.color || player.color;
+            ctx.shadowBlur = player.elevatedFromSide ? 30 : 15;
+
+            if ((player.isClinging || player.elevatedFromSide) && mode === 'topdown') {
+                ctx.save();
+                ctx.shadowBlur = 0; ctx.fillStyle = "#fff"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center";
+                ctx.fillText("站在障礙物上", pPos.x + player.width / 2, pPos.y - 10);
+                ctx.restore();
+            } else {
+                ctx.shadowColor = player.elevatedFromSide ? "#ffffff" : player.color;
+            }
+
+            if (player.isDying) {
+                // 繪製死亡動畫：中心旋轉並縮小
+                const progress = Math.min(player.deathAnimTimer / 0.8, 1);
+                const scale = 1 - progress;
+                const rotation = progress * Math.PI * 4; // 旋轉兩圈
+
+                ctx.save();
+                ctx.translate(pPos.x + player.width / 2, pPos.y + player.height / 2);
+                ctx.rotate(rotation);
+                ctx.scale(scale, scale);
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = player.color;
+                ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
+                ctx.restore();
+
+                // 繪製死亡時的文字氣泡 (讓玩家「出聲」的視覺化)
+                ctx.save();
+                ctx.fillStyle = "white";
+                ctx.font = "bold 24px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "bottom";
+                ctx.fillText("!", pPos.x + player.width / 2, pPos.y - 10);
+                ctx.restore();
+            } else {
+                ctx.fillRect(pPos.x, pPos.y, player.width, player.height);
+            }
+            ctx.shadowBlur = 0;
+        }
+
+        function getVisualRectForMode(obs, mode, pLockedX) {
+            if (mode === 'topdown') return { x: obs.x, y: obs.y, w: obs.baseWidth, h: obs.baseDepth };
+            if (pLockedX + player.width > obs.x && pLockedX < obs.x + obs.baseWidth) {
+                return {
+                    x: world.x + world.height - (obs.y - world.y) - obs.baseDepth,
+                    y: world.y + world.height - obs.baseHeight,
+                    w: obs.baseDepth,
+                    h: obs.baseHeight
+                };
+            }
+            return null;
+        }
+
+        function gameLoop(timestamp) {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const dt = (timestamp - lastTimestamp) / 1000;
+            lastTimestamp = timestamp;
+            update(dt || 0.016);
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        // 修正：必須呼叫此行才能啟動遊戲
+        requestAnimationFrame(gameLoop);
+    </script>
+
+</body>
+
+</html>
