@@ -21,6 +21,8 @@
     <meta name="theme-color" content="#00ffcc">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- 引入 Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -234,6 +236,7 @@
         <button id="skip-btn" onclick="skipTutorial()">跳過教學關卡</button>
         <button id="skip-btn" style="margin-top: 10px; color: #ffaa00; border-color: #ffaa00;" onclick="loadLevelCode()">輸入關卡代碼</button>
         <button id="skip-btn" style="margin-top: 10px; color: #00ffcc; border-color: #00ffcc;" onclick="window.open('editor.html', '_blank')">✏️ 關卡編輯器</button>
+        <button id="skip-btn" style="margin-top: 10px; color: #00ccff; border-color: #00ccff; background: #0a1a24; font-weight: bold;" onclick="openCloudLobby()">🌐 探索社群關卡 (Supabase)</button>
     </div>
 
     <div id="dialog-overlay" class="hidden">
@@ -1580,8 +1583,156 @@
         }
         // 修正：必須呼叫此行才能啟動遊戲
         requestAnimationFrame(gameLoop);
+
+        // ==========================================
+        // ☁️ Supabase 雲端社群關卡大廳
+        // ==========================================
+        let supabaseClient = null;
+        function initSupabase() {
+            const url = localStorage.getItem('SUPABASE_URL') || "https://your-project-id.supabase.co";
+            const key = localStorage.getItem('SUPABASE_ANON_KEY') || "your-anon-key";
+            if (url.includes('supabase.co') && key !== "your-anon-key") {
+                supabaseClient = window.supabase.createClient(url, key);
+                return true;
+            }
+            return false;
+        }
+
+        function openCloudLobby() {
+            if (!initSupabase()) {
+                openSupabaseConfig();
+                return;
+            }
+            document.getElementById('cloud-lobby-modal').style.display = 'flex';
+            fetchCloudLevels();
+        }
+
+        function closeCloudLobby() {
+            document.getElementById('cloud-lobby-modal').style.display = 'none';
+        }
+
+        function openSupabaseConfig() {
+            document.getElementById('supabase-config-modal').style.display = 'flex';
+            document.getElementById('config-url').value = localStorage.getItem('SUPABASE_URL') || '';
+            document.getElementById('config-key').value = localStorage.getItem('SUPABASE_ANON_KEY') || '';
+        }
+
+        function closeSupabaseConfig() {
+            document.getElementById('supabase-config-modal').style.display = 'none';
+        }
+
+        function saveSupabaseConfig() {
+            const url = document.getElementById('config-url').value.trim();
+            const key = document.getElementById('config-key').value.trim();
+            if (!url || !key) {
+                alert("請填寫完整的 URL 與 Anon Key！");
+                return;
+            }
+            localStorage.setItem('SUPABASE_URL', url);
+            localStorage.setItem('SUPABASE_ANON_KEY', key);
+            alert("Supabase 連線設定已儲存！");
+            closeSupabaseConfig();
+            initSupabase();
+            if (document.getElementById('cloud-lobby-modal').style.display === 'flex') {
+                fetchCloudLevels();
+            }
+        }
+
+        async function fetchCloudLevels() {
+            if (!supabaseClient) return;
+            const listContainer = document.getElementById('cloud-levels-list');
+            listContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #00ffcc;">🌀 正在探索多重次元社群關卡...</div>';
+
+            try {
+                const { data, error } = await supabaseClient.from('levels')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    listContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #aaa;">目前還沒有社群關卡，快前往【✏️ 關卡編輯器】發布第一個作品吧！</div>';
+                    return;
+                }
+
+                listContainer.innerHTML = data.map(lvl => `
+                    <div style="background: #121218; border: 1px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                        <div>
+                            <div style="font-size: 18px; font-weight: bold; color: #00ffcc; margin-bottom: 4px;">${lvl.name} <span style="font-size: 12px; color: #888; background: #222; padding: 2px 6px; border-radius: 4px;">#${lvl.id}</span></div>
+                            <div style="font-size: 13px; color: #aaa;">👤 創作者：<span style="color: #ffaa00;">${lvl.creator || '神秘旅人'}</span> | 📅 ${new Date(lvl.created_at).toLocaleDateString()}</div>
+                        </div>
+                        <button onclick='playCloudLevel(${JSON.stringify(lvl).replace(/'/g, "&#39;")})' style="padding: 10px 20px; background: #00ffcc; color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 0 10px rgba(0,255,204,0.4);">🚀 立即遊玩</button>
+                    </div>
+                `).join('');
+            } catch(e) {
+                listContainer.innerHTML = `<div style="text-align: center; padding: 40px; color: #ff3333;">讀取失敗！請確認 Supabase 權限與資料表 (levels) 設定。<br><span style="font-size: 12px; color: #888;">${e.message || ''}</span></div>`;
+            }
+        }
+
+        function playCloudLevel(lvl) {
+            if (!lvl || !lvl.world || !lvl.obstacles) {
+                alert("關卡資料不完整！");
+                return;
+            }
+            Object.assign(world, lvl.world);
+            obstacles.length = 0;
+            obstacles.push(...lvl.obstacles);
+
+            closeCloudLobby();
+            isStartScreen = false;
+            document.getElementById('start-screen').classList.add('hidden');
+            const overlay = document.getElementById('dialog-overlay');
+            if (overlay) overlay.classList.add('hidden');
+
+            currentLevel = -1; // 標記為社群自定義關卡
+            isDialogOpen = false;
+            setupLevelTransition();
+            if (viewInfo) viewInfo.innerText = `目前遊玩：${lvl.name} (by ${lvl.creator})`;
+        }
     </script>
 
-</body>
+    <!-- 雲端社群大廳 Modal -->
+    <div id="cloud-lobby-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div style="background: #1a1a24; border: 2px solid #00ccff; border-radius: 12px; padding: 30px; width: 700px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 0 40px rgba(0,204,255,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px;">
+                <div>
+                    <h2 style="margin: 0; color: #00ccff; font-size: 24px;">🌐 跨維度社群關卡大廳</h2>
+                    <div style="font-size: 13px; color: #aaa; margin-top: 4px;">隨選遊玩全球玩家打造的極限關卡！</div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="openSupabaseConfig()" style="padding: 8px 15px; background: #2a2a36; color: #ffaa00; border: 1px solid #ffaa00; border-radius: 6px; cursor: pointer; font-weight: bold;">⚙️ 金鑰設定</button>
+                    <button onclick="fetchCloudLevels()" style="padding: 8px 15px; background: #2a2a36; color: #fff; border: 1px solid #555; border-radius: 6px; cursor: pointer;">🔄 重新整理</button>
+                    <button onclick="closeCloudLobby()" style="padding: 8px 15px; background: #aa3333; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ 關閉</button>
+                </div>
+            </div>
+            <div id="cloud-levels-list" style="flex: 1; overflow-y: auto; padding-right: 10px;">
+                <!-- 列表動態生成 -->
+            </div>
+        </div>
+    </div>
 
+    <!-- Supabase 金鑰設定 Modal -->
+    <div id="supabase-config-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 10001; justify-content: center; align-items: center;">
+        <div style="background: #1a1a24; border: 2px solid #ffaa00; border-radius: 12px; padding: 30px; width: 500px; box-shadow: 0 0 30px rgba(255,170,0,0.3);">
+            <h2 style="margin-top: 0; color: #ffaa00;">⚙️ 設定 Supabase 連線金鑰</h2>
+            <p style="color: #aaa; font-size: 14px;">系統偵測到您尚未設定 Supabase 專案金鑰。請填入您的 Supabase API 設定以啟用雲端關卡庫功能：</p>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; color: #fff;">🔗 Supabase Project URL</label>
+                <input id="config-url" type="text" placeholder="https://your-project-id.supabase.co" style="width: 100%; padding: 10px; background: #0a0a0c; border: 1px solid #555; color: #fff; border-radius: 6px;">
+            </div>
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; margin-bottom: 5px; color: #fff;">🔑 Supabase Anon Key</label>
+                <input id="config-key" type="password" placeholder="eyJhbGciOiJIUzI1NiIsIn..." style="width: 100%; padding: 10px; background: #0a0a0c; border: 1px solid #555; color: #fff; border-radius: 6px;">
+            </div>
+            <div style="background: #2a2a36; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; color: #ccc;">
+                💡 <b>資料表建立提示</b>：請確保在 Supabase 建立名為 <code>levels</code> 的資料表，並包含 <code>id</code>(主鍵), <code>name</code>(text), <code>creator</code>(text), <code>world</code>(jsonb), <code>obstacles</code>(jsonb), <code>created_at</code>(timestamptz) 欄位。
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn" style="padding: 10px 20px; background: #333; color: #fff; border: none; border-radius: 6px; cursor: pointer;" onclick="closeSupabaseConfig()">取消</button>
+                <button class="btn" style="padding: 10px 20px; background: #ffaa00; color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;" onclick="saveSupabaseConfig()">💾 儲存設定</button>
+            </div>
+        </div>
+    </div>
+</body>
 </html>

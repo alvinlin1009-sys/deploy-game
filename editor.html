@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2.5D 關卡編輯器 | 遊戲工作室</title>
+    <!-- 引入 Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg-dark: #0a0a0c;
@@ -337,6 +339,8 @@
             <option value="9">Level 9: 熔岩跑酷 🔥</option>
             <option value="10">Level 10: 終極次元 🔥</option>
         </select>
+        <div style="width: 1px; height: 30px; background: var(--border);"></div>
+        <button class="btn" style="border-color: #00ffcc; color: #00ffcc; background: #0a1a1f; font-weight: bold;" onclick="openPublishModal()">☁️ 發布至雲端 (Supabase)</button>
     </div>
     <div style="display: flex; gap: 10px;">
         <button class="btn" id="view-toggle" onclick="toggleEditorView()">目前視角：上帝視角</button>
@@ -978,6 +982,139 @@
             }
         }
     });
+
+    // ==========================================
+    // ☁️ Supabase 雲端發布系統
+    // ==========================================
+    let supabaseClient = null;
+    function initSupabase() {
+        const url = localStorage.getItem('SUPABASE_URL') || "https://your-project-id.supabase.co";
+        const key = localStorage.getItem('SUPABASE_ANON_KEY') || "your-anon-key";
+        if (url.includes('supabase.co') && key !== "your-anon-key") {
+            supabaseClient = window.supabase.createClient(url, key);
+            return true;
+        }
+        return false;
+    }
+
+    function openPublishModal() {
+        if (!initSupabase()) {
+            openSupabaseConfig();
+            return;
+        }
+        document.getElementById('publish-modal').style.display = 'flex';
+        const savedCreator = localStorage.getItem('LEVEL_CREATOR') || '';
+        document.getElementById('publish-creator').value = savedCreator;
+    }
+
+    function closePublishModal() {
+        document.getElementById('publish-modal').style.display = 'none';
+    }
+
+    function openSupabaseConfig() {
+        document.getElementById('supabase-config-modal').style.display = 'flex';
+        document.getElementById('config-url').value = localStorage.getItem('SUPABASE_URL') || '';
+        document.getElementById('config-key').value = localStorage.getItem('SUPABASE_ANON_KEY') || '';
+    }
+
+    function closeSupabaseConfig() {
+        document.getElementById('supabase-config-modal').style.display = 'none';
+    }
+
+    function saveSupabaseConfig() {
+        const url = document.getElementById('config-url').value.trim();
+        const key = document.getElementById('config-key').value.trim();
+        if (!url || !key) {
+            alert("請填寫完整的 URL 與 Anon Key！");
+            return;
+        }
+        localStorage.setItem('SUPABASE_URL', url);
+        localStorage.setItem('SUPABASE_ANON_KEY', key);
+        alert("Supabase 連線設定已儲存！");
+        closeSupabaseConfig();
+        initSupabase();
+    }
+
+    async function publishToSupabase() {
+        if (!supabaseClient) {
+            alert("Supabase 尚未連線！");
+            return;
+        }
+        const name = document.getElementById('publish-name').value.trim();
+        const creator = document.getElementById('publish-creator').value.trim();
+        if (!name || !creator) {
+            alert("請填寫關卡名稱與創作者暱稱！");
+            return;
+        }
+
+        localStorage.setItem('LEVEL_CREATOR', creator);
+        const publishBtn = document.getElementById('publish-submit-btn');
+        publishBtn.innerText = "☁️ 正在發布至雲端...";
+        publishBtn.disabled = true;
+
+        try {
+            const { data, error } = await supabaseClient.from('levels').insert([
+                { name, creator, world, obstacles }
+            ]).select();
+
+            if (error) {
+                console.error("發布失敗錯誤詳情:", error);
+                throw error;
+            }
+
+            const newLvl = data[0];
+            alert(`🎉 發布成功！\n您的專屬關卡 ID 是：#${newLvl.id}\n現在您可以前往遊戲中的「🌐 探索社群關卡」大廳遊玩！`);
+            closePublishModal();
+        } catch(e) {
+            alert("發布失敗！請確認 Supabase 權限或資料表結構 (levels) 是否正確。\n錯誤訊息: " + (e.message || JSON.stringify(e)));
+        } finally {
+            publishBtn.innerText = "🚀 確定發布";
+            publishBtn.disabled = false;
+        }
+    }
 </script>
+
+<!-- 發布關卡 Modal -->
+<div id="publish-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center;">
+    <div style="background: #1a1a24; border: 2px solid #00ffcc; border-radius: 12px; padding: 30px; width: 400px; box-shadow: 0 0 30px rgba(0,255,204,0.3);">
+        <h2 style="margin-top: 0; color: #00ffcc;">☁️ 發布關卡至雲端</h2>
+        <p style="color: #aaa; font-size: 14px;">發布後社群玩家都能在遊戲大廳看到您的作品！</p>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; color: #fff;">🏷️ 關卡名稱</label>
+            <input id="publish-name" type="text" placeholder="例如：極限跳島考驗" style="width: 100%; padding: 10px; background: #0a0a0c; border: 1px solid #555; color: #fff; border-radius: 6px;">
+        </div>
+        <div style="margin-bottom: 25px;">
+            <label style="display: block; margin-bottom: 5px; color: #fff;">👤 創作者暱稱</label>
+            <input id="publish-creator" type="text" placeholder="您的暱稱" style="width: 100%; padding: 10px; background: #0a0a0c; border: 1px solid #555; color: #fff; border-radius: 6px;">
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="btn" onclick="closePublishModal()">取消</button>
+            <button id="publish-submit-btn" class="btn primary" onclick="publishToSupabase()">🚀 確定發布</button>
+        </div>
+    </div>
+</div>
+
+<!-- Supabase 金鑰設定 Modal -->
+<div id="supabase-config-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center;">
+    <div style="background: #1a1a24; border: 2px solid #ffaa00; border-radius: 12px; padding: 30px; width: 500px; box-shadow: 0 0 30px rgba(255,170,0,0.3);">
+        <h2 style="margin-top: 0; color: #ffaa00;">⚙️ 設定 Supabase 連線金鑰</h2>
+        <p style="color: #aaa; font-size: 14px;">系統偵測到您尚未設定 Supabase 專案金鑰。請填入您的 Supabase API 設定以啟用雲端關卡庫功能：</p>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; color: #fff;">🔗 Supabase Project URL</label>
+            <input id="config-url" type="text" placeholder="https://your-project-id.supabase.co" style="width: 100%; padding: 10px; background: #0a0a0c; border: 1px solid #555; color: #fff; border-radius: 6px;">
+        </div>
+        <div style="margin-bottom: 25px;">
+            <label style="display: block; margin-bottom: 5px; color: #fff;">🔑 Supabase Anon Key</label>
+            <input id="config-key" type="password" placeholder="eyJhbGciOiJIUzI1NiIsIn..." style="width: 100%; padding: 10px; background: #0a0a0c; border: 1px solid #555; color: #fff; border-radius: 6px;">
+        </div>
+        <div style="background: #2a2a36; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; color: #ccc;">
+            💡 <b>資料表建立提示</b>：請確保在 Supabase 建立名為 <code>levels</code> 的資料表，並包含 <code>id</code>(主鍵), <code>name</code>(text), <code>creator</code>(text), <code>world</code>(jsonb), <code>obstacles</code>(jsonb), <code>created_at</code>(timestamptz) 欄位。
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="btn" onclick="closeSupabaseConfig()">取消</button>
+            <button class="btn" style="background: #ffaa00; color: #000; font-weight: bold;" onclick="saveSupabaseConfig()">💾 儲存設定</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
