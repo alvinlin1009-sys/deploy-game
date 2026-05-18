@@ -171,7 +171,7 @@
             top: 30px;
             left: 0;
             width: 100%;
-            height: calc(100% - 30px);
+            height: calc(100% - 60px);
             display: flex;
             justify-content: center;
             align-items: flex-end;
@@ -223,21 +223,196 @@
             color: var(--roc-yellow);
             text-shadow: 2px 2px 2px #000;
         }
+
+        /* --- 長官致詞暨可愛輪播圖片展示區 (Carousel) --- */
+        #carousel-container {
+            width: 90%;
+            max-width: 700px;
+            background: linear-gradient(to bottom, #004488, #001122);
+            border: 6px ridge #c0c0c0;
+            margin-bottom: 25px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .carousel-slide {
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+
+        .carousel-slide.active {
+            display: block;
+        }
+
+        .carousel-header {
+            font-family: 'DFKai-SB', serif;
+            font-size: 22px;
+            color: var(--roc-yellow);
+            border-bottom: 2px dashed var(--roc-yellow);
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        .carousel-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .carousel-text {
+            font-family: 'PMingLiU', serif;
+            font-size: 18px;
+            color: #ffffff;
+            line-height: 1.5;
+            text-align: left;
+            flex: 1;
+        }
+
+        .carousel-nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .carousel-dot {
+            width: 14px;
+            height: 14px;
+            background: #888888;
+            border: 2px outset #ffffff;
+            cursor: pointer;
+        }
+
+        .carousel-dot.active {
+            background: var(--roc-yellow);
+            border: 2px inset #ffff00;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* --- 兩側便民廣告連結專區 --- */
+        .side-badges {
+            position: absolute;
+            top: 50px;
+            width: 180px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 10px;
+            z-index: 25;
+        }
+
+        .side-badges.left { left: 10px; }
+        .side-badges.right { right: 10px; }
+
+        .badge-card {
+            background: linear-gradient(to bottom, #cc0000, #660000);
+            border: 4px outset #ff8888;
+            color: #ffff00;
+            padding: 10px;
+            text-align: center;
+            font-family: 'DFKai-SB', serif;
+            font-size: 15px;
+            font-weight: bold;
+            box-shadow: 3px 3px 5px rgba(0,0,0,0.8);
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            animation: badgeBlink 2s infinite;
+        }
+
+        .badge-card.blue { background: linear-gradient(to bottom, #0055aa, #002244); border-color: #88ccff; color: #ffffff; animation: none; }
+        .badge-card.gold { background: linear-gradient(to bottom, #ffaa00, #885500); border-color: #ffff88; color: #331100; animation: none; }
+        .badge-card.green { background: linear-gradient(to bottom, #008844, #003311); border-color: #88ffaa; color: #ffffff; animation: none; }
+
+        @keyframes badgeBlink { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.4); } }
     </style>
 </head>
 
 <body>
 
-    <!-- 政令宣導跑馬燈 -->
+    <!-- 頂部政令宣導跑馬燈 -->
     <div id="roc-banner" style="position: fixed; top: 0; left: 0; width: 100%; background: linear-gradient(to bottom, #003366, #001122); color: #ffff00; font-family: 'PMingLiU', 'MingLiU', 'DFKai-SB', serif; font-size: 16px; font-weight: bold; padding: 5px 0; border-bottom: 3px ridge #c0c0c0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.8);">
         <marquee scrollamount="5">【行政院暨國家二點五維度遊戲開發推動委員會 e 化便民宣導】歡迎各位鄉親民眾蒞臨本系統！請務必詳閱相關操作規範，落實空間切換便民措施，共創多維度美好未來！如有任何問題請洽詢本系統服務窗口。</marquee>
+    </div>
+
+    <!-- 底部聯合政令宣導跑馬燈 -->
+    <div id="roc-footer-banner" style="position: fixed; bottom: 0; left: 0; width: 100%; background: linear-gradient(to bottom, #cc0000, #660000); color: #ffffff; font-family: 'PMingLiU', 'MingLiU', 'DFKai-SB', serif; font-size: 16px; font-weight: bold; padding: 5px 0; border-top: 3px ridge #c0c0c0; z-index: 1000; box-shadow: 0 -2px 5px rgba(0,0,0,0.8);">
+        <marquee scrollamount="6">【各級單位聯合政令宣導】◆ 防詐騙宣導：近期歹徒猖獗，凡接獲不明來電要求操作 ATM 解除 2.5D 分期付款設定，皆為詐騙！請撥打 165 反詐騙專線！ ◆ 衛福部宣導：預防狂犬病，請每年帶家中犬貓施打狂犬病疫苗！不棄養、不接觸野生動物！ ◆ 財政部宣導：五月報稅季即將來臨，請多加利用 e 化線上報稅系統，省時又便利！ ◆ 交通安全宣導：路口慢看停，行人優先行！切換側面視角時請注意左右來車與高低落差！</marquee>
     </div>
 
     <div id="view-info">【本系統當前監控狀態】 ＞ 上帝平面視角模式 (※ 按 E 鍵切換 e 化視圖)</div>
 
     <div id="start-screen">
+        <!-- 兩側便民廣告連結專區 -->
+        <div class="side-badges left">
+            <a href="https://165.npa.gov.tw" target="_blank" class="badge-card">🚨 165 反詐騙諮詢暨通報專網</a>
+            <a href="javascript:alert('【廉政專線】檢舉貪瀆不法，請撥打 0800-286-586，共同維護清廉政風！')" class="badge-card blue">⚖️ 全民貪瀆不法檢舉專線窗口</a>
+            <a href="javascript:alert('【系統通知】感謝您的回饋！當前本系統 e 化滿意度評分為：100 分 (滿分)！')" class="badge-card gold">📝 e 化服務滿意度線上調查表</a>
+        </div>
+        <div class="side-badges right">
+            <a href="javascript:alert('【防震宣導】地震來臨時，請牢記三步驟：趴下(Drop)、掩護(Cover)、穩住(Hold on)！')" class="badge-card green">⛑️ 國家防災防震線上演練專網</a>
+            <a href="javascript:alert('【資安宣導】定期更新通行密碼，不開啟來路不明之電子郵件附件！')" class="badge-card blue">🔒 政府機關資安防護宣導專區</a>
+            <a href="javascript:alert('【便民服務】本單位提供 24 小時全天候二點五維度視角轉換諮詢服務！')" class="badge-card gold">☎️ 縣市政府便民服務專線 1999</a>
+        </div>
+
         <h1 id="game-title">2.5D 跨維度</h1>
         <div id="game-subtitle">◆ 中華民國二點五維度空間轉換虛擬實境暨 e 化便民遊玩宣導系統 ◆</div>
+        
+        <!-- 長官致詞暨可愛輪播圖片展示區 (Carousel) -->
+        <div id="carousel-container">
+            <div class="carousel-slide active" id="slide-0">
+                <div class="carousel-header">【首長勉勵】本機關首長關心您的二點五維度遊玩體驗！</div>
+                <div class="carousel-content">
+                    <div style="width: 130px; height: 130px; background: #ffcc00; border: 4px ridge #fff; display: flex; align-items: center; justify-content: center; font-size: 75px; box-shadow: 3px 3px 5px #000;">
+                        🧑‍💼
+                    </div>
+                    <div class="carousel-text">
+                        <b>「科技創新，服務便民！切換視角，顛覆維度！」</b><br><br>
+                        本推動委員會致力於打造具備多維度視野之現代化 e 化遊玩環境。期勉各位鄉親在遊玩過程中，體會空間轉換之奧妙，並祝大家闖關成功、萬事如意！<br>
+                        <span style="color: var(--roc-yellow); float: right;">—— 本推動委員會 主委 敬賀</span>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-slide" id="slide-1">
+                <div class="carousel-header">【吉祥物宣導】本系統專屬吉祥物「快龍導覽員」小叮嚀</div>
+                <div class="carousel-content">
+                    <div style="width: 130px; height: 130px; background: #00ffcc; border: 4px ridge #fff; display: flex; align-items: center; justify-content: center; font-size: 75px; box-shadow: 3px 3px 5px #000;">
+                        🐲
+                    </div>
+                    <div class="carousel-text">
+                        <b>「跳躍請按 W，切換視圖請按 E！」</b><br><br>
+                        各位好朋友們，當遇到過不去的高處平台時，千萬別慌張！只要輕輕按下 E 鍵切換成側面視角，就能輕鬆進行垂直維度跳躍作業囉！快龍祝您平平安安出門，快快樂樂通關！
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-slide" id="slide-2">
+                <div class="carousel-header">【施政績效】本系統榮獲行政院 e 化便民服務評鑑優等！</div>
+                <div class="carousel-content">
+                    <div style="width: 130px; height: 130px; background: #ff6666; border: 4px ridge #fff; display: flex; align-items: center; justify-content: center; font-size: 75px; box-shadow: 3px 3px 5px #000;">
+                        🏆
+                    </div>
+                    <div class="carousel-text">
+                        <b>「累計服務人次突破 99,999 人次！滿意度 100%！」</b><br><br>
+                        本系統自上線以來，落實各項政令宣導與空間解謎機制，有效提升國民空間感知能力與維度轉換素養。感謝各級長官與廣大鄉親民眾的鼎力支持！
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-nav">
+                <div class="carousel-dot active" onclick="setCarouselSlide(0)"></div>
+                <div class="carousel-dot" onclick="setCarouselSlide(1)"></div>
+                <div class="carousel-dot" onclick="setCarouselSlide(2)"></div>
+            </div>
+        </div>
+
         <button id="start-btn" class="roc-btn" onclick="enterGame()">會員身分驗證登入暨 e 化線上遊玩系統 (Enter)</button>
         <button class="roc-btn btn-yellow" onclick="skipTutorial()">新手引導教學關卡 e 化快速略過申請專區 (Skip)</button>
         <button class="roc-btn btn-blue" onclick="loadLevelCode()">自訂關卡密碼憑證 e 化登錄檢驗窗口 (Custom)</button>
@@ -270,6 +445,23 @@
             alert("遊戲錯誤: " + msg + "\n行號: " + line + "\n內容: " + (error ? error.stack : ""));
             return false;
         };
+
+        // --- 長官致詞暨可愛輪播圖片展示區 (Carousel) 邏輯 ---
+        let currentCarouselSlide = 0;
+        let carouselInterval = setInterval(() => {
+            currentCarouselSlide = (currentCarouselSlide + 1) % 3;
+            setCarouselSlide(currentCarouselSlide);
+        }, 5000);
+
+        function setCarouselSlide(index) {
+            currentCarouselSlide = index;
+            document.querySelectorAll('.carousel-slide').forEach((slide, i) => {
+                slide.classList.toggle('active', i === index);
+            });
+            document.querySelectorAll('.carousel-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+        }
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
