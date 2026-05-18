@@ -30,232 +30,238 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌀</text></svg>">
     <style>
         :root {
-            --accent: #00ffcc;
-            --bg: #0f0f12;
+            --roc-blue: #003366;
+            --roc-red: #cc0000;
+            --roc-yellow: #ffff00;
+            --roc-cyan: #00ffff;
+            --roc-gold: #ffcc00;
+            --bg: #0f151d;
             --text: #ffffff;
-            --panel-bg: rgba(15, 15, 18, 0.8);
+            --panel-bg: rgba(15, 21, 29, 0.9);
         }
 
         body {
             margin: 0;
             overflow: hidden;
             background-color: var(--bg);
-            font-family: 'Inter', "Microsoft JhengHei", sans-serif;
+            font-family: 'PMingLiU', 'MingLiU', 'DFKai-SB', "Microsoft JhengHei", Tahoma, Arial, sans-serif;
             color: var(--text);
         }
 
         canvas {
             display: block;
+            margin-top: 30px; /* 留給跑馬燈空間 */
         }
 
-        /* 視角狀態提示 */
+        /* 視角狀態提示 - 行政資訊帶風格 */
         #view-info {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            background: rgba(0, 255, 204, 0.2);
-            color: #00ffcc;
-            border: 1px solid #00ffcc;
-            border-radius: 5px;
-            font-family: sans-serif;
+            top: 45px;
+            left: 20px;
+            padding: 8px 15px;
+            background: linear-gradient(to bottom, hsl(210 100% 25%), hsl(210 100% 20%));
+            color: var(--roc-yellow);
+            border: 3px ridge #c0c0c0;
+            font-family: 'PMingLiU', 'MingLiU', serif;
+            font-size: 15px;
+            font-weight: bold;
             z-index: 5;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.8);
         }
 
-        /* 遊戲開始畫面 */
+        /* 遊戲開始畫面 - 舊式入口網站/政令宣導頁風格 */
         #start-screen {
             position: fixed;
-            top: 0;
+            top: 30px;
             left: 0;
             width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
+            height: calc(100% - 30px);
+            background: linear-gradient(to bottom, #002244 0%, #001122 100%);
+            border: 8px ridge #c0c0c0;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 20;
+            box-sizing: border-box;
             transition: opacity 0.5s;
         }
 
+        /* 早期 Word 文字藝術師感標題 */
         #game-title {
-            font-size: clamp(60px, 15vw, 120px);
-            font-family: 'Outfit', sans-serif;
+            font-size: clamp(50px, 12vw, 110px);
+            font-family: 'DFKai-SB', 'PMingLiU', serif;
             font-weight: 900;
-            color: #fff;
-            text-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
-            margin: 0;
-            letter-spacing: 0.15em;
-            font-style: italic;
-            text-transform: uppercase;
-            animation: titlePulse 3s ease-in-out infinite alternate;
-        }
-
-        @keyframes titlePulse {
-            from {
-                transform: scale(1);
-                text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc;
-            }
-
-            to {
-                transform: scale(1.05);
-                text-shadow: 0 0 20px #00ffcc, 0 0 40px #00ffcc, 0 0 60px #00ffcc;
-            }
+            color: var(--roc-yellow);
+            transform: skew(-10deg) scaleY(1.2);
+            text-shadow: 3px 3px 0 #000, 6px 6px 0 var(--roc-red), 9px 9px 0 #000, 12px 12px 20px rgba(255,255,0,0.8);
+            margin: 0 0 20px 0;
+            letter-spacing: 0.1em;
+            border-bottom: 5px double var(--roc-yellow);
+            padding-bottom: 10px;
         }
 
         #game-subtitle {
-            color: #00ffcc;
-            font-family: sans-serif;
-            margin-bottom: 50px;
-            letter-spacing: 5px;
-            opacity: 0.8;
+            background: var(--roc-red);
+            color: var(--roc-yellow);
+            font-family: 'PMingLiU', serif;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 8px 25px;
+            border: 3px outset #ff6666;
+            margin-bottom: 40px;
+            letter-spacing: 3px;
+            box-shadow: 3px 3px 0 #000;
+        }
+
+        /* 老 Windows XP 浮雕亮面按鈕 */
+        .roc-btn {
+            margin-top: 15px;
+            padding: 12px 35px;
+            font-size: 18px;
+            font-weight: bold;
+            font-family: 'PMingLiU', 'MingLiU', 'DFKai-SB', serif;
+            border-radius: 0;
+            cursor: pointer;
+            box-shadow: 3px 3px 5px rgba(0,0,0,0.8);
+            transition: all 0.1s;
+        }
+
+        .roc-btn:active {
+            box-shadow: 1px 1px 1px rgba(0,0,0,0.8);
+            transform: translate(2px, 2px);
         }
 
         #start-btn {
-            padding: 15px 60px;
+            background: linear-gradient(to bottom, #00ffff, #008888);
+            border: 4px outset #ccffff;
+            color: #000033;
             font-size: 24px;
-            font-weight: bold;
-            color: #00ffcc;
-            background: rgba(0, 255, 204, 0.1);
-            border: 2px solid #00ffcc;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s;
+            padding: 15px 50px;
         }
 
         #start-btn:hover {
-            background: #00ffcc;
-            color: #000;
-            box-shadow: 0 0 30px #00ffcc;
-            transform: translateY(-3px);
+            background: linear-gradient(to bottom, #ccffff, #00aaaa);
         }
 
-        #skip-btn {
-            margin-top: 20px;
-            padding: 10px 30px;
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.5);
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s;
+        .btn-yellow {
+            background: linear-gradient(to bottom, #ffffcc, #cccc00);
+            border: 4px outset #ffffff;
+            color: #333300;
         }
+        .btn-yellow:hover { background: linear-gradient(to bottom, #ffffff, #eeee00); }
 
-        #skip-btn:hover {
-            color: #fff;
-            border-color: #fff;
-            background: rgba(255, 255, 255, 0.1);
+        .btn-blue {
+            background: linear-gradient(to bottom, #6699cc, #003366);
+            border: 4px outset #aaccff;
+            color: #ffffff;
         }
+        .btn-blue:hover { background: linear-gradient(to bottom, #99ccff, #004488); }
 
-        /* RPG 對話框 */
+        .btn-gold {
+            background: linear-gradient(to bottom, #ffcc00, #996600);
+            border: 4px outset #ffff66;
+            color: #331100;
+        }
+        .btn-gold:hover { background: linear-gradient(to bottom, #ffff33, #bb8800); }
+
+        /* RPG 對話框 - 華國美學公文框 */
         #dialog-overlay {
             position: fixed;
-            top: 0;
+            top: 30px;
             left: 0;
             width: 100%;
-            height: 100%;
+            height: calc(100% - 30px);
             display: flex;
             justify-content: center;
             align-items: flex-end;
-            padding-bottom: 50px;
+            padding-bottom: 40px;
             z-index: 10;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 20, 0.6);
         }
 
         #dialog-box {
-            width: 85%;
-            max-width: 800px;
-            background: rgba(20, 20, 20, 0.95);
-            border: 4px solid #00ffcc;
-            border-radius: 10px;
-            padding: 25px;
-            color: white;
-            font-family: sans-serif;
-            font-size: 20px;
+            width: 90%;
+            max-width: 850px;
+            background: linear-gradient(to bottom, hsl(210 100% 15%), hsl(210 100% 10%));
+            border: 6px ridge #c0c0c0;
+            padding: 25px 30px;
+            color: #ffffff;
+            font-family: 'DFKai-SB', 'PMingLiU', serif;
+            font-size: 22px;
+            line-height: 1.6;
             cursor: pointer;
+            box-shadow: 0 0 20px rgba(0,0,0,0.9);
         }
 
         #dialog-footer {
             text-align: right;
-            font-size: 14px;
-            color: #00ffcc;
-            margin-top: 15px;
+            font-size: 16px;
+            color: var(--roc-yellow);
+            margin-top: 20px;
+            font-family: 'PMingLiU', serif;
+            font-weight: bold;
             animation: blink 1.2s infinite;
         }
 
         @keyframes blink {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.3;
-            }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
 
-        .hidden {
-            display: none !important;
-        }
+        .hidden { display: none !important; }
 
-        /* 嘗試操作階段的樣式：背景全透明，對話框變淡 */
-        #dialog-overlay.trying-action {
-            background: rgba(0, 0, 0, 0);
-        }
-
+        /* 嘗試操作階段的樣式 */
+        #dialog-overlay.trying-action { background: rgba(0, 0, 0, 0); }
         #dialog-overlay.trying-action #dialog-box {
-            background: rgba(20, 20, 20, 0.4);
-            border-color: rgba(0, 255, 204, 0.4);
+            background: linear-gradient(to bottom, rgba(0,34,68,0.4), rgba(0,17,34,0.4));
+            border-color: rgba(192,192,192,0.4);
         }
-
-        #dialog-overlay.trying-action #dialog-content {
-            opacity: 0.2;
-            /* 教學文字變淡 */
-        }
-
+        #dialog-overlay.trying-action #dialog-content { opacity: 0.25; }
         #dialog-overlay.trying-action #dialog-footer {
             opacity: 1;
-            /* 提示文字保持明亮 */
-            color: #00ffcc;
+            color: var(--roc-yellow);
+            text-shadow: 2px 2px 2px #000;
         }
     </style>
 </head>
 
 <body>
 
-    <div id="view-info">目前視角：上帝視角 (按 E 切換)</div>
+    <!-- 政令宣導跑馬燈 -->
+    <div id="roc-banner" style="position: fixed; top: 0; left: 0; width: 100%; background: linear-gradient(to bottom, #003366, #001122); color: #ffff00; font-family: 'PMingLiU', 'MingLiU', 'DFKai-SB', serif; font-size: 16px; font-weight: bold; padding: 5px 0; border-bottom: 3px ridge #c0c0c0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.8);">
+        <marquee scrollamount="5">【行政院暨國家二點五維度遊戲開發推動委員會 e 化便民宣導】歡迎各位鄉親民眾蒞臨本系統！請務必詳閱相關操作規範，落實空間切換便民措施，共創多維度美好未來！如有任何問題請洽詢本系統服務窗口。</marquee>
+    </div>
+
+    <div id="view-info">【本系統當前監控狀態】 ＞ 上帝平面視角模式 (※ 按 E 鍵切換 e 化視圖)</div>
 
     <div id="start-screen">
-        <h1 id="game-title">2.5D</h1>
-        <div id="game-subtitle">DIMENSIONAL SHIFT</div>
-        <button id="start-btn" onclick="enterGame()">進入遊戲</button>
-        <button id="skip-btn" onclick="skipTutorial()">跳過教學關卡</button>
-        <button id="skip-btn" style="margin-top: 10px; color: #ffaa00; border-color: #ffaa00;" onclick="loadLevelCode()">輸入關卡代碼</button>
-        <button id="skip-btn" style="margin-top: 10px; color: #00ffcc; border-color: #00ffcc;" onclick="window.open('editor.html', '_blank')">✏️ 關卡編輯器</button>
+        <h1 id="game-title">2.5D 跨維度</h1>
+        <div id="game-subtitle">◆ 中華民國二點五維度空間轉換虛擬實境暨 e 化便民遊玩宣導系統 ◆</div>
+        <button id="start-btn" class="roc-btn" onclick="enterGame()">會員身分驗證登入暨 e 化線上遊玩系統 (Enter)</button>
+        <button class="roc-btn btn-yellow" onclick="skipTutorial()">新手引導教學關卡 e 化快速略過申請專區 (Skip)</button>
+        <button class="roc-btn btn-blue" onclick="loadLevelCode()">自訂關卡密碼憑證 e 化登錄檢驗窗口 (Custom)</button>
+        <button class="roc-btn btn-gold" onclick="window.open('editor.html', '_blank')">◆ 本系統專屬 e 化自訂關卡開發者工作室入口 (Studio)</button>
     </div>
 
     <div id="dialog-overlay" class="hidden">
         <div id="dialog-box">
             <div id="dialog-content">
-                <!-- 內容將由 JavaScript 動態設定 -->
                 ● <b>WASD</b> 移動角色。<br>
                 ● 按 <b>E 鍵</b> 切換上帝/側面視角。<br>
                 ● 側面視角下：W 跳躍、S 蹲下。<br>
                 ● 按「空白鍵」或點擊此處開始。
             </div>
-            <div id="dialog-footer">▼ 按下空白鍵繼續</div>
+            <div id="dialog-footer">▼ 點擊或按下空白鍵繼續確認作業</div>
         </div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
-    <!-- 新增：DOM 自動演示 UI -->
-    <div id="demo-controls" style="position: absolute; top: 20px; right: 20px; z-index: 9999;">
-        <button id="run-demo-btn" onclick="runDomDemo()"
-            style="padding: 12px 20px; background: #00ffcc; color: #000; border: 2px solid #000; cursor: pointer; border-radius: 8px; font-weight: bold; box-shadow: 0 4px #008866; display: block;">[
-            Dom 自動演示測試 ]</button>
+    <!-- DOM 自動演示 UI - 華國美學窗口 -->
+    <div id="demo-controls" style="position: absolute; top: 45px; right: 20px; z-index: 9999;">
+        <button id="run-demo-btn" class="roc-btn btn-yellow" onclick="runDomDemo()"
+            style="padding: 10px 18px; font-size: 15px;">[ 系統自動化 e 化展演測試窗口 (Demo) ]</button>
     </div>
 
     <script>
@@ -609,7 +615,7 @@
         }
 
         function loadLevelCode() {
-            const code = prompt("請貼入關卡代碼：");
+            const code = prompt("【系統登錄提示】請輸入或貼上經核發之自訂關卡密碼憑證字串：");
             if (!code) return;
             try {
                 // 解碼 Base64 (支援 UTF-8)
@@ -630,7 +636,7 @@
                 isDialogOpen = false;
                 setupLevelTransition();
             } catch (e) {
-                alert("代碼無效，請確認是否完整複製！");
+                alert("【系統警告】您所輸入之憑證字串無法通過系統檢驗！請確認是否完整複製或洽詢發證窗口。");
             }
         }
 
@@ -652,61 +658,61 @@
                         isDialogOpen = false;
                         setupLevelTransition();
                     } catch (e) {
-                        console.error("載入自訂關卡失敗", e);
+                        console.error("【系統異常】載入自訂關卡資料失敗，請檢驗 localStorage 存取權限與資料完整性", e);
                     }
                 }
             }
         }
         window.addEventListener('DOMContentLoaded', initCustomLevel);
 
-        const TUTORIAL_CHARACTER_NAME = "快龍";
+        const TUTORIAL_CHARACTER_NAME = "快龍導覽員 / 本系統服務窗口";
 
         function getDialogueText(step) {
             switch (step) {
                 case 1:
                     return {
-                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>歡迎來到2.5D的世界！`,
-                        footer: `▼ 點擊以繼續`
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>歡迎蒞臨「二點五維度空間轉換虛擬實境暨 e 化便民遊玩系統」！請依序完成以下步驟，千萬請不要著急，本單位將耐心引導您的操作作業。`,
+                        footer: `▼ 點擊或按下空白鍵繼續確認作業`
                     };
                 case 2:
                     return {
-                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>目前你使用的是上帝視角，移動看看吧！`,
-                        footer: `▼ 點擊以繼續`
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>目前本系統當前監控狀態為「上帝平面視角模式」。請嘗試操作您的方向鍵或 WASD 鍵進行移動。請注意，每一項移動操作都很重要喔！`,
+                        footer: `▼ 點擊或按下空白鍵繼續確認作業`
                     };
                 case 3:
                     return {
-                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>按下 <b>E 鍵</b> 即可切換視角，試試看吧！`,
-                        footer: `▼ 點擊以繼續`
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>為落實便民措施與多元視角服務，請按下 <b>E 鍵</b> 即可切換至「側面視角模式」。請大家一起配合，讓系統切換作業更加順利！`,
+                        footer: `▼ 點擊或按下空白鍵繼續確認作業`
                     };
                 case 4:
                     return {
-                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>在側面視角模式中，你的上下鍵會改為跳躍和蹲下。跳躍看看吧！`,
-                        footer: `▼ 點擊以繼續`
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>在「側面視角模式」中，您的上下鍵將自動轉化為 e 化跳躍與蹲下功能。請試著進行跳躍操作，體驗垂直維度便民措施！`,
+                        footer: `▼ 點擊或按下空白鍵繼續確認作業`
                     };
                 case 5:
                     return {
-                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>現在給你一個箱子，跳上去試試！`,
-                        footer: `▼ 點擊以繼續`
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>為配合模擬演練，本系統現已配發【標準化檢驗箱體】一座。請嘗試跳躍登頂，進行高處視圖檢驗作業！`,
+                        footer: `▼ 點擊或按下空白鍵繼續確認作業`
                     };
                 case 6:
                     return {
-                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>現在切換看看視角`,
-                        footer: `▼ 點擊以繼續`
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>非常好！請於箱體上方再次按下 E 鍵進行 e 化視圖切換，檢視空間座標轉換之穩定性。`,
+                        footer: `▼ 點擊或按下空白鍵繼續確認作業`
                     };
                 case 7:
                     return {
-                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>沒錯！你出現在箱子上了！<br>你可以直接<b>走出箱子範圍</b>即可降落到地面。`,
-                        footer: `▼ 點擊以繼續`
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>確認無誤！您當前已穩固立足於箱體上方。為落實直覺化操作，您可直接 <b>走出箱體邊界範圍</b>，系統將自動啟動安全降落機制返回地面。`,
+                        footer: `▼ 點擊或按下空白鍵繼續確認作業`
                     };
                 case 8:
                     return {
-                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>側面視角會將你所在的那一行障礙物高低顯示出來，這麼說有點難懂，玩下去就懂啦！`,
-                        footer: `▼ 點擊以繼續`
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>※ 業務說明：側面視角將依據您當前所在之 X 軸切片座標，動態渲染該行障礙物之高低結構。請詳閱紅色切片標記線，以維護您的空間判斷權益。`,
+                        footer: `▼ 點擊或按下空白鍵繼續確認作業`
                     };
                 case 9:
                     return {
-                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>現在，繞過箱子通關吧，玩得開心！`,
-                        footer: `▼ 點擊以繼續`
+                        content: `【${TUTORIAL_CHARACTER_NAME}】<br>新手引導教學演練已圓滿達成！請繞過箱體前往終點區域，正式啟動多維度闖關專案。祝您遊玩順利，共創美好未來！`,
+                        footer: `▼ 點擊或按下空白鍵繼續確認作業`
                     };
                 default:
                     return { content: "", footer: "" };
@@ -719,11 +725,11 @@
             isDialogOpen = true;
             dialogOverlay.classList.remove('hidden');
             dialogContent.innerHTML = `
-            <h2 style="color: #ffcc00; font-size: 2em; margin-bottom: 15px;">🏆 恭喜征服全部 10 關！</h2>
-            <p>你已熟練地在<b>上帝視角</b>與<b>側面視角</b>之間切換，穿越迷宮、躍過岩漿、攀登高台。</p>
-            <p>整個次元世界的秘密都已盡在你掌握之中！感謝遊玩 🌀</p>
+            <h2 style="color: var(--roc-yellow); font-size: 1.8em; margin-bottom: 15px; border-bottom: 3px double var(--roc-yellow); padding-bottom: 10px;">🏆 【行政公告】恭喜完成二點五維度空間轉換全數十階段演練作業！</h2>
+            <p>您已具備優良之空間切換技能，能熟練於<b>上帝平面視角</b>與<b>側面視角</b>之間靈活調度，順利克服迷宮結構、高處平台及高危險性岩漿地板等各項政令挑戰。</p>
+            <p>◆ 本專案推動委員會感謝您的熱烈參與與配合！共創 e 化便民多維度新紀元！ 🌀</p>
         `;
-            dialogFooter.innerHTML = '<button onclick="location.reload()" style="padding:10px 30px;background:#ffcc00;color:#000;border:none;border-radius:8px;font-size:18px;cursor:pointer;font-weight:bold;">再玩一次</button>';
+            dialogFooter.innerHTML = '<button class="roc-btn btn-gold" onclick="location.reload()">◆ 重新啟動本系統演練作業 (Restart)</button>';
         }
 
         function showDialogContent() {
@@ -878,7 +884,7 @@
             }
 
             viewMode = (oldViewMode === 'topdown') ? 'sideview' : 'topdown';
-            viewInfo.innerText = `目前視角：${viewMode === 'topdown' ? '上帝視角' : '側面視角'} (按 E 切換)`;
+            viewInfo.innerText = `【本系統當前監控狀態】 ＞ ${viewMode === 'topdown' ? '上帝平面視角模式' : '側面視角模式'} (※ 按 E 鍵切換 e 化視圖)`;
 
             // 教學特定邏輯：偵測視角切換
             if (isDialogOpen && isDimmed) {
@@ -943,7 +949,7 @@
                         let o = getObsRect(obstacles[i]);
                         if (o && player.x < o.x + o.w + 2 && player.x + player.width > o.x - 2 &&
                             player.y < o.y + o.h + 2 && player.y + player.height > o.y - 2) {
-                            player.standingOn = i;
+                             player.standingOn = i;
                             break;
                         }
                     }
@@ -995,7 +1001,7 @@
 
             generateObstacles();
             viewMode = 'topdown';
-            if (viewInfo) viewInfo.innerText = `目前視角：上帝視角 (按 E 切換)`;
+            if (viewInfo) viewInfo.innerText = `【本系統當前監控狀態】 ＞ 上帝平面視角模式 (※ 按 E 鍵切換 e 化視圖)`;
 
             // 每一關都執行安全重生檢測
             respawnPlayer();
@@ -1503,8 +1509,8 @@
 
             if ((player.isClinging || player.elevatedFromSide) && mode === 'topdown') {
                 ctx.save();
-                ctx.shadowBlur = 0; ctx.fillStyle = "#fff"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center";
-                ctx.fillText("站在障礙物上", pPos.x + player.width / 2, pPos.y - 10);
+                ctx.shadowBlur = 0; ctx.fillStyle = "#ffff00"; ctx.font = "bold 15px 'PMingLiU', 'MingLiU', sans-serif"; ctx.textAlign = "center";
+                ctx.fillText("【已登錄高處障礙物】", pPos.x + player.width / 2, pPos.y - 10);
                 ctx.restore();
             } else {
                 ctx.shadowColor = player.elevatedFromSide ? "#ffffff" : player.color;
@@ -1527,11 +1533,11 @@
 
                 // 繪製死亡時的文字氣泡 (讓玩家「出聲」的視覺化)
                 ctx.save();
-                ctx.fillStyle = "white";
-                ctx.font = "bold 24px Arial";
+                ctx.fillStyle = "#ff0000";
+                ctx.font = "bold 20px 'PMingLiU', 'MingLiU', serif";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "bottom";
-                ctx.fillText("!", pPos.x + player.width / 2, pPos.y - 10);
+                ctx.fillText("【系統判定死亡！】", pPos.x + player.width / 2, pPos.y - 10);
                 ctx.restore();
             } else {
                 ctx.fillRect(pPos.x, pPos.y, player.width, player.height);
