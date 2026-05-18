@@ -826,13 +826,11 @@
                 const s = snap({ x: newX, y: newY });
                 spawnPoint.x = s.x; spawnPoint.y = s.y;
             } else {
-                // 側面視角拖曳：Screen X 對應 World Y (深度)，Screen Y 對應 World Z (高度)
-                let newY = wPos.x - spawnDragOffset.x - world.x;
+                // 側面視角拖曳：鎖定水平位置 (spawnPoint.y 不變)，僅根據 Screen Y 調整 World Z (高度)
                 let curWZ = (world.y + world.height) - (wPos.y - spawnDragOffset.y) - 40;
-                newY = Math.max(0, Math.min(world.height - 40, newY));
                 curWZ = Math.max(0, Math.min(world.height - 40, curWZ));
-                const s = snap({ x: newY, y: curWZ });
-                spawnPoint.y = s.x; spawnPoint.z = s.y;
+                const s = snap({ x: 0, y: curWZ });
+                spawnPoint.z = s.y;
             }
             syncWorldSpawnGoal();
             updateUI();
