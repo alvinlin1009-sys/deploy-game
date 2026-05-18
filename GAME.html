@@ -424,8 +424,8 @@
         let transitionOldView = 'topdown';
         let isDimmed = false; // 對話框是否變淡 (嘗試操作中)
         let currentLevel = 0; // 當前關卡
-        const maxLevel = 1; // 最大關卡
-        const lavaLevels = []; // 哪些關卡有岩漿地板
+        const maxLevel = 10; // 最大關卡
+        const lavaLevels = [5, 7, 9, 10]; // 哪些關卡有岩漿地板
         let isVictory = false; // 是否已通關
 
         let dialogStep = 0; // 0: 無對話框, 1: 冒險者指南, 2: 視角切換教學
@@ -437,20 +437,133 @@
             if (currentLevel === -1) return;
             obstacles.length = 0;
 
+            const wx = world.x, wy = world.y, ww = world.width, wh = world.height;
+
             if (currentLevel === 0) {
+                // 教學關：視情況顯示箱子
                 const showTutorialBox = (dialogStep > 5) || (dialogStep === 5 && isDimmed) || (dialogStep === 0 && !isDialogOpen && !isStartScreen);
                 if (showTutorialBox) {
-                    obstacles.push({ x: world.x + world.width / 2 - 50, y: world.y + 120, baseWidth: 100, baseHeight: 120, baseDepth: 100, color: '#777' });
+                    obstacles.push({ x: wx + ww/2 - 50, y: wy + 120, baseWidth: 100, baseHeight: 120, baseDepth: 100, color: '#777' });
                 }
+
             } else if (currentLevel === 1) {
-                // 第 1 關：基礎跳躍
-                obstacles.push({ x: world.x + 350, y: world.y + 50, baseWidth: 100, baseHeight: 150, baseDepth: 50, color: '#777' });
-                obstacles.push({ x: world.x + 100, y: world.y + 350, baseWidth: 120, baseHeight: 80, baseDepth: 120, color: '#558877' });
-                obstacles.push({ x: world.x + 500, y: world.y + 200, baseWidth: 150, baseHeight: 120, baseDepth: 150, color: '#885577' });
+                // ★ 第 1 關「踏石問路」— 單純上帝視角走迷宮，認識障礙物
+                // 左側牆
+                obstacles.push({ x: wx + 50,  y: wy + 80,  baseWidth: 200, baseHeight: 120, baseDepth: 80,  color: '#4a6080' });
+                // 中間橫牆（留左右小缺口）
+                obstacles.push({ x: wx + 120, y: wy + 220, baseWidth: 400, baseHeight: 120, baseDepth: 60,  color: '#3d7055' });
+                // 右側單塊
+                obstacles.push({ x: wx + 560, y: wy + 100, baseWidth: 120, baseHeight: 120, baseDepth: 120, color: '#6a4070' });
+                // 下方右角
+                obstacles.push({ x: wx + 500, y: wy + 350, baseWidth: 180, baseHeight: 120, baseDepth: 130, color: '#70603a' });
+                // 左下角
+                obstacles.push({ x: wx + 50,  y: wy + 400, baseWidth: 130, baseHeight: 120, baseDepth: 100, color: '#4a6080' });
+
+            } else if (currentLevel === 2) {
+                // ★ 第 2 關「高台跳躍」— 側面視角跳上高台走過去
+                // 中間高牆（必須跳過）
+                obstacles.push({ x: wx + 200, y: wy + 80, baseWidth: 80, baseHeight: 350, baseDepth: 500, color: '#5566aa' });
+                // 右側跳台 (側面視角可見)
+                obstacles.push({ x: wx + 380, y: wy + 100, baseWidth: 180, baseHeight: 180, baseDepth: 400, color: '#3d9055' });
+                // 左邊起跳台
+                obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 80,  baseHeight: 100, baseDepth: 500, color: '#665544' });
+
+            } else if (currentLevel === 3) {
+                // ★ 第 3 關「兩視角切換」— 需要切換視角繞過 L 形障礙
+                // 水平牆（上帝可見，擋住直行）
+                obstacles.push({ x: wx + 80,  y: wy + 180, baseWidth: 550, baseHeight: 120, baseDepth: 80,  color: '#aa5533' });
+                // 垂直牆（側面可見，頂部有豁口）
+                obstacles.push({ x: wx + 350, y: wy + 80,  baseWidth: 80,  baseHeight: 200, baseDepth: 100, color: '#3388aa' });
+                // 右側跳台
+                obstacles.push({ x: wx + 520, y: wy + 80,  baseWidth: 120, baseHeight: 80,  baseDepth: 350, color: '#559933' });
+                // 左角擋牆
+                obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 80,  baseHeight: 120, baseDepth: 100, color: '#887733' });
+
+            } else if (currentLevel === 4) {
+                // ★ 第 4 關「階梯天堂」— 三層階梯，需側面視角跳上去後上帝視角穿越
+                // 階梯 1 (最低)
+                obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 150, baseHeight: 80,  baseDepth: 180, color: '#7755aa' });
+                // 階梯 2 (中間)
+                obstacles.push({ x: wx + 260, y: wy + 80,  baseWidth: 150, baseHeight: 160, baseDepth: 180, color: '#5577aa' });
+                // 階梯 3 (最高)
+                obstacles.push({ x: wx + 440, y: wy + 80,  baseWidth: 150, baseHeight: 260, baseDepth: 180, color: '#3399aa' });
+                // 頂部平台（上帝視角下走到出口）
+                obstacles.push({ x: wx + 80,  y: wy + 350, baseWidth: 520, baseHeight: 80,  baseDepth: 80,  color: '#556655' });
+                // 右側擋路
+                obstacles.push({ x: wx + 620, y: wy + 150, baseWidth: 60,  baseHeight: 250, baseDepth: 350, color: '#773333' });
+
+            } else if (currentLevel === 5) {
+                // ★ 第 5 關「岩漿跳島」— 地板有岩漿，必須跳島前進
+                // 起始小島（玩家出生在這）
+                obstacles.push({ x: wx + 300, y: wy + 480, baseWidth: 180, baseHeight: 120, baseDepth: 100, color: '#888866' });
+                // 中間小島 1
+                obstacles.push({ x: wx + 100, y: wy + 300, baseWidth: 120, baseHeight: 140, baseDepth: 120, color: '#668866' });
+                // 中間小島 2
+                obstacles.push({ x: wx + 350, y: wy + 200, baseWidth: 100, baseHeight: 160, baseDepth: 100, color: '#668866' });
+                // 中間小島 3
+                obstacles.push({ x: wx + 560, y: wy + 300, baseWidth: 130, baseHeight: 140, baseDepth: 120, color: '#668866' });
+                // 終點平台
+                obstacles.push({ x: wx + 300, y: wy + 80,  baseWidth: 200, baseHeight: 120, baseDepth: 150, color: '#aaaa44' });
+
+            } else if (currentLevel === 6) {
+                // ★ 第 6 關「隱形橋」— 上帝視角看不見橋，側面才看得到（橋細而長）
+                // 粗大擋牆（橫向）
+                obstacles.push({ x: wx + 100, y: wy + 80,  baseWidth: 80,  baseHeight: 120, baseDepth: 450, color: '#6644aa' });
+                obstacles.push({ x: wx + 620, y: wy + 80,  baseWidth: 80,  baseHeight: 120, baseDepth: 450, color: '#6644aa' });
+                // 細橋（高度高，但上帝視角 depth 很小故幾乎不可見）
+                obstacles.push({ x: wx + 180, y: wy + 280, baseWidth: 440, baseHeight: 300, baseDepth: 20,  color: '#44aaaa' });
+                // 引導牆
+                obstacles.push({ x: wx + 300, y: wy + 420, baseWidth: 200, baseHeight: 120, baseDepth: 120, color: '#554433' });
+
+            } else if (currentLevel === 7) {
+                // ★ 第 7 關「岩漿迷城」— 地板岩漿，上帝視角複雜迷宮
+                obstacles.push({ x: wx + 50,  y: wy + 470, baseWidth: 700, baseHeight: 120, baseDepth: 80,  color: '#557744' });
+                obstacles.push({ x: wx + 50,  y: wy + 80,  baseWidth: 120, baseHeight: 120, baseDepth: 390, color: '#557744' });
+                obstacles.push({ x: wx + 200, y: wy + 200, baseWidth: 120, baseHeight: 120, baseDepth: 270, color: '#446655' });
+                obstacles.push({ x: wx + 350, y: wy + 80,  baseWidth: 120, baseHeight: 120, baseDepth: 270, color: '#446655' });
+                obstacles.push({ x: wx + 500, y: wy + 200, baseWidth: 120, baseHeight: 120, baseDepth: 270, color: '#557744' });
+                obstacles.push({ x: wx + 630, y: wy + 80,  baseWidth: 120, baseHeight: 120, baseDepth: 390, color: '#557744' });
+
+            } else if (currentLevel === 8) {
+                // ★ 第 8 關「雙重視角謎題」— 兩個視角都要用，高台+迷宮雙重挑戰
+                // 上帝視角的「L」形牆
+                obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 500, baseHeight: 120, baseDepth: 60,  color: '#5566cc' });
+                obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 60,  baseHeight: 120, baseDepth: 380, color: '#5566cc' });
+                // 需跳過的高台
+                obstacles.push({ x: wx + 250, y: wy + 200, baseWidth: 200, baseHeight: 280, baseDepth: 200, color: '#cc6633' });
+                // 右側通道引導
+                obstacles.push({ x: wx + 560, y: wy + 160, baseWidth: 60,  baseHeight: 120, baseDepth: 340, color: '#5566cc' });
+                // 底部擋牆
+                obstacles.push({ x: wx + 80,  y: wy + 460, baseWidth: 640, baseHeight: 120, baseDepth: 60,  color: '#334455' });
+
+            } else if (currentLevel === 9) {
+                // ★ 第 9 關「熔岩跑酷」— 岩漿地板 + 高速跳躍連跳考驗
+                // 出生平台
+                obstacles.push({ x: wx + 300, y: wy + 430, baseWidth: 180, baseHeight: 130, baseDepth: 120, color: '#888855' });
+                // 跳台連鎖（間距逐漸加大）
+                obstacles.push({ x: wx + 100, y: wy + 350, baseWidth: 100, baseHeight: 150, baseDepth: 80,  color: '#6688aa' });
+                obstacles.push({ x: wx + 550, y: wy + 260, baseWidth: 100, baseHeight: 170, baseDepth: 80,  color: '#6688aa' });
+                obstacles.push({ x: wx + 200, y: wy + 160, baseWidth: 100, baseHeight: 190, baseDepth: 80,  color: '#6688aa' });
+                obstacles.push({ x: wx + 450, y: wy + 80,  baseWidth: 120, baseHeight: 210, baseDepth: 100, color: '#aabb44' });
+                // 終點高台
+                obstacles.push({ x: wx + 300, y: wy + 80,  baseWidth: 120, baseHeight: 220, baseDepth: 90,  color: '#ffcc44' });
+
+            } else if (currentLevel === 10) {
+                // ★ 第 10 關「終極次元」— 岩漿+複雜地形+需精確操作雙視角
+                // 起點島
+                obstacles.push({ x: wx + 330, y: wy + 420, baseWidth: 140, baseHeight: 130, baseDepth: 130, color: '#888855' });
+                // 第一段：上帝視角繞行
+                obstacles.push({ x: wx + 80,  y: wy + 300, baseWidth: 200, baseHeight: 120, baseDepth: 100, color: '#5577bb' });
+                obstacles.push({ x: wx + 540, y: wy + 300, baseWidth: 180, baseHeight: 120, baseDepth: 100, color: '#5577bb' });
+                // 中段高台（側面跳躍）
+                obstacles.push({ x: wx + 200, y: wy + 180, baseWidth: 160, baseHeight: 250, baseDepth: 120, color: '#cc5533' });
+                obstacles.push({ x: wx + 440, y: wy + 180, baseWidth: 160, baseHeight: 200, baseDepth: 120, color: '#cc5533' });
+                // 最終衝刺橋（細而高）
+                obstacles.push({ x: wx + 280, y: wy + 80,  baseWidth: 240, baseHeight: 320, baseDepth: 100, color: '#ffcc00' });
+                // 左右危險牆
+                obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 60,  baseHeight: 120, baseDepth: 500, color: '#aa3333' });
+                obstacles.push({ x: wx + 660, y: wy + 80,  baseWidth: 60,  baseHeight: 120, baseDepth: 500, color: '#aa3333' });
             }
-            
-            // 【最終修正】安全起步墊 (此處已移除 Level 2-10，故不再需要安全墊邏輯)
-            // if ([2, 4, 6, 7, 8, 9, 10].includes(currentLevel)) { ... }
 
             // 若方塊位於該位置，改為標記「站在障礙物上」而非彈開
             for (let i = 0; i < obstacles.length; i++) {
@@ -606,11 +719,11 @@
             isDialogOpen = true;
             dialogOverlay.classList.remove('hidden');
             dialogContent.innerHTML = `
-            <h2 style="color: #ffcc00; font-size: 2em; margin-bottom: 15px;">🏆 恭喜晉升大師！</h2>
-            <p>你已經成功征服了全部 10 個關卡，展現了卓越的空間邏輯與操作技巧。</p>
-            <p>這個世界的所有秘密都逃不過你的視線！</p>
+            <h2 style="color: #ffcc00; font-size: 2em; margin-bottom: 15px;">🏆 恭喜征服全部 10 關！</h2>
+            <p>你已熟練地在<b>上帝視角</b>與<b>側面視角</b>之間切換，穿越迷宮、躍過岩漿、攀登高台。</p>
+            <p>整個次元世界的秘密都已盡在你掌握之中！感謝遊玩 🌀</p>
         `;
-            dialogFooter.innerHTML = '<button onclick="location.reload()">再玩一次</button>';
+            dialogFooter.innerHTML = '<button onclick="location.reload()" style="padding:10px 30px;background:#ffcc00;color:#000;border:none;border-radius:8px;font-size:18px;cursor:pointer;font-weight:bold;">再玩一次</button>';
         }
 
         function showDialogContent() {
