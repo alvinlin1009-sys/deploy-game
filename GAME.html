@@ -1448,6 +1448,24 @@
                 ctx.restore();
             }
 
+            // 🔥 岩漿地板：若本關有岩漿，地面填成紅色
+            if (lavaLevels.includes(currentLevel)) {
+                const lavaAnim = 0.7 + 0.3 * Math.sin(Date.now() / 300); // 呼吸閃爍效果
+                if (mode === 'topdown') {
+                    ctx.fillStyle = `rgba(200, 30, 0, ${lavaAnim})`;
+                    ctx.fillRect(world.x, world.y, world.width, world.height);
+                    // 岩漿紋路
+                    ctx.fillStyle = `rgba(255, 80, 0, ${lavaAnim * 0.5})`;
+                    for (let i = 0; i < 6; i++) {
+                        ctx.fillRect(world.x + 60 + i * 120, world.y + 40 + (i % 2) * 80, 60, 30);
+                    }
+                } else {
+                    // 側面視角：底部地板是岩漿
+                    ctx.fillStyle = `rgba(200, 30, 0, ${lavaAnim})`;
+                    ctx.fillRect(world.x, world.y + world.height - 4, world.height, 4);
+                }
+            }
+
             for (const obs of obstacles) {
                 let o = getVisualRectForMode(obs, mode, currentLockedX);
                 if (!o || o.x === undefined) continue;
