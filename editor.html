@@ -388,8 +388,12 @@
             <input type="number" id="spawn-x" class="prop-input" oninput="updateSpawnGoal()">
         </div>
         <div class="prop-row">
-            <span class="prop-label">出生點 Y</span>
+            <span class="prop-label">出生點 Y (深)</span>
             <input type="number" id="spawn-y" class="prop-input" oninput="updateSpawnGoal()">
+        </div>
+        <div class="prop-row">
+            <span class="prop-label">出生點 Z (高)</span>
+            <input type="number" id="spawn-z" class="prop-input" oninput="updateSpawnGoal()">
         </div>
         <div class="prop-row" style="margin-top: 10px;">
             <span class="prop-label" style="color: #ffcc00;">🌟 終點 X (頂部)</span>
@@ -398,6 +402,10 @@
         <div class="prop-row">
             <span class="prop-label" style="color: #ffcc00;">終點寬度</span>
             <input type="number" id="goal-w" class="prop-input" oninput="updateSpawnGoal()">
+        </div>
+        <div class="prop-row">
+            <span class="prop-label" style="color: #ffcc00;">終點 Z (高)</span>
+            <input type="number" id="goal-z" class="prop-input" oninput="updateSpawnGoal()">
         </div>
     </div>
 
@@ -469,8 +477,8 @@
     let obstacles = [];
     let selectedIndex = -1;
     
-    let spawnPoint = { x: 380, y: 540 }; // 相對於 world.x, world.y 的相對座標
-    let goalPoint = { x: 360, width: 80 }; // 相對 X 座標與寬度 (Y固定在上邊 world.y)
+    let spawnPoint = { x: 380, y: 540, z: 0 }; // 相對於 world.x, world.y 的相對座標與高度(z)
+    let goalPoint = { x: 360, width: 80, z: 0 }; // 相對 X 座標、寬度與高度(z)
 
     function syncWorldSpawnGoal() {
         world.spawnPoint = spawnPoint;
@@ -619,45 +627,9 @@
         obstacles.forEach((obs, index) => {
             const r = getProjectedRect(obs, viewMode);
             ctx.save();
-            
-            if (viewMode === 'sideview') {
-                // 1. 深度陰影增強 (Depth Shading)：越靠近螢幕 (obs.y 越小) 越亮，越深越暗
-                const depthRatio = Math.max(0.2, 1 - ((obs.y - world.y) / world.height)); // 0.2 ~ 1.0
-                ctx.fillStyle = (obs.type === 'lava') ? '#ff3300' : (obs.color || '#777');
-                ctx.globalAlpha = (selectedIndex === index) ? 1.0 : (0.3 + depthRatio * 0.55);
-
-                // 2. 繪製底部投影陰影 (Ground Shadow)
-                ctx.save();
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-                ctx.fillRect(r.x, world.y + world.height - 4, r.w, 4);
-                ctx.restore();
-
-                ctx.fillRect(r.x, r.y, r.w, r.h);
-
-                // 3. 智能引導參考線 (Guide Lines) - 顯示高度對齊線與標尺數值
-                if (selectedIndex === index) {
-                    ctx.save();
-                    ctx.strokeStyle = '#00ffcc';
-                    ctx.lineWidth = 1.5 / camera.zoom;
-                    ctx.setLineDash([4, 4]);
-                    ctx.beginPath();
-                    // 水平對齊線至左邊界
-                    ctx.moveTo(world.x, r.y); ctx.lineTo(r.x, r.y);
-                    // 垂直對齊線至地面
-                    ctx.moveTo(r.x + r.w/2, r.y + r.h); ctx.lineTo(r.x + r.w/2, world.y + world.height);
-                    ctx.stroke();
-                    ctx.restore();
-                    
-                    ctx.fillStyle = '#00ffcc';
-                    ctx.font = `bold ${Math.max(11, 12/camera.zoom)}px sans-serif`;
-                    ctx.fillText(`高: ${obs.baseHeight} | 離地: ${obs.baseZ || 0}`, r.x + 5, r.y - 6);
-                }
-            } else {
-                ctx.fillStyle = (obs.type === 'lava') ? '#ff3300' : (obs.color || '#777');
-                ctx.globalAlpha = (selectedIndex === index) ? 1.0 : 0.7;
-                ctx.fillRect(r.x, r.y, r.w, r.h);
-            }
-
+            ctx.fillStyle = (obs.type === 'lava') ? '#ff3300' : (obs.color || '#777');
+            ctx.globalAlpha = (selectedIndex === index) ? 1.0 : (viewMode === 'sideview' ? 0.5 : 0.7);
+            ctx.fillRect(r.x, r.y, r.w, r.h);
             if (selectedIndex === index && activeTool === 'edit') {
                 ctx.strokeStyle = '#fff';
                 ctx.lineWidth = 3 / camera.zoom;
@@ -687,12 +659,12 @@
             ey = world.y - 20;
             ew = goalPoint.width; eh = 20.5;
         } else {
-            // 側面視角：出生點在地圖左下方
-            sx = world.x + 20;
-            sy = world.y + world.height - sh;
-            // 終點在地圖最右側中央
+            // 側面視角：Screen X 對應 World Y (深度)，Screen Y 對應 World Z (高度)
+            sx = world.x + spawnPoint.y;
+            sy = world.y + world.height - (spawnPoint.z || 0) - sh;
+            // 終點在地圖最右側中央 (對應 X 頂部)，Screen Y 對應 Z 高度
             ex = world.x + world.height - 0.5;
-            ey = world.y + (world.height - goalPoint.width) / 2;
+            ey = world.y + world.height - (goalPoint.z || 0) - goalPoint.width;
             ew = 20; eh = goalPoint.width;
         }
 
@@ -761,25 +733,43 @@
 
         saveState();
 
-        if (viewMode === 'topdown' && (activeTool === 'drag' || activeTool === 'edit')) {
-            // 檢查出生點
-            const sx = world.x + spawnPoint.x, sy = world.y + spawnPoint.y;
+        if (viewMode === 'topdown') {
+            if (activeTool === 'drag' || activeTool === 'edit') {
+                // 檢查出生點
+                const sx = world.x + spawnPoint.x, sy = world.y + spawnPoint.y;
+                if (wPos.x >= sx && wPos.x <= sx + 40 && wPos.y >= sy && wPos.y <= sy + 40) {
+                    isDraggingSpawn = true;
+                    spawnDragOffset = { x: wPos.x - sx, y: wPos.y - sy };
+                    return;
+                }
+                // 檢查終點出口 (Y 固定在上邊 world.y - 20)
+                const ex = world.x + goalPoint.x, ey = world.y - 20;
+                if (wPos.x >= ex && wPos.x <= ex + goalPoint.width && wPos.y >= ey && wPos.y <= ey + 20.5) {
+                    isDraggingGoal = true;
+                    goalDragOffset = { x: wPos.x - ex };
+                    return;
+                }
+            }
+            if (activeTool === 'place') {
+                isCreating = true; createStart = snap(wPos); selectedIndex = -1; requestRender(); return;
+            }
+        } else if (viewMode === 'sideview' && (activeTool === 'drag' || activeTool === 'edit')) {
+            // 檢查出生點 (側面)
+            const sx = world.x + spawnPoint.y;
+            const sy = world.y + world.height - (spawnPoint.z || 0) - 40;
             if (wPos.x >= sx && wPos.x <= sx + 40 && wPos.y >= sy && wPos.y <= sy + 40) {
                 isDraggingSpawn = true;
                 spawnDragOffset = { x: wPos.x - sx, y: wPos.y - sy };
                 return;
             }
-            // 檢查終點出口 (Y 固定在上邊 world.y - 20)
-            const ex = world.x + goalPoint.x, ey = world.y - 20;
-            if (wPos.x >= ex && wPos.x <= ex + goalPoint.width && wPos.y >= ey && wPos.y <= ey + 20.5) {
+            // 檢查終點出口 (側面)
+            const ex = world.x + world.height - 0.5;
+            const ey = world.y + world.height - (goalPoint.z || 0) - goalPoint.width;
+            if (wPos.x >= ex && wPos.x <= ex + 20 && wPos.y >= ey && wPos.y <= ey + goalPoint.width) {
                 isDraggingGoal = true;
-                goalDragOffset = { x: wPos.x - ex };
+                goalDragOffset = { y: wPos.y - ey };
                 return;
             }
-        }
-
-        if (activeTool === 'place' && viewMode === 'topdown') {
-            isCreating = true; createStart = snap(wPos); selectedIndex = -1; requestRender(); return;
         }
 
         if (activeTool === 'edit' && selectedIndex !== -1) {
@@ -828,20 +818,38 @@
 
         if (isPanning) { camera.x += dx; camera.y += dy; }
         else if (isDraggingSpawn) {
-            let newX = wPos.x - spawnDragOffset.x - world.x;
-            let newY = wPos.y - spawnDragOffset.y - world.y;
-            newX = Math.max(0, Math.min(world.width - 40, newX));
-            newY = Math.max(0, Math.min(world.height - 40, newY));
-            const s = snap({ x: newX, y: newY });
-            spawnPoint.x = s.x; spawnPoint.y = s.y;
+            if (viewMode === 'topdown') {
+                let newX = wPos.x - spawnDragOffset.x - world.x;
+                let newY = wPos.y - spawnDragOffset.y - world.y;
+                newX = Math.max(0, Math.min(world.width - 40, newX));
+                newY = Math.max(0, Math.min(world.height - 40, newY));
+                const s = snap({ x: newX, y: newY });
+                spawnPoint.x = s.x; spawnPoint.y = s.y;
+            } else {
+                // 側面視角拖曳：Screen X 對應 World Y (深度)，Screen Y 對應 World Z (高度)
+                let newY = wPos.x - spawnDragOffset.x - world.x;
+                let curWZ = (world.y + world.height) - (wPos.y - spawnDragOffset.y) - 40;
+                newY = Math.max(0, Math.min(world.height - 40, newY));
+                curWZ = Math.max(0, Math.min(world.height - 40, curWZ));
+                const s = snap({ x: newY, y: curWZ });
+                spawnPoint.y = s.x; spawnPoint.z = s.y;
+            }
             syncWorldSpawnGoal();
             updateUI();
             requestRender();
         } else if (isDraggingGoal) {
-            let newX = wPos.x - goalDragOffset.x - world.x;
-            newX = Math.max(0, Math.min(world.width - goalPoint.width, newX));
-            const s = snap({ x: newX, y: 0 });
-            goalPoint.x = s.x;
+            if (viewMode === 'topdown') {
+                let newX = wPos.x - goalDragOffset.x - world.x;
+                newX = Math.max(0, Math.min(world.width - goalPoint.width, newX));
+                const s = snap({ x: newX, y: 0 });
+                goalPoint.x = s.x;
+            } else {
+                // 側面視角拖曳終點：Screen Y 對應 World Z (高度)
+                let curWZ = (world.y + world.height) - (wPos.y - goalDragOffset.y) - goalPoint.width;
+                curWZ = Math.max(0, Math.min(world.height - goalPoint.width, curWZ));
+                const s = snap({ x: 0, y: curWZ });
+                goalPoint.z = s.y;
+            }
             syncWorldSpawnGoal();
             updateUI();
             requestRender();
@@ -941,8 +949,10 @@
         if (document.activeElement.id.startsWith('spawn') || document.activeElement.id.startsWith('goal')) {
             spawnPoint.x = parseFloat(document.getElementById('spawn-x').value) || 0;
             spawnPoint.y = parseFloat(document.getElementById('spawn-y').value) || 0;
+            spawnPoint.z = parseFloat(document.getElementById('spawn-z').value) || 0;
             goalPoint.x = parseFloat(document.getElementById('goal-x').value) || 0;
             goalPoint.width = parseFloat(document.getElementById('goal-w').value) || 80;
+            goalPoint.z = parseFloat(document.getElementById('goal-z').value) || 0;
             syncWorldSpawnGoal();
             draw();
         }
@@ -952,8 +962,10 @@
         if (document.activeElement.className !== 'prop-input') {
             document.getElementById('spawn-x').value = Math.round(spawnPoint.x);
             document.getElementById('spawn-y').value = Math.round(spawnPoint.y);
+            document.getElementById('spawn-z').value = Math.round(spawnPoint.z || 0);
             document.getElementById('goal-x').value = Math.round(goalPoint.x);
             document.getElementById('goal-w').value = Math.round(goalPoint.width);
+            document.getElementById('goal-z').value = Math.round(goalPoint.z || 0);
         }
     }
 

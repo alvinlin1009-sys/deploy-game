@@ -1053,7 +1053,8 @@
                 player.lockedX = startX;
                 const zRel = startY - world.y;
                 player.x = world.x + (world.height - zRel - player.width);
-                player.y = world.y + world.height - player.height;
+                const spawnZ = world.spawnPoint ? (world.spawnPoint.z || 0) : 0;
+                player.y = world.y + world.height - spawnZ - player.height;
             }
 
             player.vy = 0;
@@ -1226,7 +1227,8 @@
                 ex = world.x + gX; ey = world.y - 20; ew = gW; eh = 20.5;
             } else {
                 const gW = world.goalPoint ? world.goalPoint.width : 80;
-                ex = world.x + world.height - 0.5; ey = world.y + (world.height - gW) / 2; ew = 20; eh = gW;
+                const goalZ = world.goalPoint ? (world.goalPoint.z || 0) : 0;
+                ex = world.x + world.height - 0.5; ey = world.y + world.height - goalZ - gW; ew = 20; eh = gW;
             }
 
             if (player.x < ex + ew && player.x + player.width > ex && player.y < ey + eh && player.y + player.height > ey) {
