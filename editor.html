@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2.5D 關卡編輯器 | 遊戲工作室</title>
+    <style>
+        :root {
+            --bg-dark: #0a0a0c;
+            --bg-panel: rgba(20, 20, 25, 0.9);
+            --accent: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.4);
+            --text: #e0e0e0;
+            --border: rgba(255, 255, 255, 0.1);
+            --card-bg: #1a1a20;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--text);
+            font-family: 'Segoe UI', "Microsoft JhengHei", Roboto, sans-serif;
+            overflow: hidden;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* 驗證前隱藏編輯器組件 */
+        #toolbar, #sidebar, #main-view {
+            display: flex !important;
+        }
+
+        .auth-unlocked #toolbar, 
+        .auth-unlocked #sidebar, 
+        .auth-unlocked #main-view {
+            display: flex !important;
+        }
+
+        .auth-unlocked #main-view {
+            display: block !important;
+        }
+
+        /* --- 密碼鎖門已禁用 --- */
+        #login-gate {
+            display: none !important;
+        }
+
+        #login-box {
+            background: var(--bg-panel);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            backdrop-filter: blur(20px);
+            width: 320px;
+        }
+
+        #login-box h2 {
+            margin: 0 0 20px;
+            color: var(--accent);
+            letter-spacing: 2px;
+            font-size: 18px;
+        }
+
+        #pass-input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: #fff;
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #pass-input:focus {
+            border-color: var(--accent);
+        }
+
+        #login-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        #login-btn:active {
+            transform: scale(0.95);
+        }
+
+        .error-msg {
+            color: #ff4444;
+            font-size: 12px;
+            margin-top: 10px;
+            opacity: 0;
+        }
+
+        /* --- 佈局 --- */
+        #toolbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: var(--bg-panel);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 100;
+            justify-content: space-between;
+        }
+
+        #sidebar {
+            width: 340px !important;
+            min-width: 340px !important;
+            max-width: 340px !important;
+            background: var(--bg-panel);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--border);
+            margin-top: 60px;
+            display: flex !important;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 50;
+        }
+
+        #main-view {
+            flex-grow: 1;
+            margin-top: 60px;
+            position: relative;
+            background-image: 
+                radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
+            background-size: 50px 50px;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* --- UI 元件 --- */
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .btn.primary {
+            background: var(--accent);
+            color: #000;
+            font-weight: bold;
+            border: none;
+        }
+
+        .tool-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 12px 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .tool-btn.active {
+            background: var(--accent-glow);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .panel-section {
+            margin-bottom: 24px;
+        }
+
+        .panel-section h3 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 4px;
+        }
+
+        .prop-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .prop-label {
+            width: 90px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .prop-input {
+            flex-grow: 1;
+            background: #121216;
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            width: 100%;
+        }
+
+        .prop-input:focus {
+            outline: 2px solid var(--accent);
+            border-color: var(--accent);
+        }
+
+        #layer-list {
+            list-style: none; padding: 0; margin: 0;
+        }
+
+        .layer-item {
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.2s;
+        }
+
+        .layer-item:hover { background: rgba(255, 255, 255, 0.08); }
+        .layer-item.selected { background: var(--accent-glow); border: 1px solid var(--accent); }
+
+        #view-overlay {
+            position: fixed; bottom: 20px; right: 20px;
+            padding: 12px 18px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 10px;
+            font-size: 13px;
+            pointer-events: none;
+            border: 1px solid var(--border);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .color-preview {
+            width: 18px; height: 18px; border-radius: 3px; }
+        #login-gate.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+    </style>
+    <script>
+        // 密碼驗證已禁用 - 直接打開編輯器
+        function unlock() {
+            document.addEventListener('DOMContentLoaded', () => {
+                document.body.classList.add('auth-unlocked');
+                const gate = document.getElementById('login-gate');
+                if (gate) gate.classList.add('hidden');
+            });
+        }
+
+        function tryLogin() {
+            // 密碼功能已禁用，此處留空或直接呼叫 unlock
+        }
+
+        // 立即解鎖
+        unlock();
+    </script>
+</head>
+<body>
+    <!-- 密碼登入層 -->
+    <div id="login-gate">
+        <div id="login-box">
+            <h2>EDITOR ACCESS</h2>
+            <input type="password" id="pass-input" placeholder="Enter Password" onkeydown="if(event.key==='Enter') tryLogin()">
+            <button id="login-btn" onclick="tryLogin()">VERIFY IDENTITY</button>
+            <div class="error-msg">INVALID ACCESS KEY</div>
+        </div>
+    </div>
+
+<div id="toolbar">
+    <div style="display: flex; gap: 15px; align-items: center;">
+        <div style="font-weight: 900; font-size: 20px; color: var(--accent); letter-spacing: 2px;">開發者工作室</div>
+        <div style="width: 1px; height: 30px; background: var(--border);"></div>
+        <button class="btn" onclick="newLevel()">新建關卡</button>
+        <button class="btn" onclick="exportJSON()">導出 JSON</button>
+        <button class="btn" onclick="importJSON()">導入 JSON</button>
+        <button class="btn" style="border-color: #ffaa00; color: #ffaa00;" onclick="copyLevelCode()">複製關卡代碼</button>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn" id="view-toggle" onclick="toggleEditorView()">目前視角：上帝視角</button>
+        <button class="btn primary" onclick="testLevel()">進入測試遊戲</button>
+    </div>
+</div>
+
+<div id="sidebar">
+    <div class="panel-section">
+        <h3>操作模式</h3>
+        <div style="display: flex; gap: 8px;">
+            <button class="tool-btn" id="tool-place" onclick="setTool('place')">
+                <span>➕</span>放置
+            </button>
+            <button class="tool-btn" id="tool-drag" onclick="setTool('drag')">
+                <span>🖐️</span>拖曳
+            </button>
+            <button class="tool-btn" id="tool-edit" onclick="setTool('edit')">
+                <span>📐</span>編輯
+            </button>
+        </div>
+    </div>
+
+    <div class="panel-section">
+        <h3>畫布設定</h3>
+        <div class="prop-row">
+            <span class="prop-label">畫布寬度</span>
+            <input type="number" id="world-w" class="prop-input" value="800" oninput="updateWorld()">
+        </div>
+        <div class="prop-row">
+            <span class="prop-label">畫布深度</span>
+            <input type="number" id="world-h" class="prop-input" value="600" oninput="updateWorld()">
+        </div>
+        <div class="prop-row">
+            <span class="prop-label">網格對齊</span>
+            <input type="number" id="grid-size" class="prop-input" value="25" oninput="draw()">
+        </div>
+    </div>
+
+    <div class="panel-section">
+        <h3>物件屬性</h3>
+        <div id="no-selection-msg" style="color: rgba(255,255,255,0.3); font-size: 13px; font-style: italic;">尚未選取任何物件</div>
+        <div id="selected-props" style="display: none;">
+            <div class="prop-row">
+                <span class="prop-label">類型</span>
+                <select id="obj-type" class="prop-input" onchange="updateSelected()">
+                    <option value="obstacle">一般障礙 (Obstacle)</option>
+                    <option value="lava">岩漿地帶 (Lava)</option>
+                </select>
+            </div>
+            <div class="prop-row">
+                <span class="prop-label">座標 X</span>
+                <input type="number" id="obj-x" class="prop-input" oninput="updateSelected()">
+            </div>
+            <div class="prop-row">
+                <span class="prop-label">座標 Y (深)</span>
+                <input type="number" id="obj-y" class="prop-input" oninput="updateSelected()">
+            </div>
+            <div class="prop-row">
+                <span class="prop-label">寬度 (W)</span>
+                <input type="number" id="obj-w" class="prop-input" oninput="updateSelected()">
+            </div>
+            <div class="prop-row">
+                <span class="prop-label">深度 (D)</span>
+                <input type="number" id="obj-d" class="prop-input" oninput="updateSelected()">
+            </div>
+            <div class="prop-row">
+                <span class="prop-label">高度 (H)</span>
+                <input type="number" id="obj-h" class="prop-input" oninput="updateSelected()">
+            </div>
+            <div class="prop-row">
+                <span class="prop-label">離地高度 (Z)</span>
+                <input type="number" id="obj-z" class="prop-input" oninput="updateSelected()">
+            </div>
+            <div class="prop-row" id="color-row">
+                <span class="prop-label">顏色</span>
+                <input type="color" id="obj-color" class="prop-input" oninput="updateSelected()" style="height: 35px; padding: 2px;">
+            </div>
+            <div class="prop-row" id="require-x-row">
+                <span class="prop-label">需按 X 下降</span>
+                <input type="checkbox" id="obj-require-x" onchange="updateSelected()" style="width: 20px; height: 20px; cursor: pointer;">
+            </div>
+            <button class="btn" style="width: 100%; margin-top: 15px; color: #ff5555; border-color: rgba(255,85,85,0.3);" onclick="deleteSelected()">刪除物件</button>
+        </div>
+    </div>
+
+    <div class="panel-section" style="flex-grow: 1;">
+        <h3>物件清單</h3>
+        <ul id="layer-list"></ul>
+    </div>
+</div>
+
+<div id="main-view">
+    <canvas id="editorCanvas"></canvas>
+    <div id="view-overlay">
+        左鍵：操作 | 右鍵：平移 | 滾輪：縮放 | 側面模式：支援直覺拉伸
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('editorCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let world = { x: 50, y: 50, width: 800, height: 600 };
+    let obstacles = [];
+    let selectedIndex = -1;
+    
+    let viewMode = 'topdown'; 
+    let activeTool = 'drag'; 
+    
+    let camera = { x: 0, y: 0, zoom: 1 };
+    let isPanning = false;
+    let isCreating = false;
+    let isDragging = false;
+    let isResizing = false;
+    let lastMouse = { x: 0, y: 0 };
+    let dragOffset = { x: 0, y: 0 };
+    let createStart = { x: 0, y: 0 };
+    let resizeCorner = -1; // 0:TL, 1:TR, 2:BL, 3:BR
+
+    let undoStack = [];
+    let redoStack = [];
+    const MAX_HISTORY = 50;
+    let renderRequested = false;
+
+    function requestRender() {
+        if (!renderRequested) {
+            renderRequested = true;
+            requestAnimationFrame(() => {
+                draw();
+                renderRequested = false;
+            });
+        }
+    }
+
+    function saveState() {
+        const state = JSON.stringify({
+            obstacles: obstacles,
+            selectedIndex: selectedIndex
+        });
+        if (undoStack.length > 0 && undoStack[undoStack.length - 1] === state) return;
+        undoStack.push(state);
+        if (undoStack.length > MAX_HISTORY) undoStack.shift();
+        redoStack = []; 
+    }
+
+    function undo() {
+        if (undoStack.length === 0) return;
+        const currentState = JSON.stringify({
+            obstacles: obstacles,
+            selectedIndex: selectedIndex
+        });
+        redoStack.push(currentState);
+        
+        const state = JSON.parse(undoStack.pop());
+        obstacles = state.obstacles;
+        selectedIndex = state.selectedIndex;
+        requestRender();
+    }
+
+    function redo() {
+        if (redoStack.length === 0) return;
+        const currentState = JSON.stringify({
+            obstacles: obstacles,
+            selectedIndex: selectedIndex
+        });
+        undoStack.push(currentState);
+        
+        const state = JSON.parse(redoStack.pop());
+        obstacles = state.obstacles;
+        selectedIndex = state.selectedIndex;
+        requestRender();
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) {
+            e.preventDefault();
+            undo();
+        }
+        if (e.ctrlKey && (e.key === 'y' || e.key === 'Y' || (e.shiftKey && (e.key === 'z' || e.key === 'Z')))) {
+            e.preventDefault();
+            redo();
+        }
+        // 刪除物件
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
+                deleteSelected();
+            }
+        }
+    });
+
+    
+    function resizeCanvas() {
+        const mv = document.getElementById('main-view');
+        if (!mv) return;
+        canvas.width = mv.clientWidth;
+        canvas.height = mv.clientHeight;
+        requestRender();
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function getProjectedRect(obs, mode) {
+        if (mode === 'topdown') {
+            return { x: obs.x, y: obs.y, w: obs.baseWidth, h: obs.baseDepth };
+        } else {
+            // 側面圖投影：Screen X 對應 World Y，Screen Y 對應 World Z
+            return {
+                x: world.x + (obs.y - world.y),
+                y: world.y + world.height - (obs.baseZ || 0) - obs.baseHeight,
+                w: obs.baseDepth,
+                h: obs.baseHeight
+            };
+        }
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(canvas.width / 2 + camera.x, canvas.height / 2 + camera.y);
+        ctx.scale(camera.zoom, camera.zoom);
+        
+        const grid = parseInt(document.getElementById('grid-size').value) || 25;
+        if (grid >= 5) {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1/camera.zoom;
+            ctx.beginPath();
+            for (let x = -2000; x <= 2000; x += grid) {
+                ctx.moveTo(x, -2000); ctx.lineTo(x, 2000);
+            }
+            for (let y = -2000; y <= 2000; y += grid) {
+                ctx.moveTo(-2000, y); ctx.lineTo(2000, y);
+            }
+            ctx.stroke();
+        }
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+        const curW = (viewMode === 'topdown' ? world.width : world.height);
+        ctx.fillRect(world.x, world.y, curW, world.height);
+        ctx.strokeStyle = '#00ffcc';
+        ctx.strokeRect(world.x, world.y, curW, world.height);
+        
+        obstacles.forEach((obs, index) => {
+            const r = getProjectedRect(obs, viewMode);
+            ctx.save();
+            ctx.fillStyle = (obs.type === 'lava') ? '#ff3300' : (obs.color || '#777');
+            ctx.globalAlpha = (selectedIndex === index) ? 1.0 : (viewMode === 'sideview' ? 0.5 : 0.7);
+            ctx.fillRect(r.x, r.y, r.w, r.h);
+            if (selectedIndex === index && activeTool === 'edit') {
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3 / camera.zoom;
+                ctx.strokeRect(r.x, r.y, r.w, r.h);
+                // 繪製四個角的小方塊
+                ctx.fillStyle = '#fff';
+                const sz = 14 / camera.zoom;
+                ctx.fillRect(r.x - sz/2, r.y - sz/2, sz, sz); // TL
+                ctx.fillRect(r.x + r.w - sz/2, r.y - sz/2, sz, sz); // TR
+                ctx.fillRect(r.x - sz/2, r.y + r.h - sz/2, sz, sz); // BL
+                ctx.fillRect(r.x + r.w - sz/2, r.y + r.h - sz/2, sz, sz); // BR
+            }
+            ctx.restore();
+        });
+
+        if (isCreating && viewMode === 'topdown') {
+            ctx.fillStyle = 'rgba(0, 255, 204, 0.3)';
+            const cur = snap(screenToWorld(lastMouse.x, lastMouse.y));
+            const x = Math.min(createStart.x, cur.x);
+            const y = Math.min(createStart.y, cur.y);
+            const w = Math.abs(createStart.x - cur.x);
+            const d = Math.abs(createStart.y - cur.y);
+            ctx.fillRect(x, y, w, d);
+        }
+
+        ctx.restore();
+    }
+
+    function screenToWorld(sx, sy) {
+        const r = canvas.getBoundingClientRect();
+        return {
+            x: (sx - r.left - canvas.width / 2 - camera.x) / camera.zoom,
+            y: (sy - r.top - canvas.height / 2 - camera.y) / camera.zoom
+        };
+    }
+
+    function snap(pos) {
+        const grid = parseInt(document.getElementById('grid-size').value) || 1;
+        return { x: Math.round(pos.x / grid) * grid, y: Math.round(pos.y / grid) * grid };
+    }
+
+    function setTool(tool) {
+        activeTool = tool;
+        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        if (document.getElementById('tool-' + tool)) document.getElementById('tool-' + tool).classList.add('active');
+        isCreating = isDragging = isResizing = false;
+        requestRender();
+    }
+
+    canvas.onmousedown = (e) => {
+        lastMouse = { x: e.clientX, y: e.clientY };
+        const wPos = screenToWorld(e.clientX, e.clientY);
+        if (e.button === 2) { isPanning = true; return; }
+
+        saveState();
+
+        if (activeTool === 'place' && viewMode === 'topdown') {
+            isCreating = true; createStart = snap(wPos); selectedIndex = -1; requestRender(); return;
+        }
+
+        if (activeTool === 'edit' && selectedIndex !== -1) {
+            const r = getProjectedRect(obstacles[selectedIndex], viewMode);
+            const sz = 14 / camera.zoom;
+            const corners = [
+                {x: r.x, y: r.y},           // 0: TL
+                {x: r.x + r.w, y: r.y},     // 1: TR
+                {x: r.x, y: r.y + r.h},     // 2: BL
+                {x: r.x + r.w, y: r.y + r.h} // 3: BR
+            ];
+            for (let i = 0; i < 4; i++) {
+                if (wPos.x >= corners[i].x - sz && wPos.x <= corners[i].x + sz &&
+                    wPos.y >= corners[i].y - sz && wPos.y <= corners[i].y + sz) {
+                    isResizing = true;
+                    resizeCorner = i;
+                    return;
+                }
+            }
+        }
+
+        if (activeTool === 'drag' || activeTool === 'edit') {
+            let found = -1;
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const r = getProjectedRect(obstacles[i], viewMode);
+                if (wPos.x >= r.x && wPos.x <= r.x + r.w && wPos.y >= r.y && wPos.y <= r.y + r.h) {
+                    found = i; break;
+                }
+            }
+            selectedIndex = found;
+            if (selectedIndex !== -1) {
+                isDragging = true;
+                const r = getProjectedRect(obstacles[selectedIndex], viewMode);
+                dragOffset = { x: wPos.x - r.x, y: wPos.y - r.y };
+            }
+        }
+        requestRender();
+        updateUI();
+    };
+
+    canvas.onmousemove = (e) => {
+        const dx = e.clientX - lastMouse.x;
+        const dy = e.clientY - lastMouse.y;
+        lastMouse = { x: e.clientX, y: e.clientY };
+        const wPos = screenToWorld(e.clientX, e.clientY);
+
+        if (isPanning) { camera.x += dx; camera.y += dy; }
+        else if (isResizing && selectedIndex !== -1) {
+            const obs = obstacles[selectedIndex];
+            const s = snap(wPos);
+            if (viewMode === 'topdown') {
+                const oldX = obs.x, oldY = obs.y, oldW = obs.baseWidth, oldD = obs.baseDepth;
+                if (resizeCorner === 3) { // BR
+                    obs.baseWidth = Math.max(10, s.x - obs.x);
+                    obs.baseDepth = Math.max(10, s.y - obs.y);
+                } else if (resizeCorner === 0) { // TL
+                    const newX = Math.min(s.x, oldX + oldW - 10);
+                    const newY = Math.min(s.y, oldY + oldD - 10);
+                    obs.baseWidth = oldX + oldW - newX;
+                    obs.baseDepth = oldY + oldD - newY;
+                    obs.x = newX; obs.y = newY;
+                } else if (resizeCorner === 1) { // TR
+                    obs.baseWidth = Math.max(10, s.x - obs.x);
+                    const newY = Math.min(s.y, oldY + oldD - 10);
+                    obs.baseDepth = oldY + oldD - newY;
+                    obs.y = newY;
+                } else if (resizeCorner === 2) { // BL
+                    const newX = Math.min(s.x, oldX + oldW - 10);
+                    obs.baseWidth = oldX + oldW - newX;
+                    obs.x = newX;
+                    obs.baseDepth = Math.max(10, s.y - obs.y);
+                }
+            } else {
+                const H_floor = world.y + world.height;
+                const oldY = obs.y, oldD = obs.baseDepth;
+                const oldZ = obs.baseZ || 0, oldH = obs.baseHeight;
+                const Z_top = oldZ + oldH, Y_right = oldY + oldD;
+                const curWY = s.x - world.x + world.y, curWZ = H_floor - s.y;
+
+                if (resizeCorner === 3) { // BR (其實是 Y_right 和 Z)
+                    obs.baseDepth = Math.max(10, curWY - oldY);
+                    const newZ = Math.min(curWZ, Z_top - 10);
+                    obs.baseZ = newZ; obs.baseHeight = Z_top - newZ;
+                } else if (resizeCorner === 0) { // TL (對應 Y 和 Z_top)
+                    const newY = Math.min(curWY, Y_right - 10);
+                    obs.y = newY; obs.baseDepth = Y_right - newY;
+                    obs.baseHeight = Math.max(10, curWZ - oldZ);
+                } else if (resizeCorner === 1) { // TR (對應 Y_right 和 Z_top)
+                    obs.baseDepth = Math.max(10, curWY - oldY);
+                    obs.baseHeight = Math.max(10, curWZ - oldZ);
+                } else if (resizeCorner === 2) { // BL (對應 Y 和 Z)
+                    const newY = Math.min(curWY, Y_right - 10);
+                    obs.y = newY; obs.baseDepth = Y_right - newY;
+                    const newZ = Math.min(curWZ, Z_top - 10);
+                    obs.baseZ = newZ; obs.baseHeight = Z_top - newZ;
+                }
+            }
+        } else if (isDragging && selectedIndex !== -1) {
+            const obs = obstacles[selectedIndex];
+            const s = snap({ x: wPos.x - dragOffset.x, y: wPos.y - dragOffset.y });
+            if (viewMode === 'topdown') { obs.x = s.x; obs.y = s.y; }
+            else {
+                // 側面圖平移：X -> World Y, Y -> World Z
+                obs.y = world.y + (s.x - world.x);
+                obs.baseZ = (world.y + world.height) - s.y - obs.baseHeight;
+                // 對齊網格
+                const grid = parseInt(document.getElementById('grid-size').value) || 1;
+                obs.baseZ = Math.round(obs.baseZ / grid) * grid;
+            }
+        }
+        
+        if (isDragging || isResizing || isPanning) requestRender();
+    };
+
+    window.onmouseup = () => {
+        if (isCreating && viewMode === 'topdown') {
+            const cur = snap(screenToWorld(lastMouse.x, lastMouse.y));
+            const x = Math.min(createStart.x, cur.x);
+            const y = Math.min(createStart.y, cur.y);
+            const w = Math.max(10, Math.abs(createStart.x - cur.x));
+            const d = Math.max(10, Math.abs(createStart.y - cur.y));
+            obstacles.push({ x, y, baseWidth: w, baseDepth: d, baseHeight: 120, color: '#777777', type: 'obstacle' });
+            selectedIndex = obstacles.length - 1;
+        }
+        isPanning = isDragging = isCreating = isResizing = false;
+        updateUI();
+        requestRender();
+    };
+
+    canvas.onwheel = (e) => { e.preventDefault(); camera.zoom *= (e.deltaY > 0 ? 0.9 : 1.1); requestRender(); };
+    canvas.oncontextmenu = (e) => e.preventDefault();
+
+    function toggleEditorView() {
+        viewMode = (viewMode === 'topdown' ? 'sideview' : 'topdown');
+        document.getElementById('view-toggle').innerText = `目前視角：${viewMode === 'topdown' ? '上帝視角' : '側面預覽'}`;
+        updateUI();
+        requestRender();
+    }
+
+    function updateUI() {
+        updatePropertyPanel();
+        updateLayerList();
+    }
+
+    function updatePropertyPanel() {
+        const props = document.getElementById('selected-props');
+        const msg = document.getElementById('no-selection-msg');
+        if (selectedIndex === -1) { props.style.display = 'none'; msg.style.display = 'block'; }
+        else {
+            props.style.display = 'block'; msg.style.display = 'none';
+            const obs = obstacles[selectedIndex];
+            if (document.activeElement.className !== 'prop-input') {
+                document.getElementById('obj-type').value = obs.type || 'obstacle';
+                document.getElementById('obj-x').value = Math.round(obs.x);
+                document.getElementById('obj-y').value = Math.round(obs.y);
+                document.getElementById('obj-w').value = Math.round(obs.baseWidth);
+                document.getElementById('obj-d').value = Math.round(obs.baseDepth);
+                document.getElementById('obj-h').value = Math.round(obs.baseHeight || 120);
+                document.getElementById('obj-z').value = Math.round(obs.baseZ || 0);
+                document.getElementById('obj-color').value = obs.color || '#777777';
+                document.getElementById('obj-require-x').checked = !!obs.requireX;
+
+                document.getElementById('color-row').style.display = (obs.type === 'obstacle' ? 'flex' : 'none');
+                document.getElementById('require-x-row').style.display = (obs.type === 'obstacle' ? 'flex' : 'none');
+            }
+        }
+    }
+
+    function updateLayerList() {
+        const list = document.getElementById('layer-list');
+        list.innerHTML = '';
+        obstacles.forEach((obs, i) => {
+            const li = document.createElement('li');
+            li.className = 'layer-item' + (selectedIndex === i ? ' selected' : '');
+            const emoji = obs.type === 'lava' ? '🔥' : '📦';
+            li.innerHTML = `<span>${emoji} ${obs.type === 'lava' ? '岩漿' : '障礙物'} #${i}</span>`;
+            li.onclick = () => { selectedIndex = i; draw(); };
+            list.appendChild(li);
+        });
+    }
+
+    function updateSelected() {
+        if (selectedIndex === -1) return;
+        const obs = obstacles[selectedIndex];
+        obs.type = document.getElementById('obj-type').value;
+        
+        obs.x = parseFloat(document.getElementById('obj-x').value);
+        obs.y = parseFloat(document.getElementById('obj-y').value);
+        obs.baseWidth = parseFloat(document.getElementById('obj-w').value);
+        obs.baseDepth = parseFloat(document.getElementById('obj-d').value);
+        obs.baseHeight = parseFloat(document.getElementById('obj-h').value);
+        obs.baseZ = parseFloat(document.getElementById('obj-z').value) || 0;
+        obs.color = document.getElementById('obj-color').value;
+        obs.requireX = document.getElementById('obj-require-x').checked;
+        updateUI();
+    }
+
+    function deleteSelected() { if (selectedIndex !== -1) { saveState(); obstacles.splice(selectedIndex, 1); selectedIndex = -1; updateUI(); draw(); } }
+    function newLevel() { if (confirm("確定清空嗎？")) { saveState(); obstacles = []; selectedIndex = -1; draw(); } }
+    function exportJSON() {
+        const str = JSON.stringify({ world, obstacles }, null, 2);
+        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([str], {type: "application/json"}));
+        a.download = "level.json"; a.click();
+    }
+    function importJSON() {
+        const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
+        input.onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = (re) => {
+                saveState();
+                const data = JSON.parse(re.target.result);
+                world = data.world; obstacles = data.obstacles;
+                draw();
+            };
+            reader.readAsText(e.target.files[0]);
+        };
+        input.click();
+    }
+    function testLevel() {
+        const levelData = JSON.stringify({ world, obstacles });
+        localStorage.setItem('customLevelData', levelData);
+        window.open('GAME.html?custom=true', '_blank');
+    }
+
+    function updateWorld() {
+        world.width = parseInt(document.getElementById('world-w').value) || 800;
+        world.height = parseInt(document.getElementById('world-h').value) || 600;
+        updateUI();
+        draw();
+    }
+    function centerCamera() {
+        camera.x = -(world.x + world.width / 2);
+        camera.y = -(world.y + world.height / 2);
+        draw();
+    }
+
+    setTool('drag');
+    updateUI();
+    centerCamera();
+
+    // 自動為所有屬性框加上 focus 時儲存狀態，以便復原
+    document.querySelectorAll('.prop-input').forEach(input => {
+        input.addEventListener('focus', () => saveState());
+    });
+</script>
+</body>
+</html>

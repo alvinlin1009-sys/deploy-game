@@ -233,6 +233,7 @@
         <button id="start-btn" onclick="enterGame()">進入遊戲</button>
         <button id="skip-btn" onclick="skipTutorial()">跳過教學關卡</button>
         <button id="skip-btn" style="margin-top: 10px; color: #ffaa00; border-color: #ffaa00;" onclick="loadLevelCode()">輸入關卡代碼</button>
+        <button id="skip-btn" style="margin-top: 10px; color: #00ffcc; border-color: #00ffcc;" onclick="window.open('editor.html', '_blank')">✏️ 關卡編輯器</button>
     </div>
 
     <div id="dialog-overlay" class="hidden">
@@ -519,6 +520,31 @@
                 alert("代碼無效，請確認是否完整複製！");
             }
         }
+
+        function initCustomLevel() {
+            if (location.search.includes('custom=true')) {
+                const rawData = localStorage.getItem('customLevelData');
+                if (rawData) {
+                    try {
+                        const data = JSON.parse(rawData);
+                        Object.assign(world, data.world);
+                        obstacles.length = 0;
+                        obstacles.push(...data.obstacles);
+                        
+                        isStartScreen = false;
+                        document.getElementById('start-screen').classList.add('hidden');
+                        const overlay = document.getElementById('dialog-overlay');
+                        if (overlay) overlay.classList.add('hidden');
+                        currentLevel = -1;
+                        isDialogOpen = false;
+                        setupLevelTransition();
+                    } catch (e) {
+                        console.error("載入自訂關卡失敗", e);
+                    }
+                }
+            }
+        }
+        window.addEventListener('DOMContentLoaded', initCustomLevel);
 
         const TUTORIAL_CHARACTER_NAME = "快龍";
 
