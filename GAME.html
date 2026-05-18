@@ -1585,21 +1585,39 @@
         requestAnimationFrame(gameLoop);
 
         // ==========================================
-        // ☁️ Supabase 雲端社群關卡大廳
+        // ☁️ Supabase 雲端社群關卡大廳 (支援 Vercel 環境變數 API)
         // ==========================================
         let supabaseClient = null;
-        function initSupabase() {
-            const url = localStorage.getItem('SUPABASE_URL') || "https://your-project-id.supabase.co";
-            const key = localStorage.getItem('SUPABASE_ANON_KEY') || "your-anon-key";
-            if (url.includes('supabase.co') && key !== "your-anon-key") {
+        async function initSupabase() {
+            if (supabaseClient) return true;
+
+            let url = localStorage.getItem('SUPABASE_URL') || "";
+            let key = localStorage.getItem('SUPABASE_ANON_KEY') || "";
+
+            // 若 localStorage 未設定，嘗試從 Vercel Serverless Function 讀取環境變數
+            if (!url || !key) {
+                try {
+                    const res = await fetch('/api/config');
+                    if (res.ok) {
+                        const envData = await res.json();
+                        if (envData.SUPABASE_URL && envData.SUPABASE_ANON_KEY) {
+                            url = envData.SUPABASE_URL;
+                            key = envData.SUPABASE_ANON_KEY;
+                        }
+                    }
+                } catch(e) { console.warn("無法從環境變數 API 取得設定", e); }
+            }
+
+            if (url.includes('supabase.co') && key && key !== "your-anon-key") {
                 supabaseClient = window.supabase.createClient(url, key);
                 return true;
             }
             return false;
         }
 
-        function openCloudLobby() {
-            if (!initSupabase()) {
+        async function openCloudLobby() {
+            const connected = await initSupabase();
+            if (!connected) {
                 openSupabaseConfig();
                 return;
             }
