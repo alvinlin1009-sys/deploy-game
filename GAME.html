@@ -442,8 +442,8 @@
             const wx = world.x, wy = world.y, ww = world.width, wh = world.height;
 
             if (currentLevel === 0) {
-                // 教學關：視情況顯示箱子
-                const showTutorialBox = (dialogStep >= 5) || (dialogStep === 0 && !isDialogOpen && !isStartScreen);
+                // 教學關：讓箱子從頭到尾永遠顯示，避免玩家認為箱子消失
+                const showTutorialBox = true;
                 if (showTutorialBox) {
                     obstacles.push({ x: wx + ww/2 - 50, y: wy + 120, baseWidth: 100, baseHeight: 120, baseDepth: 100, color: '#777' });
                 }
