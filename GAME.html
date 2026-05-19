@@ -1548,13 +1548,13 @@
                 if (!o || o.x === undefined) continue;
                 
                 if (obs.type === 'lava') {
-                    ctx.fillStyle = '#ff3300';
+                    ctx.fillStyle = '#cc4422';
                 } else {
                     const topZ = (obs.baseZ || 0) + (obs.baseHeight || 120);
                     const ratio = Math.min(Math.max(topZ / 800, 0), 1);
                     const hue = Math.floor(260 - ratio * 100);
-                    const lightness = Math.floor(25 + ratio * 45);
-                    ctx.fillStyle = `hsl(${hue}, 70%, ${lightness}%)`;
+                    const lightness = Math.floor(35 + ratio * 25);
+                    ctx.fillStyle = `hsl(${hue}, 45%, ${lightness}%)`;
                 }
 
                 ctx.fillRect(o.x, o.y, o.w, o.h);
