@@ -590,7 +590,7 @@
         } else {
             // 側面圖投影：Screen X 對應 World Y，Screen Y 對應 World Z
             return {
-                x: world.x + (obs.y - world.y),
+                x: world.x + world.height - (obs.y - world.y) - obs.baseDepth,
                 y: world.y + world.height - (obs.baseZ || 0) - obs.baseHeight,
                 w: obs.baseDepth,
                 h: obs.baseHeight
@@ -660,7 +660,7 @@
             ew = goalPoint.width; eh = 20.5;
         } else {
             // 側面視角：Screen X 對應 World Y (深度)，Screen Y 對應 World Z (高度)
-            sx = world.x + spawnPoint.y;
+            sx = world.x + world.height - spawnPoint.y - 40;
             sy = world.y + world.height - (spawnPoint.z || 0) - sh;
             // 終點在地圖最右側中央 (對應 X 頂部)，Screen Y 對應 Z 高度
             ex = world.x + world.height - 0.5;
@@ -786,7 +786,7 @@
             }
         } else if (viewMode === 'sideview' && (activeTool === 'drag' || activeTool === 'edit')) {
             // 檢查出生點 (側面)
-            const sx = world.x + spawnPoint.y;
+            const sx = world.x + world.height - spawnPoint.y - 40;
             const sy = world.y + world.height - (spawnPoint.z || 0) - 40;
             if (wPos.x >= sx && wPos.x <= sx + 40 && wPos.y >= sy && wPos.y <= sy + 40) {
                 isDraggingSpawn = true;
@@ -912,7 +912,8 @@
                 const oldY = obs.y, oldD = obs.baseDepth;
                 const oldZ = obs.baseZ || 0, oldH = obs.baseHeight;
                 const Z_top = oldZ + oldH, Y_right = oldY + oldD;
-                const curWY = s.x - world.x + world.y, curWZ = H_floor - s.y;
+                const curWY = world.y + world.height - (s.x - world.x);
+                const curWZ = H_floor - s.y;
 
                 if (resizeCorner === 3) { // BR (其實是 Y_right 和 Z)
                     obs.baseDepth = Math.max(10, curWY - oldY);
@@ -937,11 +938,12 @@
             const s = snap({ x: wPos.x - dragOffset.x, y: wPos.y - dragOffset.y });
             if (viewMode === 'topdown') { obs.x = s.x; obs.y = s.y; }
             else {
-                // 側面圖平移：X -> World Y, Y -> World Z
-                obs.y = world.y + (s.x - world.x);
+                // 側面圖平移：Screen X 對應 World Y, Screen Y 對應 World Z
+                obs.y = world.y + world.height - (s.x - world.x) - obs.baseDepth;
                 obs.baseZ = (world.y + world.height) - s.y - obs.baseHeight;
                 // 對齊網格
                 const grid = parseInt(document.getElementById('grid-size').value) || 1;
+                obs.y = Math.round(obs.y / grid) * grid;
                 obs.baseZ = Math.round(obs.baseZ / grid) * grid;
             }
         }
