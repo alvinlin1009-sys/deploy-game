@@ -652,8 +652,7 @@
                 ctx.lineWidth = 3 / camera.zoom;
                 ctx.strokeRect(r.x, r.y, r.w, r.h);
                 // 繪製四個角的小方塊
-                ctx.fillStyle = '#fff';
-                const sz = 14 / camera.zoom;
+                const sz = 16 / camera.zoom;
                 ctx.fillRect(r.x - sz/2, r.y - sz/2, sz, sz); // TL
                 ctx.fillRect(r.x + r.w - sz/2, r.y - sz/2, sz, sz); // TR
                 ctx.fillRect(r.x - sz/2, r.y + r.h - sz/2, sz, sz); // BL
@@ -822,7 +821,7 @@
 
         if (activeTool === 'select' && selectedIndex !== -1) {
             const r = getProjectedRect(obstacles[selectedIndex], viewMode);
-            const sz = 14 / camera.zoom;
+            const sz = 16 / camera.zoom;
             const corners = [
                 {x: r.x, y: r.y},           // 0: TL
                 {x: r.x + r.w, y: r.y},     // 1: TR
@@ -929,18 +928,18 @@
                 const curWY = world.y + world.height - (s.x - world.x);
                 const curWZ = H_floor - s.y;
 
-                if (resizeCorner === 3) { // BR (其實是 Y_right 和 Z)
+                if (resizeCorner === 0) { // TL (對應 Y_right 和 Z_top)
                     obs.baseDepth = Math.max(10, curWY - oldY);
-                    const newZ = Math.min(curWZ, Z_top - 10);
-                    obs.baseZ = newZ; obs.baseHeight = Z_top - newZ;
-                } else if (resizeCorner === 0) { // TL (對應 Y 和 Z_top)
+                    obs.baseHeight = Math.max(10, curWZ - oldZ);
+                } else if (resizeCorner === 1) { // TR (對應 Y 和 Z_top)
                     const newY = Math.min(curWY, Y_right - 10);
                     obs.y = newY; obs.baseDepth = Y_right - newY;
                     obs.baseHeight = Math.max(10, curWZ - oldZ);
-                } else if (resizeCorner === 1) { // TR (對應 Y_right 和 Z_top)
+                } else if (resizeCorner === 2) { // BL (對應 Y_right 和 Z)
                     obs.baseDepth = Math.max(10, curWY - oldY);
-                    obs.baseHeight = Math.max(10, curWZ - oldZ);
-                } else if (resizeCorner === 2) { // BL (對應 Y 和 Z)
+                    const newZ = Math.min(curWZ, Z_top - 10);
+                    obs.baseZ = newZ; obs.baseHeight = Z_top - newZ;
+                } else if (resizeCorner === 3) { // BR (對應 Y 和 Z)
                     const newY = Math.min(curWY, Y_right - 10);
                     obs.y = newY; obs.baseDepth = Y_right - newY;
                     const newZ = Math.min(curWZ, Z_top - 10);
