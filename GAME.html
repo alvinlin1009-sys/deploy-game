@@ -1037,6 +1037,48 @@
         }
 
 
+        function validateSpawnAndGoalInGame() {
+            let sp = world.spawnPoint || { x: world.x + world.width / 2, y: world.y + world.height - 35, z: 0 };
+            let gp = world.goalPoint || { x: world.x + world.width / 2, width: 80, z: 0 };
+
+            let isSpawnInvalid = false;
+            let isGoalInvalid = false;
+
+            for (let obs of obstacles) {
+                if (obs.type === 'lava' || obs.color === '#ff3300') {
+                    if (sp.x >= obs.x && sp.x <= obs.x + obs.baseWidth && sp.y >= obs.y && sp.y <= obs.y + obs.baseDepth) {
+                        const obsTop = (obs.baseZ || 0) + obs.baseHeight;
+                        if ((sp.z || 0) <= obsTop) {
+                            isSpawnInvalid = true;
+                            sp.x = Math.max(world.x + 20, Math.min(world.x + world.width - 20, obs.x - 40));
+                            if (sp.x < world.x + 20) sp.x = Math.min(world.x + world.width - 20, obs.x + obs.baseWidth + 40);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            const gxStart = gp.x - gp.width / 2, gxEnd = gxStart + gp.width;
+            for (let obs of obstacles) {
+                if (obs.type === 'lava' || obs.color === '#ff3300') {
+                    if (obs.y <= world.y + 10) {
+                        if (!(gxEnd <= obs.x || gxStart >= obs.x + obs.baseWidth)) {
+                            isGoalInvalid = true;
+                            gp.x = Math.max(world.x + gp.width / 2, Math.min(world.x + world.width - gp.width / 2, obs.x - gp.width / 2 - 10));
+                            if (gp.x < world.x + gp.width / 2) gp.x = Math.min(world.x + world.width - gp.width / 2, obs.x + obs.baseWidth + gp.width / 2 + 10);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (isSpawnInvalid || isGoalInvalid) {
+                world.spawnPoint = sp;
+                world.goalPoint = gp;
+                console.warn("系統自動防護：起點或終點位於岩漿上方，已自動調整至安全位置。");
+            }
+        }
+
         // 封裝關卡切換的初始化邏輯
         async function setupLevelTransition() {
             isChangingLevel = true;
@@ -1047,6 +1089,7 @@
             player.vy = 0;
 
             await generateObstacles();
+            validateSpawnAndGoalInGame();
             viewMode = 'topdown';
             if (viewInfo && !viewInfo.innerText.includes('主線關卡')) {
                 viewInfo.innerText = `目前視角：上帝視角 (按 E 切換)`;
@@ -1088,7 +1131,10 @@
 
             // 立即尋找起點平台 (getObsRect 會根據目前的 viewMode 回傳矩形)
             for (let i = 0; i < obstacles.length; i++) {
-                let o = getObsRect(obstacles[i]);
+                const obsObj = obstacles[i];
+                if (obsObj.type === 'lava' || obsObj.color === '#ff3300') continue;
+
+                let o = getObsRect(obsObj);
                 if (o && player.x < o.x + o.w && player.x + player.width > o.x &&
                     player.y < o.y + o.h && player.y + player.height > o.y) {
                     player.elevatedFromSide = true;

@@ -918,6 +918,47 @@
         if (isDragging || isResizing || isPanning) requestRender();
     };
 
+    function validateSpawnAndGoal() {
+        let isSpawnInvalid = false;
+        let isGoalInvalid = false;
+        const sx = world.x + spawnPoint.x, sy = world.y + spawnPoint.y;
+        
+        for (let obs of obstacles) {
+            if (obs.type === 'lava' || obs.color === '#ff3300') {
+                if (sx >= obs.x && sx <= obs.x + obs.baseWidth && sy >= obs.y && sy <= obs.y + obs.baseDepth) {
+                    const obsTop = (obs.baseZ || 0) + obs.baseHeight;
+                    if ((spawnPoint.z || 0) <= obsTop) {
+                        isSpawnInvalid = true;
+                        spawnPoint.x = Math.max(0, Math.min(world.width - 40, (obs.x - world.x) - 50));
+                        if (spawnPoint.x < 0) spawnPoint.x = Math.min(world.width - 40, (obs.x + obs.baseWidth - world.x) + 50);
+                        break;
+                    }
+                }
+            }
+        }
+
+        const gxStart = world.x + goalPoint.x, gxEnd = gxStart + goalPoint.width;
+        for (let obs of obstacles) {
+            if (obs.type === 'lava' || obs.color === '#ff3300') {
+                if (obs.y <= world.y + 10) {
+                    if (!(gxEnd <= obs.x || gxStart >= obs.x + obs.baseWidth)) {
+                        isGoalInvalid = true;
+                        goalPoint.x = Math.max(0, Math.min(world.width - goalPoint.width, (obs.x - world.x) - goalPoint.width - 20));
+                        if (goalPoint.x < 0) goalPoint.x = Math.min(world.width - goalPoint.width, (obs.x + obs.baseWidth - world.x) + 20);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (isSpawnInvalid || isGoalInvalid) {
+            alert("⚠️ 警告：出生點與終點不可設置於岩漿上方！系統已自動微調至安全位置。");
+            syncWorldSpawnGoal();
+            updateUI();
+            requestRender();
+        }
+    }
+
     window.onmouseup = () => {
         if (isCreating && viewMode === 'topdown') {
             const cur = snap(screenToWorld(lastMouse.x, lastMouse.y));
@@ -932,6 +973,7 @@
         }
         isPanning = isDragging = isCreating = isResizing = isDraggingSpawn = isDraggingGoal = false;
         updateUI();
+        validateSpawnAndGoal();
         requestRender();
     };
 
@@ -954,6 +996,7 @@
             goalPoint.width = parseFloat(document.getElementById('goal-w').value) || 80;
             goalPoint.z = parseFloat(document.getElementById('goal-z').value) || 0;
             syncWorldSpawnGoal();
+            validateSpawnAndGoal();
             draw();
         }
     }
@@ -1038,6 +1081,8 @@
         obs.baseZ = parseFloat(document.getElementById('obj-z').value) || 0;
         obs.requireX = document.getElementById('obj-require-x').checked;
         updateUI();
+        validateSpawnAndGoal();
+        draw();
     }
 
     function deleteSelected() { if (selectedIndex !== -1) { saveState(); obstacles.splice(selectedIndex, 1); selectedIndex = -1; updateUI(); draw(); } }
