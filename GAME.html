@@ -440,6 +440,7 @@
         const maxLevel = 10; // 最大關卡
         const lavaLevels = [5, 7, 9, 10]; // 哪些關卡有岩漿地板
         let isVictory = false; // 是否已通關
+        let isChangingLevel = false; // 是否正在進行非同步換關載入
 
         let dialogStep = 0; // 0: 無對話框, 1: 冒險者指南, 2: 視角切換教學
         let viewMode = 'topdown';
@@ -1038,6 +1039,7 @@
 
         // 封裝關卡切換的初始化邏輯
         async function setupLevelTransition() {
+            isChangingLevel = true;
             // 先重置一些關鍵狀態
             player.standingOn = null;
             player.elevatedFromSide = false;
@@ -1055,6 +1057,7 @@
 
             // 每一關都執行安全重生檢測
             respawnPlayer();
+            isChangingLevel = false;
         }
 
         function editCurrentLevel() {
@@ -1105,7 +1108,7 @@
 
         // 更新邏輯
         function update(dt) {
-            if (isStartScreen) return;
+            if (isStartScreen || isChangingLevel) return;
 
             // 【新增】處理螢幕震動與紅閃冷卻
             if (shakeAmount > 0) {
