@@ -366,11 +366,8 @@
             <button class="tool-btn" id="tool-place" onclick="setTool('place')">
                 <span>➕</span>放置
             </button>
-            <button class="tool-btn" id="tool-drag" onclick="setTool('drag')">
-                <span>🖐️</span>拖曳
-            </button>
-            <button class="tool-btn" id="tool-edit" onclick="setTool('edit')">
-                <span>📐</span>編輯
+            <button class="tool-btn" id="tool-select" onclick="setTool('select')">
+                <span>🖐️</span>選取與編輯
             </button>
         </div>
     </div>
@@ -504,7 +501,7 @@
     }
 
     let viewMode = 'topdown'; 
-    let activeTool = 'drag'; 
+    let activeTool = 'select'; 
     
     let camera = { x: 0, y: 0, zoom: 1 };
     let isPanning = false;
@@ -648,7 +645,7 @@
             ctx.fillStyle = (obs.type === 'lava') ? '#ff3300' : (obs.color || '#777');
             ctx.globalAlpha = (selectedIndex === index) ? 1.0 : (viewMode === 'sideview' ? 0.5 : 0.7);
             ctx.fillRect(r.x, r.y, r.w, r.h);
-            if (selectedIndex === index && activeTool === 'edit') {
+            if (selectedIndex === index && activeTool === 'select') {
                 ctx.strokeStyle = '#fff';
                 ctx.lineWidth = 3 / camera.zoom;
                 ctx.strokeRect(r.x, r.y, r.w, r.h);
@@ -802,7 +799,7 @@
             if (activeTool === 'place') {
                 isCreating = true; createStart = snap(wPos); selectedIndex = -1; requestRender(); return;
             }
-        } else if (viewMode === 'sideview' && (activeTool === 'drag' || activeTool === 'edit')) {
+        } else if (viewMode === 'sideview' && activeTool === 'select') {
             // 檢查出生點 (側面)
             const sx = world.x + world.height - spawnPoint.y - 40;
             const sy = world.y + world.height - (spawnPoint.z || 0) - 40;
@@ -821,7 +818,7 @@
             }
         }
 
-        if (activeTool === 'edit' && selectedIndex !== -1) {
+        if (activeTool === 'select' && selectedIndex !== -1) {
             const r = getProjectedRect(obstacles[selectedIndex], viewMode);
             const sz = 14 / camera.zoom;
             const corners = [
@@ -840,7 +837,7 @@
             }
         }
 
-        if (activeTool === 'drag' || activeTool === 'edit') {
+        if (activeTool === 'select') {
             let found = -1;
             for (let i = obstacles.length - 1; i >= 0; i--) {
                 const r = getProjectedRect(obstacles[i], viewMode);
