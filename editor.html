@@ -856,7 +856,6 @@
             }
         }
         requestRender();
-        updateUI();
     };
 
     canvas.onmousemove = (e) => {
@@ -882,7 +881,7 @@
                 spawnPoint.z = Math.max(0, Math.min(world.height - 40, s.y));
             }
             syncWorldSpawnGoal();
-            updateUI();
+            initSpawnGoalUI();
             requestRender();
         } else if (isDraggingGoal) {
             if (viewMode === 'topdown') {
@@ -896,7 +895,7 @@
                 goalPoint.z = Math.max(0, Math.min(world.height - goalPoint.width, s.y));
             }
             syncWorldSpawnGoal();
-            updateUI();
+            initSpawnGoalUI();
             requestRender();
         } else if (isResizing && selectedIndex !== -1) {
             const obs = obstacles[selectedIndex];
@@ -949,6 +948,7 @@
                     obs.baseZ = newZ; obs.baseHeight = Z_top - newZ;
                 }
             }
+            updatePropertyPanel();
         } else if (isDragging && selectedIndex !== -1) {
             const obs = obstacles[selectedIndex];
             const s = snap({ x: wPos.x - dragOffset.x, y: wPos.y - dragOffset.y });
@@ -962,9 +962,10 @@
                 obs.y = Math.round(obs.y / grid) * grid;
                 obs.baseZ = Math.round(obs.baseZ / grid) * grid;
             }
+            updatePropertyPanel();
         }
         
-        if (isDragging || isResizing || isPanning) requestRender();
+        if (isDragging || isResizing || isPanning || isCreating) requestRender();
     };
 
     window.onmouseup = () => {
