@@ -340,6 +340,7 @@
         <button class="btn" style="border-color: #00ffcc; color: #00ffcc; background: #0a1a1f; font-weight: bold;" onclick="openPublishModal()">☁️ 發布至雲端 (Supabase)</button>
         <button id="admin-unlock-btn" class="btn" style="border-color: #ffaa00; color: #ffaa00; background: #1f1a0a; font-weight: bold;" onclick="openAdminLoginModal()">🔒 管理者模式</button>
         <button id="official-publish-btn" class="btn" style="border-color: #ff3366; color: #ff3366; background: #1f0a10; font-weight: bold; display: none;" onclick="openOfficialPublishModal()">👑 發布為主線關卡</button>
+        <button id="manage-community-btn" class="btn" style="border-color: #ffaa00; color: #ffaa00; background: #1f1a0a; font-weight: bold; display: none;" onclick="openCommunityManageModal()">🗑️ 管理社群關卡</button>
     </div>
     <div style="display: flex; gap: 10px;">
         <button class="btn" id="view-toggle" onclick="toggleEditorView()">目前視角：上帝視角</button>
@@ -1372,12 +1373,70 @@
         const pw = document.getElementById('admin-login-password').value;
         if (pw === "alvin1234") {
             currentAdminPassword = pw;
-            alert("🔓 管理者模式已解鎖！您現在可以使用「👑 發布為主線關卡」功能。");
+            alert("🔓 管理者模式已解鎖！您現在可以使用「👑 發布為主線關卡」與「🗑️ 管理社群關卡」功能。");
             document.getElementById('admin-unlock-btn').style.display = 'none';
             document.getElementById('official-publish-btn').style.display = 'flex';
+            document.getElementById('manage-community-btn').style.display = 'flex';
             closeAdminLoginModal();
         } else {
             alert("❌ 密碼錯誤！您無權進入管理者模式。");
+        }
+    }
+    async function openCommunityManageModal() {
+        document.getElementById('community-manage-modal').style.display = 'flex';
+        loadCommunityLevelsForAdmin();
+    }
+    function closeCommunityManageModal() {
+        document.getElementById('community-manage-modal').style.display = 'none';
+    }
+    async function loadCommunityLevelsForAdmin() {
+        const listDiv = document.getElementById('admin-community-list');
+        listDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: #aaa;">⏳ 正在載入社群關卡清單...</div>';
+        const connected = await initSupabase();
+        if (!connected || !supabaseClient) {
+            listDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: #ff4444;">❌ Supabase 尚未連線，無法載入清單。</div>';
+            return;
+        }
+        try {
+            const { data, error } = await supabaseClient.from('levels').select('id, name, creator, created_at').order('id', { ascending: false });
+            if (error) throw error;
+            if (!data || data.length === 0) {
+                listDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: #aaa;">📂 目前無任何社群關卡。</div>';
+                return;
+            }
+            let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+            data.forEach(lvl => {
+                const dateStr = new Date(lvl.created_at).toLocaleString();
+                html += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #121216; padding: 12px 16px; border-radius: 8px; border: 1px solid #333;">
+                        <div>
+                            <div style="font-weight: bold; color: #00ffcc; font-size: 15px;">#${lvl.id} - ${lvl.name}</div>
+                            <div style="font-size: 12px; color: #888; margin-top: 4px;">創作者: ${lvl.creator} | 建立時間: ${dateStr}</div>
+                        </div>
+                        <button class="btn" style="background: #330a10; border-color: #ff3333; color: #ff3333; font-weight: bold; padding: 6px 12px;" onclick="deleteCommunityLevel(${lvl.id}, '${lvl.name.replace(/'/g, "\\'")}')">🗑️ 刪除</button>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            listDiv.innerHTML = html;
+        } catch(e) {
+            listDiv.innerHTML = `<div style="padding: 20px; text-align: center; color: #ff4444;">❌ 讀取失敗: ${e.message}</div>`;
+        }
+    }
+    async function deleteCommunityLevel(id, name) {
+        if (!confirm(`⚠️ 警告：確定要永久刪除社群關卡 #${id} (${name}) 嗎？此操作無法復原！`)) return;
+        try {
+            const res = await fetch('/api/delete_community', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ level_id: id, password: currentAdminPassword })
+            });
+            const result = await res.json();
+            if (!res.ok) throw new Error(result.error || "刪除失敗");
+            alert(`🗑️ 成功刪除社群關卡 #${id} (${name})！`);
+            loadCommunityLevelsForAdmin();
+        } catch(e) {
+            alert("刪除失敗: " + e.message);
         }
     }
     function openOfficialPublishModal() {
@@ -1443,6 +1502,18 @@
             <button class="btn" style="padding: 10px 20px; background: #333; color: #fff; border: none; border-radius: 6px; cursor: pointer;" onclick="closeAdminLoginModal()">取消</button>
             <button class="btn" style="padding: 10px 20px; background: #ffaa00; color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 0 15px rgba(255,170,0,0.5);" onclick="verifyAdminLogin()">🔓 驗證解鎖</button>
         </div>
+    </div>
+</div>
+
+<!-- 社群關卡管理 Modal -->
+<div id="community-manage-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 10002; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+    <div style="background: #1a1a24; border: 2px solid #ffaa00; border-radius: 12px; padding: 30px; width: 600px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 0 40px rgba(255,170,0,0.4);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 15px;">
+            <h2 style="margin: 0; color: #ffaa00;">🗑️ 社群關卡管理中心</h2>
+            <button class="btn" style="background: #333; color: #fff; border: none; padding: 6px 12px;" onclick="closeCommunityManageModal()">✕ 關閉</button>
+        </div>
+        <p style="color: #aaa; font-size: 14px; margin-top: 0;">此處列出所有社群玩家上傳的自訂關卡，管理員可審核並移除違規或測試地圖：</p>
+        <div id="admin-community-list" style="flex-grow: 1; overflow-y: auto; padding-right: 5px; margin-bottom: 15px;"></div>
     </div>
 </div>
 
