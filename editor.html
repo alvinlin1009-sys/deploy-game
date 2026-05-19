@@ -455,9 +455,6 @@
                 <span class="prop-label">顏色</span>
                 <input type="color" id="obj-color" class="prop-input" oninput="updateSelected()" style="height: 35px; padding: 2px;">
             </div>
-            <div class="prop-row" id="require-x-row">
-                <span class="prop-label">需按 X 下降</span>
-                <input type="checkbox" id="obj-require-x" onchange="updateSelected()" style="width: 20px; height: 20px; cursor: pointer;">
             </div>
             <button class="btn" style="width: 100%; margin-top: 15px; color: #ff5555; border-color: rgba(255,85,85,0.3);" onclick="deleteSelected()">刪除物件</button>
         </div>
@@ -1142,10 +1139,8 @@
                 document.getElementById('obj-h').value = Math.round(obs.baseHeight || 120);
                 document.getElementById('obj-z').value = Math.round(obs.baseZ || 0);
                 document.getElementById('obj-color').value = obs.color || '#777777';
-                document.getElementById('obj-require-x').checked = !!obs.requireX;
 
                 document.getElementById('color-row').style.display = (obs.type === 'obstacle' ? 'flex' : 'none');
-                document.getElementById('require-x-row').style.display = (obs.type === 'obstacle' ? 'flex' : 'none');
             }
         }
     }
@@ -1188,7 +1183,6 @@
         obs.baseDepth = parseFloat(document.getElementById('obj-d').value);
         obs.baseHeight = parseFloat(document.getElementById('obj-h').value);
         obs.baseZ = parseFloat(document.getElementById('obj-z').value) || 0;
-        obs.requireX = document.getElementById('obj-require-x').checked;
 
         const check = validateSpawnGoalAgainstLava();
         if (!check.valid) {
