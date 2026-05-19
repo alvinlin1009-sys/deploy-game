@@ -5,31 +5,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>2.5D Dimensional Shift | 跨維度冒險</title>
-    
+
     <!-- SEO & Metadata -->
     <meta name="description" content="一款獨特的 2.5D 視角切換冒險遊戲。在上帝視角與側面視角之間切換，破解空間謎題，挑戰維度邊界。">
     <meta name="keywords" content="2.5D, Game, Perspective Shift, Web Game, HTML5, JavaScript, 空間解謎, 獨立遊戲">
     <meta name="author" content="Alvin & Antigravity">
-    
+
     <!-- Social Media Tags (Open Graph) -->
     <meta property="og:title" content="2.5D Dimensional Shift | 跨維度冒險">
     <meta property="og:description" content="切換視角，顛覆空間！你能挑戰 2.5D 的極限嗎？">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
-    
+
     <!-- PWA & Mobile Optimization -->
     <meta name="theme-color" content="#00ffcc">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <!-- 引入 Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&family=Outfit:wght@300;700&display=swap" rel="stylesheet">
-    
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌀</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&family=Outfit:wght@300;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌀</text></svg>">
     <style>
         :root {
             --accent: #00ffcc;
@@ -234,9 +236,13 @@
         <div id="game-subtitle">DIMENSIONAL SHIFT</div>
         <button id="start-btn" onclick="enterGame()">進入遊戲</button>
         <button id="skip-btn" onclick="skipTutorial()">跳過教學關卡</button>
-        <button id="skip-btn" style="margin-top: 10px; color: #ffaa00; border-color: #ffaa00;" onclick="loadLevelCode()">輸入關卡代碼</button>
-        <button id="skip-btn" style="margin-top: 10px; color: #00ffcc; border-color: #00ffcc;" onclick="window.open('editor.html', '_blank')">✏️ 關卡編輯器</button>
-        <button id="skip-btn" style="margin-top: 10px; color: #00ccff; border-color: #00ccff; background: #0a1a24; font-weight: bold;" onclick="openCloudLobby()">🌐 探索社群關卡 (Supabase)</button>
+        <button id="skip-btn" style="margin-top: 10px; color: #ffaa00; border-color: #ffaa00;"
+            onclick="loadLevelCode()">輸入關卡代碼</button>
+        <button id="skip-btn" style="margin-top: 10px; color: #00ffcc; border-color: #00ffcc;"
+            onclick="window.open('editor.html', '_blank')">✏️ 關卡編輯器</button>
+        <button id="skip-btn"
+            style="margin-top: 10px; color: #00ccff; border-color: #00ccff; background: #0a1a24; font-weight: bold;"
+            onclick="openCloudLobby()">🌐 探索社群關卡 (Supabase)</button>
     </div>
 
     <div id="dialog-overlay" class="hidden">
@@ -255,12 +261,14 @@
     <canvas id="gameCanvas"></canvas>
 
     <!-- 新增：DOM 自動演示 UI -->
-    <div id="demo-controls" style="position: absolute; top: 20px; right: 20px; z-index: 9999; display: flex; gap: 10px; flex-direction: column; align-items: flex-end;">
+    <div id="demo-controls"
+        style="position: absolute; top: 20px; right: 20px; z-index: 9999; display: flex; gap: 10px; flex-direction: column; align-items: flex-end;">
         <button id="run-demo-btn" onclick="runDomDemo()"
             style="padding: 12px 20px; background: #00ffcc; color: #000; border: 2px solid #000; cursor: pointer; border-radius: 8px; font-weight: bold; box-shadow: 0 4px #008866; display: block;">[
             Dom 自動演示測試 ]</button>
         <button id="edit-level-btn" onclick="editCurrentLevel()"
-            style="padding: 12px 20px; background: #ffaa00; color: #000; border: 2px solid #000; cursor: pointer; border-radius: 8px; font-weight: bold; box-shadow: 0 4px #aa6600; display: none;">✏️ 編輯本關 (按 M 鍵)</button>
+            style="padding: 12px 20px; background: #ffaa00; color: #000; border: 2px solid #000; cursor: pointer; border-radius: 8px; font-weight: bold; box-shadow: 0 4px #aa6600; display: none;">✏️
+            編輯本關 (按 M 鍵)</button>
     </div>
 
     <script>
@@ -456,7 +464,7 @@
                         return;
                     }
                 }
-            } catch(e) { console.warn("讀取雲端主線失敗，降級使用內建預設關卡", e); }
+            } catch (e) { console.warn("讀取雲端主線失敗，降級使用內建預設關卡", e); }
 
             obstacles.length = 0;
             const wx = world.x, wy = world.y, ww = world.width, wh = world.height;
@@ -465,21 +473,21 @@
                 // 教學關：讓箱子從頭到尾永遠顯示，避免玩家認為箱子消失
                 const showTutorialBox = true;
                 if (showTutorialBox) {
-                    obstacles.push({ x: wx + ww/2 - 50, y: wy + 120, baseWidth: 100, baseHeight: 120, baseDepth: 100, color: '#777' });
+                    obstacles.push({ x: wx + ww / 2 - 50, y: wy + 120, baseWidth: 100, baseHeight: 120, baseDepth: 100, color: '#777' });
                 }
 
             } else if (currentLevel === 1) {
                 // ★ 第 1 關「踏石問路」— 單純上帝視角走迷宮，認識障礙物
                 // 左側牆
-                obstacles.push({ x: wx + 50,  y: wy + 80,  baseWidth: 200, baseHeight: 120, baseDepth: 80,  color: '#4a6080' });
+                obstacles.push({ x: wx + 50, y: wy + 80, baseWidth: 200, baseHeight: 120, baseDepth: 80, color: '#4a6080' });
                 // 中間橫牆（留左右小缺口）
-                obstacles.push({ x: wx + 120, y: wy + 220, baseWidth: 400, baseHeight: 120, baseDepth: 60,  color: '#3d7055' });
+                obstacles.push({ x: wx + 120, y: wy + 220, baseWidth: 400, baseHeight: 120, baseDepth: 60, color: '#3d7055' });
                 // 右側單塊
                 obstacles.push({ x: wx + 560, y: wy + 100, baseWidth: 120, baseHeight: 120, baseDepth: 120, color: '#6a4070' });
                 // 下方右角
                 obstacles.push({ x: wx + 500, y: wy + 350, baseWidth: 180, baseHeight: 120, baseDepth: 130, color: '#70603a' });
                 // 左下角
-                obstacles.push({ x: wx + 50,  y: wy + 400, baseWidth: 130, baseHeight: 120, baseDepth: 100, color: '#4a6080' });
+                obstacles.push({ x: wx + 50, y: wy + 400, baseWidth: 130, baseHeight: 120, baseDepth: 100, color: '#4a6080' });
 
             } else if (currentLevel === 2) {
                 // ★ 第 2 關「高台跳躍」— 側面視角跳上高台走過去
@@ -488,31 +496,31 @@
                 // 右側跳台 (側面視角可見)
                 obstacles.push({ x: wx + 380, y: wy + 100, baseWidth: 180, baseHeight: 180, baseDepth: 400, color: '#3d9055' });
                 // 左邊起跳台
-                obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 80,  baseHeight: 100, baseDepth: 500, color: '#665544' });
+                obstacles.push({ x: wx + 80, y: wy + 80, baseWidth: 80, baseHeight: 100, baseDepth: 500, color: '#665544' });
 
             } else if (currentLevel === 3) {
                 // ★ 第 3 關「兩視角切換」— 需要切換視角繞過 L 形障礙
                 // 水平牆（上帝可見，擋住直行）
-                obstacles.push({ x: wx + 80,  y: wy + 180, baseWidth: 550, baseHeight: 120, baseDepth: 80,  color: '#aa5533' });
+                obstacles.push({ x: wx + 80, y: wy + 180, baseWidth: 550, baseHeight: 120, baseDepth: 80, color: '#aa5533' });
                 // 垂直牆（側面可見，頂部有豁口）
-                obstacles.push({ x: wx + 350, y: wy + 80,  baseWidth: 80,  baseHeight: 200, baseDepth: 100, color: '#3388aa' });
+                obstacles.push({ x: wx + 350, y: wy + 80, baseWidth: 80, baseHeight: 200, baseDepth: 100, color: '#3388aa' });
                 // 右側跳台
-                obstacles.push({ x: wx + 520, y: wy + 80,  baseWidth: 120, baseHeight: 80,  baseDepth: 350, color: '#559933' });
+                obstacles.push({ x: wx + 520, y: wy + 80, baseWidth: 120, baseHeight: 80, baseDepth: 350, color: '#559933' });
                 // 左角擋牆
-                obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 80,  baseHeight: 120, baseDepth: 100, color: '#887733' });
+                obstacles.push({ x: wx + 80, y: wy + 80, baseWidth: 80, baseHeight: 120, baseDepth: 100, color: '#887733' });
 
             } else if (currentLevel === 4) {
                 // ★ 第 4 關「階梯天堂」— 三層階梯，需側面視角跳上去後上帝視角穿越
                 // 階梯 1 (最低)
-                obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 150, baseHeight: 80,  baseDepth: 180, color: '#7755aa' });
+                obstacles.push({ x: wx + 80, y: wy + 80, baseWidth: 150, baseHeight: 80, baseDepth: 180, color: '#7755aa' });
                 // 階梯 2 (中間)
-                obstacles.push({ x: wx + 260, y: wy + 80,  baseWidth: 150, baseHeight: 160, baseDepth: 180, color: '#5577aa' });
+                obstacles.push({ x: wx + 260, y: wy + 80, baseWidth: 150, baseHeight: 160, baseDepth: 180, color: '#5577aa' });
                 // 階梯 3 (最高)
-                obstacles.push({ x: wx + 440, y: wy + 80,  baseWidth: 150, baseHeight: 260, baseDepth: 180, color: '#3399aa' });
+                obstacles.push({ x: wx + 440, y: wy + 80, baseWidth: 150, baseHeight: 260, baseDepth: 180, color: '#3399aa' });
                 // 頂部平台（上帝視角下走到出口）
-                obstacles.push({ x: wx + 80,  y: wy + 350, baseWidth: 520, baseHeight: 80,  baseDepth: 80,  color: '#556655' });
+                obstacles.push({ x: wx + 80, y: wy + 350, baseWidth: 520, baseHeight: 80, baseDepth: 80, color: '#556655' });
                 // 右側擋路
-                obstacles.push({ x: wx + 620, y: wy + 150, baseWidth: 60,  baseHeight: 250, baseDepth: 350, color: '#773333' });
+                obstacles.push({ x: wx + 620, y: wy + 150, baseWidth: 60, baseHeight: 250, baseDepth: 350, color: '#773333' });
 
             } else if (currentLevel === 5) {
                 // ★ 第 5 關「岩漿跳島」— 地板有岩漿，必須跳島前進
@@ -525,71 +533,70 @@
                 // 中間小島 3
                 obstacles.push({ x: wx + 560, y: wy + 300, baseWidth: 130, baseHeight: 140, baseDepth: 120, color: '#668866' });
                 // 終點平台
-                obstacles.push({ x: wx + 300, y: wy + 80,  baseWidth: 200, baseHeight: 120, baseDepth: 150, color: '#aaaa44' });
+                obstacles.push({ x: wx + 300, y: wy + 80, baseWidth: 200, baseHeight: 120, baseDepth: 150, color: '#aaaa44' });
 
             } else if (currentLevel === 6) {
                 // ★ 第 6 關「隱形橋」— 上帝視角看不見橋，側面才看得到（橋細而長）
                 // 粗大擋牆（橫向）
-                obstacles.push({ x: wx + 100, y: wy + 80,  baseWidth: 80,  baseHeight: 120, baseDepth: 450, color: '#6644aa' });
-                obstacles.push({ x: wx + 620, y: wy + 80,  baseWidth: 80,  baseHeight: 120, baseDepth: 450, color: '#6644aa' });
+                obstacles.push({ x: wx + 100, y: wy + 80, baseWidth: 80, baseHeight: 120, baseDepth: 450, color: '#6644aa' });
+                obstacles.push({ x: wx + 620, y: wy + 80, baseWidth: 80, baseHeight: 120, baseDepth: 450, color: '#6644aa' });
                 // 細橋（高度高，但上帝視角 depth 很小故幾乎不可見）
-                obstacles.push({ x: wx + 180, y: wy + 280, baseWidth: 440, baseHeight: 300, baseDepth: 20,  color: '#44aaaa' });
+                obstacles.push({ x: wx + 180, y: wy + 280, baseWidth: 440, baseHeight: 300, baseDepth: 20, color: '#44aaaa' });
                 // 引導牆
                 obstacles.push({ x: wx + 300, y: wy + 420, baseWidth: 200, baseHeight: 120, baseDepth: 120, color: '#554433' });
 
             } else if (currentLevel === 7) {
                 // ★ 第 7 關「岩漿迷城」— 地板岩漿，上帝視角複雜迷宮
-                obstacles.push({ x: wx + 50,  y: wy + 470, baseWidth: 700, baseHeight: 120, baseDepth: 80,  color: '#557744' });
-                obstacles.push({ x: wx + 50,  y: wy + 80,  baseWidth: 120, baseHeight: 120, baseDepth: 390, color: '#557744' });
+                obstacles.push({ x: wx + 50, y: wy + 470, baseWidth: 700, baseHeight: 120, baseDepth: 80, color: '#557744' });
+                obstacles.push({ x: wx + 50, y: wy + 80, baseWidth: 120, baseHeight: 120, baseDepth: 390, color: '#557744' });
                 obstacles.push({ x: wx + 200, y: wy + 200, baseWidth: 120, baseHeight: 120, baseDepth: 270, color: '#446655' });
-                obstacles.push({ x: wx + 350, y: wy + 80,  baseWidth: 120, baseHeight: 120, baseDepth: 270, color: '#446655' });
+                obstacles.push({ x: wx + 350, y: wy + 80, baseWidth: 120, baseHeight: 120, baseDepth: 270, color: '#446655' });
                 obstacles.push({ x: wx + 500, y: wy + 200, baseWidth: 120, baseHeight: 120, baseDepth: 270, color: '#557744' });
-                obstacles.push({ x: wx + 630, y: wy + 80,  baseWidth: 120, baseHeight: 120, baseDepth: 390, color: '#557744' });
+                obstacles.push({ x: wx + 630, y: wy + 80, baseWidth: 120, baseHeight: 120, baseDepth: 390, color: '#557744' });
 
             } else if (currentLevel === 8) {
                 // ★ 第 8 關「雙重視角謎題」— 兩個視角都要用，高台+迷宮雙重挑戰
                 // 上帝視角的「L」形牆
-                obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 500, baseHeight: 120, baseDepth: 60,  color: '#5566cc' });
-                obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 60,  baseHeight: 120, baseDepth: 380, color: '#5566cc' });
+                obstacles.push({ x: wx + 80, y: wy + 80, baseWidth: 500, baseHeight: 120, baseDepth: 60, color: '#5566cc' });
+                obstacles.push({ x: wx + 80, y: wy + 80, baseWidth: 60, baseHeight: 120, baseDepth: 380, color: '#5566cc' });
                 // 需跳過的高台
                 obstacles.push({ x: wx + 250, y: wy + 200, baseWidth: 200, baseHeight: 280, baseDepth: 200, color: '#cc6633' });
                 // 右側通道引導
-                obstacles.push({ x: wx + 560, y: wy + 160, baseWidth: 60,  baseHeight: 120, baseDepth: 340, color: '#5566cc' });
+                obstacles.push({ x: wx + 560, y: wy + 160, baseWidth: 60, baseHeight: 120, baseDepth: 340, color: '#5566cc' });
                 // 底部擋牆
-                obstacles.push({ x: wx + 80,  y: wy + 460, baseWidth: 640, baseHeight: 120, baseDepth: 60,  color: '#334455' });
+                obstacles.push({ x: wx + 80, y: wy + 460, baseWidth: 640, baseHeight: 120, baseDepth: 60, color: '#334455' });
 
             } else if (currentLevel === 9) {
                 // ★ 第 9 關「熔岩跑酷」— 岩漿地板 + 高速跳躍連跳考驗
                 // 出生平台
                 obstacles.push({ x: wx + 300, y: wy + 430, baseWidth: 180, baseHeight: 130, baseDepth: 120, color: '#888855' });
                 // 跳台連鎖（間距逐漸加大）
-                obstacles.push({ x: wx + 100, y: wy + 350, baseWidth: 100, baseHeight: 150, baseDepth: 80,  color: '#6688aa' });
-                obstacles.push({ x: wx + 550, y: wy + 260, baseWidth: 100, baseHeight: 170, baseDepth: 80,  color: '#6688aa' });
-                obstacles.push({ x: wx + 200, y: wy + 160, baseWidth: 100, baseHeight: 190, baseDepth: 80,  color: '#6688aa' });
-                obstacles.push({ x: wx + 450, y: wy + 80,  baseWidth: 120, baseHeight: 210, baseDepth: 100, color: '#aabb44' });
+                obstacles.push({ x: wx + 100, y: wy + 350, baseWidth: 100, baseHeight: 150, baseDepth: 80, color: '#6688aa' });
+                obstacles.push({ x: wx + 550, y: wy + 260, baseWidth: 100, baseHeight: 170, baseDepth: 80, color: '#6688aa' });
+                obstacles.push({ x: wx + 200, y: wy + 160, baseWidth: 100, baseHeight: 190, baseDepth: 80, color: '#6688aa' });
+                obstacles.push({ x: wx + 450, y: wy + 80, baseWidth: 120, baseHeight: 210, baseDepth: 100, color: '#aabb44' });
                 // 終點高台
-                obstacles.push({ x: wx + 300, y: wy + 80,  baseWidth: 120, baseHeight: 220, baseDepth: 90,  color: '#ffcc44' });
+                obstacles.push({ x: wx + 300, y: wy + 80, baseWidth: 120, baseHeight: 220, baseDepth: 90, color: '#ffcc44' });
 
             } else if (currentLevel === 10) {
                 // ★ 第 10 關「終極次元」— 岩漿+複雜地形+需精確操作雙視角
                 // 起點島
                 obstacles.push({ x: wx + 330, y: wy + 420, baseWidth: 140, baseHeight: 130, baseDepth: 130, color: '#888855' });
                 // 第一段：上帝視角繞行
-                obstacles.push({ x: wx + 80,  y: wy + 300, baseWidth: 200, baseHeight: 120, baseDepth: 100, color: '#5577bb' });
+                obstacles.push({ x: wx + 80, y: wy + 300, baseWidth: 200, baseHeight: 120, baseDepth: 100, color: '#5577bb' });
                 obstacles.push({ x: wx + 540, y: wy + 300, baseWidth: 180, baseHeight: 120, baseDepth: 100, color: '#5577bb' });
                 // 中段高台（側面跳躍）
                 obstacles.push({ x: wx + 200, y: wy + 180, baseWidth: 160, baseHeight: 250, baseDepth: 120, color: '#cc5533' });
                 obstacles.push({ x: wx + 440, y: wy + 180, baseWidth: 160, baseHeight: 200, baseDepth: 120, color: '#cc5533' });
                 // 最終衝刺橋（細而高）
-                obstacles.push({ x: wx + 280, y: wy + 80,  baseWidth: 240, baseHeight: 320, baseDepth: 100, color: '#ffcc00' });
+                obstacles.push({ x: wx + 280, y: wy + 80, baseWidth: 240, baseHeight: 320, baseDepth: 100, color: '#ffcc00' });
                 // 左右危險牆
-                obstacles.push({ x: wx + 80,  y: wy + 80,  baseWidth: 60,  baseHeight: 120, baseDepth: 500, color: '#aa3333' });
-                obstacles.push({ x: wx + 660, y: wy + 80,  baseWidth: 60,  baseHeight: 120, baseDepth: 500, color: '#aa3333' });
+                obstacles.push({ x: wx + 80, y: wy + 80, baseWidth: 60, baseHeight: 120, baseDepth: 500, color: '#aa3333' });
+                obstacles.push({ x: wx + 660, y: wy + 80, baseWidth: 60, baseHeight: 120, baseDepth: 500, color: '#aa3333' });
             }
 
-            // 若方塊位於該位置且不是岩漿，改為標記「站在障礙物上」而非彈開
+            // 若方塊位於該位置，改為標記「站在障礙物上」而非彈開
             for (let i = 0; i < obstacles.length; i++) {
-                if (obstacles[i].type === 'lava') continue;
                 let o = getObsRect(obstacles[i]);
                 if (!o) continue;
                 if (player.x < o.x + o.w && player.x + player.width > o.x &&
@@ -639,19 +646,19 @@
             try {
                 // 解碼 Base64 (支援 UTF-8)
                 const data = JSON.parse(decodeURIComponent(escape(atob(code))));
-                
+
                 // 注入地圖數據
                 Object.assign(world, data.world);
                 obstacles.length = 0;
                 obstacles.push(...data.obstacles);
-                
+
                 // 介面切換
                 isStartScreen = false;
                 document.getElementById('start-screen').classList.add('hidden');
                 dialogOverlay.classList.add('hidden');
-                
+
                 // 標記為自定義關卡並啟動
-                currentLevel = -1; 
+                currentLevel = -1;
                 isDialogOpen = false;
                 setupLevelTransition();
             } catch (e) {
@@ -668,7 +675,7 @@
                         Object.assign(world, data.world);
                         obstacles.length = 0;
                         obstacles.push(...data.obstacles);
-                        
+
                         isStartScreen = false;
                         document.getElementById('start-screen').classList.add('hidden');
                         const overlay = document.getElementById('dialog-overlay');
@@ -925,7 +932,7 @@
             // --- 視角切換核心邏輯 ---
             if (oldViewMode === 'topdown') {
                 // 從 上帝視角 (XZ) 轉到 側面視角 (ZY)
-                player.lockedX = oldX; 
+                player.lockedX = oldX;
                 const zRel = oldY - world.y;
 
                 // 側視圖的 X 軸其實是 Topdown 的 Y 軸 (Z軸)
@@ -1043,8 +1050,10 @@
         }
 
         function respawnPlayer() {
-            const startX = world.spawnPoint ? (world.x + world.spawnPoint.x) : (world.x + world.width / 2 - player.width / 2);
-            const startY = world.spawnPoint ? (world.y + world.spawnPoint.y) : (world.y + world.height - player.height - 20);
+            const sX = world.spawnPoint ? world.spawnPoint.x : (world.width / 2 - player.width / 2);
+            const sY = world.spawnPoint ? world.spawnPoint.y : (world.height - player.height - 20);
+            const startX = world.x + sX;
+            const startY = world.y + sY;
 
             if (viewMode === 'topdown') {
                 player.x = startX;
@@ -1052,9 +1061,8 @@
             } else {
                 // 在側面模式下，設定正確的 Z 軸視覺位置與鎖定位置 (X 軸)
                 player.lockedX = startX;
-                const zRel = startY - world.y;
-                player.x = world.x + (world.height - zRel - player.width);
                 const spawnZ = world.spawnPoint ? (world.spawnPoint.z || 0) : 0;
+                player.x = world.x + sX;
                 player.y = world.y + world.height - spawnZ - player.height;
             }
 
@@ -1062,9 +1070,8 @@
             player.elevatedFromSide = false;
             player.standingOn = null;
 
-            // 立即尋找起點平台 (getObsRect 會根據目前的 viewMode 回傳矩形，排除岩漿)
+            // 立即尋找起點平台 (getObsRect 會根據目前的 viewMode 回傳矩形)
             for (let i = 0; i < obstacles.length; i++) {
-                if (obstacles[i].type === 'lava') continue;
                 let o = getObsRect(obstacles[i]);
                 if (o && player.x < o.x + o.w && player.x + player.width > o.x &&
                     player.y < o.y + o.h && player.y + player.height > o.y) {
@@ -1239,7 +1246,9 @@
                 if (isDialogOpen && !tutorialAllowedSteps.includes(dialogStep)) {
                     // 暫不處理
                 } else {
-                    if (currentLevel < maxLevel) {
+                    if (currentLevel === -1) {
+                        if (!isVictory) showCustomVictoryScreen();
+                    } else if (currentLevel < maxLevel) {
                         currentLevel++;
                         setupLevelTransition();
                     } else if (!isVictory) {
@@ -1276,9 +1285,9 @@
                 const o = targetObs ? getObsRect(targetObs) : null;
                 if (o) {
                     // 檢查是否完全走出範圍
-                    const isOutside = player.x + player.width < o.x || player.x > o.x + o.w || 
-                                     player.y + player.height < o.y || player.y > o.y + o.h;
-                    
+                    const isOutside = player.x + player.width < o.x || player.x > o.x + o.w ||
+                        player.y + player.height < o.y || player.y > o.y + o.h;
+
                     if (isOutside) {
                         player.elevatedFromSide = false;
                         player.standingOn = null;
@@ -1321,19 +1330,7 @@
                 if (Math.abs(player.reboundX) < 0.1) player.reboundX = 0;
             }
 
-            // 優先檢查是否碰觸到自訂岩漿物件 (Lava)
             for (let i = 0; i < obstacles.length; i++) {
-                if (obstacles[i].type === 'lava') {
-                    let o = getObsRect(obstacles[i]);
-                    if (o && player.x < o.x + o.w && player.x + player.width > o.x && player.y < o.y + o.h && player.y + player.height > o.y) {
-                        if (!player.isDemoProtected) playerDie();
-                        return;
-                    }
-                }
-            }
-
-            for (let i = 0; i < obstacles.length; i++) {
-                if (obstacles[i].type === 'lava') continue;
                 let o = getObsRect(obstacles[i]);
                 if (!o) continue;
                 // 如果正站在該障礙物上方，忽略碰撞（改由後方的邊界鎖定邏輯處理）
@@ -1352,7 +1349,6 @@
             }
 
             for (let i = 0; i < obstacles.length; i++) {
-                if (obstacles[i].type === 'lava') continue;
                 let o = getObsRect(obstacles[i]);
                 if (!o) continue;
                 if (viewMode === 'topdown' && player.elevatedFromSide && i === player.standingOn) continue;
@@ -1529,7 +1525,7 @@
             for (const obs of obstacles) {
                 let o = getVisualRectForMode(obs, mode, currentLockedX);
                 if (!o || o.x === undefined) continue;
-                ctx.fillStyle = (obs.type === 'lava') ? '#ff3300' : (obs.color || '#777');
+                ctx.fillStyle = obs.color || '#777';
                 ctx.fillRect(o.x, o.y, o.w, o.h);
             }
 
@@ -1644,7 +1640,7 @@
                             key = envData.SUPABASE_ANON_KEY;
                         }
                     }
-                } catch(e) { console.warn("無法從環境變數 API 取得設定", e); }
+                } catch (e) { console.warn("無法從環境變數 API 取得設定", e); }
             }
 
             if (url.includes('supabase.co') && key && key !== "your-anon-key") {
@@ -1722,7 +1718,7 @@
                         <button onclick='playCloudLevel(${JSON.stringify(lvl).replace(/'/g, "&#39;")})' style="padding: 10px 20px; background: #00ffcc; color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 0 10px rgba(0,255,204,0.4);">🚀 立即遊玩</button>
                     </div>
                 `).join('');
-            } catch(e) {
+            } catch (e) {
                 listContainer.innerHTML = `<div style="text-align: center; padding: 40px; color: #ff3333;">讀取失敗！請確認 Supabase 權限與資料表 (levels) 設定。<br><span style="font-size: 12px; color: #888;">${e.message || ''}</span></div>`;
             }
         }
@@ -1750,17 +1746,26 @@
     </script>
 
     <!-- 雲端社群大廳 Modal -->
-    <div id="cloud-lobby-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
-        <div style="background: #1a1a24; border: 2px solid #00ccff; border-radius: 12px; padding: 30px; width: 700px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 0 40px rgba(0,204,255,0.3);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px;">
+    <div id="cloud-lobby-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div
+            style="background: #1a1a24; border: 2px solid #00ccff; border-radius: 12px; padding: 30px; width: 700px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 0 40px rgba(0,204,255,0.3);">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px;">
                 <div>
                     <h2 style="margin: 0; color: #00ccff; font-size: 24px;">🌐 跨維度社群關卡大廳</h2>
                     <div style="font-size: 13px; color: #aaa; margin-top: 4px;">隨選遊玩全球玩家打造的極限關卡！</div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button onclick="openSupabaseConfig()" style="padding: 8px 15px; background: #2a2a36; color: #ffaa00; border: 1px solid #ffaa00; border-radius: 6px; cursor: pointer; font-weight: bold;">⚙️ 金鑰設定</button>
-                    <button onclick="fetchCloudLevels()" style="padding: 8px 15px; background: #2a2a36; color: #fff; border: 1px solid #555; border-radius: 6px; cursor: pointer;">🔄 重新整理</button>
-                    <button onclick="closeCloudLobby()" style="padding: 8px 15px; background: #aa3333; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ 關閉</button>
+                    <button onclick="openSupabaseConfig()"
+                        style="padding: 8px 15px; background: #2a2a36; color: #ffaa00; border: 1px solid #ffaa00; border-radius: 6px; cursor: pointer; font-weight: bold;">⚙️
+                        金鑰設定</button>
+                    <button onclick="fetchCloudLevels()"
+                        style="padding: 8px 15px; background: #2a2a36; color: #fff; border: 1px solid #555; border-radius: 6px; cursor: pointer;">🔄
+                        重新整理</button>
+                    <button onclick="closeCloudLobby()"
+                        style="padding: 8px 15px; background: #aa3333; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">✕
+                        關閉</button>
                 </div>
             </div>
             <div id="cloud-levels-list" style="flex: 1; overflow-y: auto; padding-right: 10px;">
@@ -1770,26 +1775,38 @@
     </div>
 
     <!-- Supabase 金鑰設定 Modal -->
-    <div id="supabase-config-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 10001; justify-content: center; align-items: center;">
-        <div style="background: #1a1a24; border: 2px solid #ffaa00; border-radius: 12px; padding: 30px; width: 500px; box-shadow: 0 0 30px rgba(255,170,0,0.3);">
+    <div id="supabase-config-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 10001; justify-content: center; align-items: center;">
+        <div
+            style="background: #1a1a24; border: 2px solid #ffaa00; border-radius: 12px; padding: 30px; width: 500px; box-shadow: 0 0 30px rgba(255,170,0,0.3);">
             <h2 style="margin-top: 0; color: #ffaa00;">⚙️ 設定 Supabase 連線金鑰</h2>
             <p style="color: #aaa; font-size: 14px;">系統偵測到您尚未設定 Supabase 專案金鑰。請填入您的 Supabase API 設定以啟用雲端關卡庫功能：</p>
             <div style="margin-bottom: 15px;">
                 <label style="display: block; margin-bottom: 5px; color: #fff;">🔗 Supabase Project URL</label>
-                <input id="config-url" type="text" placeholder="https://your-project-id.supabase.co" style="width: 100%; padding: 10px; background: #0a0a0c; border: 1px solid #555; color: #fff; border-radius: 6px;">
+                <input id="config-url" type="text" placeholder="https://your-project-id.supabase.co"
+                    style="width: 100%; padding: 10px; background: #0a0a0c; border: 1px solid #555; color: #fff; border-radius: 6px;">
             </div>
             <div style="margin-bottom: 25px;">
                 <label style="display: block; margin-bottom: 5px; color: #fff;">🔑 Supabase Anon Key</label>
-                <input id="config-key" type="password" placeholder="eyJhbGciOiJIUzI1NiIsIn..." style="width: 100%; padding: 10px; background: #0a0a0c; border: 1px solid #555; color: #fff; border-radius: 6px;">
+                <input id="config-key" type="password" placeholder="eyJhbGciOiJIUzI1NiIsIn..."
+                    style="width: 100%; padding: 10px; background: #0a0a0c; border: 1px solid #555; color: #fff; border-radius: 6px;">
             </div>
-            <div style="background: #2a2a36; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; color: #ccc;">
-                💡 <b>資料表建立提示</b>：請確保在 Supabase 建立名為 <code>levels</code> 的資料表，並包含 <code>id</code>(主鍵), <code>name</code>(text), <code>creator</code>(text), <code>world</code>(jsonb), <code>obstacles</code>(jsonb), <code>created_at</code>(timestamptz) 欄位。
+            <div
+                style="background: #2a2a36; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; color: #ccc;">
+                💡 <b>資料表建立提示</b>：請確保在 Supabase 建立名為 <code>levels</code> 的資料表，並包含 <code>id</code>(主鍵),
+                <code>name</code>(text), <code>creator</code>(text), <code>world</code>(jsonb),
+                <code>obstacles</code>(jsonb), <code>created_at</code>(timestamptz) 欄位。
             </div>
             <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button class="btn" style="padding: 10px 20px; background: #333; color: #fff; border: none; border-radius: 6px; cursor: pointer;" onclick="closeSupabaseConfig()">取消</button>
-                <button class="btn" style="padding: 10px 20px; background: #ffaa00; color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;" onclick="saveSupabaseConfig()">💾 儲存設定</button>
+                <button class="btn"
+                    style="padding: 10px 20px; background: #333; color: #fff; border: none; border-radius: 6px; cursor: pointer;"
+                    onclick="closeSupabaseConfig()">取消</button>
+                <button class="btn"
+                    style="padding: 10px 20px; background: #ffaa00; color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;"
+                    onclick="saveSupabaseConfig()">💾 儲存設定</button>
             </div>
         </div>
     </div>
 </body>
+
 </html>
