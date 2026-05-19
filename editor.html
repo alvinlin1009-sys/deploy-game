@@ -322,8 +322,6 @@
         <div style="font-weight: 900; font-size: 20px; color: var(--accent); letter-spacing: 2px;">開發者工作室</div>
         <div style="width: 1px; height: 30px; background: var(--border);"></div>
         <button class="btn" onclick="newLevel()">新建關卡</button>
-        <button class="btn" onclick="exportJSON()">導出 JSON</button>
-        <button class="btn" onclick="importJSON()">導入 JSON</button>
         <button class="btn" style="border-color: #ffaa00; color: #ffaa00;" onclick="copyLevelCode()">複製關卡代碼</button>
         <div style="width: 1px; height: 30px; background: var(--border);"></div>
         <select id="official-level-select" class="btn" style="background: #1a1a24; color: #00ffcc; border-color: #00ffcc; font-weight: bold; padding: 6px 12px;" onchange="loadOfficial(this.value)">
@@ -1110,30 +1108,6 @@
 
     function deleteSelected() { if (selectedIndex !== -1) { saveState(); obstacles.splice(selectedIndex, 1); selectedIndex = -1; updateUI(); draw(); } }
     function newLevel() { if (confirm("確定清空嗎？")) { saveState(); obstacles = []; selectedIndex = -1; draw(); } }
-    function exportJSON() {
-        syncWorldSpawnGoal();
-        const str = JSON.stringify({ world, obstacles }, null, 2);
-        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([str], {type: "application/json"}));
-        a.download = "level.json"; a.click();
-    }
-    function importJSON() {
-        const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
-        input.onchange = (e) => {
-            const reader = new FileReader();
-            reader.onload = (re) => {
-                saveState();
-                const data = JSON.parse(re.target.result);
-                world = data.world; obstacles = data.obstacles;
-                if (world.spawnPoint) spawnPoint = world.spawnPoint;
-                if (world.goalPoint) goalPoint = world.goalPoint;
-                syncWorldSpawnGoal();
-                updateUI();
-                draw();
-            };
-            reader.readAsText(e.target.files[0]);
-        };
-        input.click();
-    }
     function testLevel() {
         syncWorldSpawnGoal();
         const check = validateSpawnGoalAgainstLava();
