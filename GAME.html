@@ -1242,6 +1242,7 @@
             if (hasInput) player.autoMove = null;
 
             let ex, ey, ew, eh;
+            const currentWidth = (viewMode === 'topdown') ? world.width : world.height;
             const goal = world.goalPoint || { x: world.x + world.width / 2, width: 80, z: 0 };
             if (viewMode === 'topdown') {
                 ex = goal.x - goal.width / 2; ey = world.y - 20; ew = goal.width; eh = 20.5;
