@@ -1546,7 +1546,17 @@
             for (const obs of obstacles) {
                 let o = getVisualRectForMode(obs, mode, currentLockedX);
                 if (!o || o.x === undefined) continue;
-                ctx.fillStyle = obs.color || '#777';
+                
+                if (obs.type === 'lava') {
+                    ctx.fillStyle = '#ff3300';
+                } else {
+                    const topZ = (obs.baseZ || 0) + (obs.baseHeight || 120);
+                    const ratio = Math.min(Math.max(topZ / 800, 0), 1);
+                    const hue = Math.floor(260 - ratio * 100);
+                    const lightness = Math.floor(25 + ratio * 45);
+                    ctx.fillStyle = `hsl(${hue}, 70%, ${lightness}%)`;
+                }
+
                 ctx.fillRect(o.x, o.y, o.w, o.h);
             }
 

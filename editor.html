@@ -451,9 +451,6 @@
                 <span class="prop-label">離地高度 (Z)</span>
                 <input type="number" id="obj-z" class="prop-input" oninput="updateSelected()">
             </div>
-            <div class="prop-row" id="color-row">
-                <span class="prop-label">顏色</span>
-                <input type="color" id="obj-color" class="prop-input" oninput="updateSelected()" style="height: 35px; padding: 2px;">
             </div>
             </div>
             <button class="btn" style="width: 100%; margin-top: 15px; color: #ff5555; border-color: rgba(255,85,85,0.3);" onclick="deleteSelected()">刪除物件</button>
@@ -639,7 +636,15 @@
         obstacles.forEach((obs, index) => {
             const r = getProjectedRect(obs, viewMode);
             ctx.save();
-            ctx.fillStyle = (obs.type === 'lava') ? '#ff3300' : (obs.color || '#777');
+            if (obs.type === 'lava') {
+                ctx.fillStyle = '#ff3300';
+            } else {
+                const topZ = (obs.baseZ || 0) + (obs.baseHeight || 120);
+                const ratio = Math.min(Math.max(topZ / 800, 0), 1);
+                const hue = Math.floor(260 - ratio * 100);
+                const lightness = Math.floor(25 + ratio * 45);
+                ctx.fillStyle = `hsl(${hue}, 70%, ${lightness}%)`;
+            }
             ctx.globalAlpha = (selectedIndex === index) ? 1.0 : (viewMode === 'sideview' ? 0.5 : 0.7);
             ctx.fillRect(r.x, r.y, r.w, r.h);
             if (selectedIndex === index && activeTool === 'select') {
@@ -1138,9 +1143,6 @@
                 document.getElementById('obj-d').value = Math.round(obs.baseDepth);
                 document.getElementById('obj-h').value = Math.round(obs.baseHeight || 120);
                 document.getElementById('obj-z').value = Math.round(obs.baseZ || 0);
-                document.getElementById('obj-color').value = obs.color || '#777777';
-
-                document.getElementById('color-row').style.display = (obs.type === 'obstacle' ? 'flex' : 'none');
             }
         }
     }
@@ -1164,18 +1166,6 @@
         const obs = obstacles[selectedIndex];
         const oldType = obs.type;
         obs.type = document.getElementById('obj-type').value;
-        
-        if (oldType !== obs.type) {
-            if (obs.type === 'lava') {
-                obs.color = '#ff3300';
-                document.getElementById('obj-color').value = '#ff3300';
-            } else {
-                obs.color = '#777777';
-                document.getElementById('obj-color').value = '#777777';
-            }
-        } else {
-            obs.color = document.getElementById('obj-color').value;
-        }
         
         obs.x = parseFloat(document.getElementById('obj-x').value);
         obs.y = parseFloat(document.getElementById('obj-y').value);
