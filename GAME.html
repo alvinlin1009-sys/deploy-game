@@ -1260,12 +1260,20 @@
                     // 暫不處理
                 } else {
                     if (currentLevel === -1) {
-                        showCustomVictoryScreen();
+                        if (currentCampaignLevels && campaignLevelIndex < currentCampaignLevels.length - 1) {
+                            campaignLevelIndex++;
+                            loadCampaignLevelIndex(campaignLevelIndex);
+                            if (viewInfo) viewInfo.innerText = `目前遊玩：社群關卡包 (第 ${campaignLevelIndex + 1} 關)`;
+                        } else {
+                            if (typeof showCustomVictoryScreen === 'function') showCustomVictoryScreen();
+                            else { alert("🎉 太神啦！您已完全通關此關卡包！"); window.location.reload(); }
+                        }
                     } else if (currentLevel < maxLevel) {
                         currentLevel++;
                         setupLevelTransition();
                     } else if (!isVictory) {
-                        showVictoryScreen();
+                        if (typeof showVictoryScreen === 'function') showVictoryScreen();
+                        else { alert("恭喜通關！"); window.location.reload(); }
                     }
                     return; // 換關後不繼續處理當前影格
                 }
@@ -1713,7 +1721,7 @@
             listContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #00ffcc;">🌀 正在探索多重次元社群關卡...</div>';
 
             try {
-                const { data, error } = await supabaseClient.from('levels')
+                const { data, error } = await supabaseClient.from('community_campaigns')
                     .select('*')
                     .order('created_at', { ascending: false })
                     .limit(50);
@@ -1721,7 +1729,7 @@
                 if (error) throw error;
 
                 if (!data || data.length === 0) {
-                    listContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #aaa;">目前還沒有社群關卡，快前往【✏️ 關卡編輯器】發布第一個作品吧！</div>';
+                    listContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #aaa;">目前還沒有社群關卡包，快前往【✏️ 關卡編輯器】發布第一個作品吧！</div>';
                     return;
                 }
 
@@ -1739,14 +1747,16 @@
             }
         }
 
+        let currentCampaignLevels = null;
+        let campaignLevelIndex = 0;
+
         function playCloudLevel(lvl) {
-            if (!lvl || !lvl.world || !lvl.obstacles) {
-                alert("關卡資料不完整！");
+            if (!lvl || !lvl.levels || !lvl.levels.length) {
+                alert("關卡包資料不完整！");
                 return;
             }
-            Object.assign(world, lvl.world);
-            obstacles.length = 0;
-            obstacles.push(...lvl.obstacles);
+            currentCampaignLevels = lvl.levels;
+            campaignLevelIndex = 0;
 
             closeCloudLobby();
             isStartScreen = false;
@@ -1756,8 +1766,22 @@
 
             currentLevel = -1; // 標記為社群自定義關卡
             isDialogOpen = false;
+            if (viewInfo) viewInfo.innerText = `目前遊玩：${lvl.name} (第 1 關)`;
+            loadCampaignLevelIndex(0);
+        }
+
+        function loadCampaignLevelIndex(index) {
+            const levelData = currentCampaignLevels[index];
+            Object.assign(world, levelData.world);
+            obstacles.length = 0;
+            obstacles.push(...levelData.obstacles);
+            if(levelData.spawnPoint) {
+                world.spawnPoint = levelData.spawnPoint;
+            }
+            if(levelData.goalPoint) {
+                world.goalPoint = levelData.goalPoint;
+            }
             setupLevelTransition();
-            if (viewInfo) viewInfo.innerText = `目前遊玩：${lvl.name} (by ${lvl.creator})`;
         }
     </script>
 
