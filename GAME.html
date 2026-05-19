@@ -758,6 +758,21 @@
             dialogFooter.innerHTML = '<button onclick="location.reload()" style="padding:10px 30px;background:#ffcc00;color:#000;border:none;border-radius:8px;font-size:18px;cursor:pointer;font-weight:bold;">再玩一次</button>';
         }
 
+        function showCustomVictoryScreen() {
+            isVictory = true;
+            isDialogOpen = true;
+            dialogOverlay.classList.remove('hidden');
+            dialogContent.innerHTML = `
+                <h2 style="color: #00ffcc; font-size: 2em; margin-bottom: 15px;">🎉 恭喜征服本關卡！</h2>
+                <p>您已成功運用跨維度視角切換的智慧，突破重重陷阱與高台，抵達了終點次元門！</p>
+                <p>太精彩了！</p>
+            `;
+            dialogFooter.innerHTML = `
+                <button onclick="location.reload()" style="padding:10px 20px;background:#00ffcc;color:#000;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:bold;margin-right:10px;">🔄 再玩一次</button>
+                <button onclick="window.open('editor.html', '_blank')" style="padding:10px 20px;background:#ffaa00;color:#000;border:none;border-radius:8px;font-size:16px;cursor:pointer;font-weight:bold;">✏️ 關卡編輯器</button>
+            `;
+        }
+
         function showDialogContent() {
             const dialogue = getDialogueText(dialogStep);
             dialogContent.innerHTML = dialogue.content;
@@ -1050,10 +1065,9 @@
         }
 
         function respawnPlayer() {
-            const sX = world.spawnPoint ? world.spawnPoint.x : (world.width / 2 - player.width / 2);
-            const sY = world.spawnPoint ? world.spawnPoint.y : (world.height - player.height - 20);
-            const startX = world.x + sX;
-            const startY = world.y + sY;
+            const sp = world.spawnPoint || { x: world.x + world.width / 2, y: world.y + world.height - 35, z: 0 };
+            const startX = sp.x - player.width / 2;
+            const startY = sp.y - player.height / 2;
 
             if (viewMode === 'topdown') {
                 player.x = startX;
@@ -1061,9 +1075,8 @@
             } else {
                 // 在側面模式下，設定正確的 Z 軸視覺位置與鎖定位置 (X 軸)
                 player.lockedX = startX;
-                const spawnZ = world.spawnPoint ? (world.spawnPoint.z || 0) : 0;
-                player.x = world.x + sX;
-                player.y = world.y + world.height - spawnZ - player.height;
+                player.x = world.x + (world.height - (sp.y - world.y) - player.width);
+                player.y = world.y + world.height - (sp.z || 0) - player.height;
             }
 
             player.vy = 0;
@@ -1229,15 +1242,11 @@
             if (hasInput) player.autoMove = null;
 
             let ex, ey, ew, eh;
-            const currentWidth = (viewMode === 'topdown') ? world.width : world.height;
+            const goal = world.goalPoint || { x: world.x + world.width / 2, width: 80, z: 0 };
             if (viewMode === 'topdown') {
-                const gX = world.goalPoint ? world.goalPoint.x : (world.width / 2 - 40);
-                const gW = world.goalPoint ? world.goalPoint.width : 80;
-                ex = world.x + gX; ey = world.y - 20; ew = gW; eh = 20.5;
+                ex = goal.x - goal.width / 2; ey = world.y - 20; ew = goal.width; eh = 20.5;
             } else {
-                const gW = world.goalPoint ? world.goalPoint.width : 80;
-                const goalZ = world.goalPoint ? (world.goalPoint.z || 0) : 0;
-                ex = world.x + world.height - 0.5; ey = world.y + world.height - goalZ - gW; ew = 20; eh = gW;
+                ex = world.x + world.height - 0.5; ey = world.y + world.height - (goal.z || 0) - 80; ew = 20; eh = 80;
             }
 
             if (player.x < ex + ew && player.x + player.width > ex && player.y < ey + eh && player.y + player.height > ey) {
@@ -1247,7 +1256,7 @@
                     // 暫不處理
                 } else {
                     if (currentLevel === -1) {
-                        if (!isVictory) showCustomVictoryScreen();
+                        showCustomVictoryScreen();
                     } else if (currentLevel < maxLevel) {
                         currentLevel++;
                         setupLevelTransition();
@@ -1529,13 +1538,16 @@
                 ctx.fillRect(o.x, o.y, o.w, o.h);
             }
 
+            const goal = world.goalPoint || { x: world.x + world.width / 2, width: 80, z: 0 };
+            const curGap = goal.width;
+
             ctx.strokeStyle = world.borderColor; ctx.lineWidth = world.borderWidth;
             ctx.beginPath();
             if (mode === 'topdown') {
                 ctx.moveTo(world.x, world.y + world.height);
                 ctx.lineTo(world.x, world.y);
-                const gx = world.x + world.width / 2 - gapSize / 2;
-                ctx.lineTo(gx, world.y); ctx.moveTo(gx + gapSize, world.y);
+                const gx = goal.x - curGap / 2;
+                ctx.lineTo(gx, world.y); ctx.moveTo(gx + curGap, world.y);
                 ctx.lineTo(world.x + world.width, world.y);
                 ctx.lineTo(world.x + world.width, world.y + world.height);
                 ctx.lineTo(world.x, world.y + world.height);
@@ -1543,16 +1555,16 @@
                 ctx.moveTo(world.x, world.y);
                 ctx.lineTo(world.x, world.y + world.height);
                 ctx.lineTo(world.x + world.height, world.y + world.height);
-                const gy = world.y + (world.height - gapSize) / 2;
-                ctx.lineTo(world.x + world.height, gy + gapSize); ctx.moveTo(world.x + world.height, gy);
+                const gy = world.y + world.height - (goal.z || 0) - 80;
+                ctx.lineTo(world.x + world.height, gy + 80); ctx.moveTo(world.x + world.height, gy);
                 ctx.lineTo(world.x + world.height, world.y);
                 ctx.lineTo(world.x, world.y);
             }
             ctx.stroke();
 
             ctx.fillStyle = "#ffff00"; ctx.shadowBlur = 20; ctx.shadowColor = "#ffff00";
-            if (mode === 'topdown') ctx.fillRect(world.x + world.width / 2 - gapSize / 2, world.y - 8, gapSize, 8);
-            else ctx.fillRect(world.x + world.height, world.y + (world.height - gapSize) / 2, 8, gapSize);
+            if (mode === 'topdown') ctx.fillRect(goal.x - curGap / 2, world.y - 8, curGap, 8);
+            else ctx.fillRect(world.x + world.height, world.y + world.height - (goal.z || 0) - 80, 8, 80);
 
             ctx.fillStyle = pPos.color || player.color;
             ctx.shadowBlur = player.elevatedFromSide ? 30 : 15;
