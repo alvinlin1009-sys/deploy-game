@@ -726,12 +726,43 @@
         requestRender();
     }
 
+    let backupBeforeDrag = null;
+
+    function validateSpawnGoalAgainstLava() {
+        const sx = world.x + spawnPoint.x;
+        const sy = world.y + spawnPoint.y;
+        const gx = world.x + goalPoint.x;
+        const gy = world.y; // 終點出口貼著頂部邊界往下延伸
+
+        for (let i = 0; i < obstacles.length; i++) {
+            const obs = obstacles[i];
+            if (obs.type === 'lava') {
+                // 檢查出生點 (40x40) 是否與岩漿重疊 (2D 平面 X-Y)
+                const spawnOverlaps = (sx < obs.x + obs.baseWidth && sx + 40 > obs.x &&
+                                       sy < obs.y + obs.baseDepth && sy + 40 > obs.y);
+                
+                // 檢查終點出口 (width x 20) 是否與岩漿重疊 (2D 平面 X-Y)
+                const goalOverlaps = (gx < obs.x + obs.baseWidth && gx + goalPoint.width > obs.x &&
+                                      gy < obs.y + obs.baseDepth && gy + 20 > obs.y);
+
+                if (spawnOverlaps || goalOverlaps) {
+                    return {
+                        valid: false,
+                        reason: spawnOverlaps ? "出生點不可設置於岩漿上方！" : "終點出口不可設置於岩漿上方！"
+                    };
+                }
+            }
+        }
+        return { valid: true };
+    }
+
     canvas.onmousedown = (e) => {
         lastMouse = { x: e.clientX, y: e.clientY };
         const wPos = screenToWorld(e.clientX, e.clientY);
         if (e.button === 2) { isPanning = true; return; }
 
         saveState();
+        backupBeforeDrag = JSON.stringify({ spawnPoint, goalPoint, obstacles });
 
         if (viewMode === 'topdown') {
             if (activeTool === 'drag' || activeTool === 'edit') {
@@ -918,47 +949,6 @@
         if (isDragging || isResizing || isPanning) requestRender();
     };
 
-    function validateSpawnAndGoal() {
-        let isSpawnInvalid = false;
-        let isGoalInvalid = false;
-        const sx = world.x + spawnPoint.x, sy = world.y + spawnPoint.y;
-        
-        for (let obs of obstacles) {
-            if (obs.type === 'lava' || obs.color === '#ff3300') {
-                if (sx >= obs.x && sx <= obs.x + obs.baseWidth && sy >= obs.y && sy <= obs.y + obs.baseDepth) {
-                    const obsTop = (obs.baseZ || 0) + obs.baseHeight;
-                    if ((spawnPoint.z || 0) <= obsTop) {
-                        isSpawnInvalid = true;
-                        spawnPoint.x = Math.max(0, Math.min(world.width - 40, (obs.x - world.x) - 50));
-                        if (spawnPoint.x < 0) spawnPoint.x = Math.min(world.width - 40, (obs.x + obs.baseWidth - world.x) + 50);
-                        break;
-                    }
-                }
-            }
-        }
-
-        const gxStart = world.x + goalPoint.x, gxEnd = gxStart + goalPoint.width;
-        for (let obs of obstacles) {
-            if (obs.type === 'lava' || obs.color === '#ff3300') {
-                if (obs.y <= world.y + 10) {
-                    if (!(gxEnd <= obs.x || gxStart >= obs.x + obs.baseWidth)) {
-                        isGoalInvalid = true;
-                        goalPoint.x = Math.max(0, Math.min(world.width - goalPoint.width, (obs.x - world.x) - goalPoint.width - 20));
-                        if (goalPoint.x < 0) goalPoint.x = Math.min(world.width - goalPoint.width, (obs.x + obs.baseWidth - world.x) + 20);
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (isSpawnInvalid || isGoalInvalid) {
-            alert("⚠️ 警告：出生點與終點不可設置於岩漿上方！系統已自動微調至安全位置。");
-            syncWorldSpawnGoal();
-            updateUI();
-            requestRender();
-        }
-    }
-
     window.onmouseup = () => {
         if (isCreating && viewMode === 'topdown') {
             const cur = snap(screenToWorld(lastMouse.x, lastMouse.y));
@@ -972,8 +962,18 @@
             selectedIndex = obstacles.length - 1;
         }
         isPanning = isDragging = isCreating = isResizing = isDraggingSpawn = isDraggingGoal = false;
+        
+        const check = validateSpawnGoalAgainstLava();
+        if (!check.valid) {
+            alert("⚠️ 關卡設計規範錯誤：\n" + check.reason + "\n系統已自動恢復至上一安全位置。");
+            if (backupBeforeDrag) {
+                const restored = JSON.parse(backupBeforeDrag);
+                spawnPoint = restored.spawnPoint; goalPoint = restored.goalPoint; obstacles = restored.obstacles;
+                syncWorldSpawnGoal();
+            }
+        }
+
         updateUI();
-        validateSpawnAndGoal();
         requestRender();
     };
 
@@ -989,6 +989,7 @@
 
     function updateSpawnGoal() {
         if (document.activeElement.id.startsWith('spawn') || document.activeElement.id.startsWith('goal')) {
+            backupBeforeDrag = JSON.stringify({ spawnPoint, goalPoint, obstacles });
             spawnPoint.x = parseFloat(document.getElementById('spawn-x').value) || 0;
             spawnPoint.y = parseFloat(document.getElementById('spawn-y').value) || 0;
             spawnPoint.z = parseFloat(document.getElementById('spawn-z').value) || 0;
@@ -996,7 +997,17 @@
             goalPoint.width = parseFloat(document.getElementById('goal-w').value) || 80;
             goalPoint.z = parseFloat(document.getElementById('goal-z').value) || 0;
             syncWorldSpawnGoal();
-            validateSpawnAndGoal();
+
+            const check = validateSpawnGoalAgainstLava();
+            if (!check.valid) {
+                alert("⚠️ 關卡設計規範錯誤：\n" + check.reason + "\n系統已自動恢復至上一安全數值。");
+                if (backupBeforeDrag) {
+                    const restored = JSON.parse(backupBeforeDrag);
+                    spawnPoint = restored.spawnPoint; goalPoint = restored.goalPoint; obstacles = restored.obstacles;
+                    syncWorldSpawnGoal();
+                    initSpawnGoalUI();
+                }
+            }
             draw();
         }
     }
@@ -1057,6 +1068,7 @@
 
     function updateSelected() {
         if (selectedIndex === -1) return;
+        backupBeforeDrag = JSON.stringify({ spawnPoint, goalPoint, obstacles });
         const obs = obstacles[selectedIndex];
         const oldType = obs.type;
         obs.type = document.getElementById('obj-type').value;
@@ -1080,8 +1092,19 @@
         obs.baseHeight = parseFloat(document.getElementById('obj-h').value);
         obs.baseZ = parseFloat(document.getElementById('obj-z').value) || 0;
         obs.requireX = document.getElementById('obj-require-x').checked;
+
+        const check = validateSpawnGoalAgainstLava();
+        if (!check.valid) {
+            alert("⚠️ 關卡設計規範錯誤：\n" + check.reason + "\n系統已自動恢復至上一安全數值。");
+            if (backupBeforeDrag) {
+                const restored = JSON.parse(backupBeforeDrag);
+                spawnPoint = restored.spawnPoint; goalPoint = restored.goalPoint; obstacles = restored.obstacles;
+                syncWorldSpawnGoal();
+                updatePropertyPanel();
+            }
+        }
+
         updateUI();
-        validateSpawnAndGoal();
         draw();
     }
 
@@ -1113,6 +1136,8 @@
     }
     function testLevel() {
         syncWorldSpawnGoal();
+        const check = validateSpawnGoalAgainstLava();
+        if (!check.valid) { alert("⚠️ 無法測試：\n" + check.reason + "\n請先將出生點或終點移離岩漿區域！"); return; }
         const levelData = JSON.stringify({ world, obstacles });
         localStorage.setItem('customLevelData', levelData);
         window.open('GAME.html?custom=true', '_blank');
@@ -1283,6 +1308,8 @@
 
     async function openPublishModal() {
         syncWorldSpawnGoal();
+        const check = validateSpawnGoalAgainstLava();
+        if (!check.valid) { alert("⚠️ 無法發布：\n" + check.reason + "\n請先將出生點或終點移離岩漿區域！"); return; }
         const connected = await initSupabase();
         if (!connected) {
             openSupabaseConfig();
@@ -1360,6 +1387,8 @@
     }
     function openOfficialPublishModal() {
         syncWorldSpawnGoal();
+        const check = validateSpawnGoalAgainstLava();
+        if (!check.valid) { alert("⚠️ 無法發布主線：\n" + check.reason + "\n請先將出生點或終點移離岩漿區域！"); return; }
         document.getElementById('official-publish-modal').style.display = 'flex';
     }
 
