@@ -852,19 +852,16 @@
             if (viewMode === 'topdown') {
                 let newX = wPos.x - spawnDragOffset.x - world.x;
                 let newY = wPos.y - spawnDragOffset.y - world.y;
-                newX = Math.max(0, Math.min(world.width - 40, newX));
-                newY = Math.max(0, Math.min(world.height - 40, newY));
                 const s = snap({ x: newX, y: newY });
-                spawnPoint.x = s.x; spawnPoint.y = s.y;
+                spawnPoint.x = Math.max(0, Math.min(world.width - 40, s.x));
+                spawnPoint.y = Math.max(0, Math.min(world.height - 40, s.y));
             } else {
                 // 側面視角拖曳：Screen X 對應 World Y (深度)，Screen Y 對應 World Z (高度)
                 let newWY = world.height - (wPos.x - spawnDragOffset.x - world.x) - 40;
-                newWY = Math.max(0, Math.min(world.height - 40, newWY));
                 let curWZ = (world.y + world.height) - (wPos.y - spawnDragOffset.y) - 40;
-                curWZ = Math.max(0, Math.min(world.height - 40, curWZ));
                 const s = snap({ x: newWY, y: curWZ });
-                spawnPoint.y = s.x;
-                spawnPoint.z = s.y;
+                spawnPoint.y = Math.max(0, Math.min(world.height - 40, s.x));
+                spawnPoint.z = Math.max(0, Math.min(world.height - 40, s.y));
             }
             syncWorldSpawnGoal();
             updateUI();
@@ -872,15 +869,13 @@
         } else if (isDraggingGoal) {
             if (viewMode === 'topdown') {
                 let newX = wPos.x - goalDragOffset.x - world.x;
-                newX = Math.max(0, Math.min(world.width - goalPoint.width, newX));
                 const s = snap({ x: newX, y: 0 });
-                goalPoint.x = s.x;
+                goalPoint.x = Math.max(0, Math.min(world.width - goalPoint.width, s.x));
             } else {
                 // 側面視角拖曳終點：Screen Y 對應 World Z (高度)
                 let curWZ = (world.y + world.height) - (wPos.y - goalDragOffset.y) - goalPoint.width;
-                curWZ = Math.max(0, Math.min(world.height - goalPoint.width, curWZ));
                 const s = snap({ x: 0, y: curWZ });
-                goalPoint.z = s.y;
+                goalPoint.z = Math.max(0, Math.min(world.height - goalPoint.width, s.y));
             }
             syncWorldSpawnGoal();
             updateUI();
