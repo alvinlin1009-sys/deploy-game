@@ -338,7 +338,8 @@
         </select>
         <div style="width: 1px; height: 30px; background: var(--border);"></div>
         <button class="btn" style="border-color: #00ffcc; color: #00ffcc; background: #0a1a1f; font-weight: bold;" onclick="openPublishModal()">☁️ 發布至雲端 (Supabase)</button>
-        <button class="btn" style="border-color: #ff3366; color: #ff3366; background: #1f0a10; font-weight: bold;" onclick="openOfficialPublishModal()">👑 發布為主線關卡 (需密碼)</button>
+        <button id="admin-unlock-btn" class="btn" style="border-color: #ffaa00; color: #ffaa00; background: #1f1a0a; font-weight: bold;" onclick="openAdminLoginModal()">🔒 管理者模式</button>
+        <button id="official-publish-btn" class="btn" style="border-color: #ff3366; color: #ff3366; background: #1f0a10; font-weight: bold; display: none;" onclick="openOfficialPublishModal()">👑 發布為主線關卡</button>
     </div>
     <div style="display: flex; gap: 10px;">
         <button class="btn" id="view-toggle" onclick="toggleEditorView()">目前視角：上帝視角</button>
@@ -1358,11 +1359,35 @@
             publishBtn.disabled = false;
         }
     }
+    let currentAdminPassword = "";
+    function openAdminLoginModal() {
+        document.getElementById('admin-login-modal').style.display = 'flex';
+        document.getElementById('admin-login-password').value = "";
+        document.getElementById('admin-login-password').focus();
+    }
+    function closeAdminLoginModal() {
+        document.getElementById('admin-login-modal').style.display = 'none';
+    }
+    function verifyAdminLogin() {
+        const pw = document.getElementById('admin-login-password').value;
+        if (pw === "alvin1234") {
+            currentAdminPassword = pw;
+            alert("🔓 管理者模式已解鎖！您現在可以使用「👑 發布為主線關卡」功能。");
+            document.getElementById('admin-unlock-btn').style.display = 'none';
+            document.getElementById('official-publish-btn').style.display = 'flex';
+            closeAdminLoginModal();
+        } else {
+            alert("❌ 密碼錯誤！您無權進入管理者模式。");
+        }
+    }
     function openOfficialPublishModal() {
         syncWorldSpawnGoal();
         const check = validateSpawnGoalAgainstLava();
         if (!check.valid) { alert("⚠️ 無法發布主線：\n" + check.reason + "\n請先將出生點或終點移離岩漿區域！"); return; }
         document.getElementById('official-publish-modal').style.display = 'flex';
+        if (currentAdminPassword) {
+            document.getElementById('official-password').value = currentAdminPassword;
+        }
     }
 
     function closeOfficialPublishModal() {
@@ -1405,6 +1430,21 @@
         }
     }
 </script>
+
+<!-- 管理者登入 Modal -->
+<div id="admin-login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 10002; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+    <div style="background: #1f1a0a; border: 2px solid #ffaa00; border-radius: 12px; padding: 30px; width: 400px; box-shadow: 0 0 40px rgba(255,170,0,0.4);">
+        <h2 style="margin-top: 0; color: #ffaa00;">🔒 進入管理者模式</h2>
+        <p style="color: #aaa; font-size: 14px;">請輸入開發者專屬密碼，以解鎖主線關卡發布與管理權限：</p>
+        <div style="margin-bottom: 25px;">
+            <input id="admin-login-password" type="password" placeholder="請輸入管理員密碼" style="width: 100%; padding: 12px; background: #0c0a05; border: 1px solid #555; color: #fff; border-radius: 6px; font-size: 16px; text-align: center;" onkeydown="if(event.key==='Enter') verifyAdminLogin()">
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="btn" style="padding: 10px 20px; background: #333; color: #fff; border: none; border-radius: 6px; cursor: pointer;" onclick="closeAdminLoginModal()">取消</button>
+            <button class="btn" style="padding: 10px 20px; background: #ffaa00; color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 0 15px rgba(255,170,0,0.5);" onclick="verifyAdminLogin()">🔓 驗證解鎖</button>
+        </div>
+    </div>
+</div>
 
 <!-- 發布主線關卡 Modal -->
 <div id="official-publish-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 10002; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
