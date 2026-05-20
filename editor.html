@@ -607,14 +607,6 @@
         }
     }
 
-    function getSliceRange() {
-        if (selectedIndex !== -1 && obstacles[selectedIndex]) {
-            const w = obstacles[selectedIndex].baseWidth || 40;
-            return { min: obstacles[selectedIndex].x, max: obstacles[selectedIndex].x + w };
-        }
-        return { min: world.x + spawnPoint.x, max: world.x + spawnPoint.x + 40 };
-    }
-
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.save();
@@ -641,13 +633,7 @@
         ctx.strokeStyle = '#00ffcc';
         ctx.strokeRect(world.x, world.y, curW, world.height);
         
-        const slice = getSliceRange();
         obstacles.forEach((obs, index) => {
-            if (viewMode === 'sideview') {
-                const obsMaxX = obs.x + obs.baseWidth;
-                if (obsMaxX <= slice.min || obs.x >= slice.max) return;
-            }
-            
             const r = getProjectedRect(obs, viewMode);
             ctx.save();
             if (obs.type === 'lava') {
@@ -854,14 +840,8 @@
 
         if (activeTool === 'select') {
             let found = -1;
-            const slice = getSliceRange();
             for (let i = obstacles.length - 1; i >= 0; i--) {
-                const obs = obstacles[i];
-                if (viewMode === 'sideview') {
-                    const obsMaxX = obs.x + obs.baseWidth;
-                    if (obsMaxX <= slice.min || obs.x >= slice.max) continue;
-                }
-                const r = getProjectedRect(obs, viewMode);
+                const r = getProjectedRect(obstacles[i], viewMode);
                 if (wPos.x >= r.x && wPos.x <= r.x + r.w && wPos.y >= r.y && wPos.y <= r.y + r.h) {
                     found = i; break;
                 }
@@ -1349,6 +1329,9 @@
                 } catch(e) { console.error("載入自訂關卡失敗", e); }
             }
         }
+        
+        // 頁面載入時嘗試更新主線關卡選單
+        refreshOfficialLevelSelect();
     });
 
     // ==========================================
@@ -1421,7 +1404,28 @@
         localStorage.setItem('SUPABASE_ANON_KEY', key);
         alert("Supabase 連線設定已儲存！");
         closeSupabaseConfig();
-        initSupabase();
+        initSupabase().then(() => {
+            refreshOfficialLevelSelect();
+        });
+    }
+
+    async function refreshOfficialLevelSelect() {
+        try {
+            const connected = await initSupabase();
+            if (connected && supabaseClient) {
+                const { data, error } = await supabaseClient.from('official_levels').select('level_num, name').order('level_num', { ascending: true });
+                if (!error && data && data.length > 0) {
+                    const selectEl = document.getElementById('official-level-select');
+                    let html = '<option value="">📂 載入遊戲內建關卡...</option>';
+                    data.forEach(lvl => {
+                        html += `<option value="${lvl.level_num}">Level ${lvl.level_num}: ${lvl.name}</option>`;
+                    });
+                    selectEl.innerHTML = html;
+                }
+            }
+        } catch(e) {
+            console.warn("無法刷新主線關卡清單", e);
+        }
     }
 
     async function publishToSupabase() {
@@ -1576,6 +1580,7 @@
             }
 
             alert(`👑 官方主線發布成功！\n已成功更新主線第 ${level_num} 關：${name}\n玩家在遊戲中切換至此關時將自動遊玩最新版本！`);
+            refreshOfficialLevelSelect();
             closeOfficialPublishModal();
         } catch(e) {
             alert("發布主線失敗: " + e.message);
