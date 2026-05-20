@@ -1068,9 +1068,9 @@
         }
 
         function respawnPlayer() {
-            const spRel = world.spawnPoint || { x: world.width / 2, y: world.height - 35, z: 0 };
-            const startX = world.x + spRel.x - player.width / 2;
-            const startY = world.y + spRel.y - player.height / 2;
+            const spRel = world.spawnPoint || { x: world.width / 2 - 20, y: world.height - 40, z: 0 };
+            const startX = world.x + spRel.x;
+            const startY = world.y + spRel.y;
 
             if (viewMode === 'topdown') {
                 player.x = startX;
