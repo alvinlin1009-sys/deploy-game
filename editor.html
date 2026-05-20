@@ -607,6 +607,14 @@
         }
     }
 
+    function getSliceRange() {
+        if (selectedIndex !== -1 && obstacles[selectedIndex]) {
+            const w = obstacles[selectedIndex].baseWidth || 40;
+            return { min: obstacles[selectedIndex].x, max: obstacles[selectedIndex].x + w };
+        }
+        return { min: world.x + spawnPoint.x, max: world.x + spawnPoint.x + 40 };
+    }
+
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.save();
@@ -633,7 +641,13 @@
         ctx.strokeStyle = '#00ffcc';
         ctx.strokeRect(world.x, world.y, curW, world.height);
         
+        const slice = getSliceRange();
         obstacles.forEach((obs, index) => {
+            if (viewMode === 'sideview') {
+                const obsMaxX = obs.x + obs.baseWidth;
+                if (obsMaxX <= slice.min || obs.x >= slice.max) return;
+            }
+            
             const r = getProjectedRect(obs, viewMode);
             ctx.save();
             if (obs.type === 'lava') {
@@ -840,8 +854,14 @@
 
         if (activeTool === 'select') {
             let found = -1;
+            const slice = getSliceRange();
             for (let i = obstacles.length - 1; i >= 0; i--) {
-                const r = getProjectedRect(obstacles[i], viewMode);
+                const obs = obstacles[i];
+                if (viewMode === 'sideview') {
+                    const obsMaxX = obs.x + obs.baseWidth;
+                    if (obsMaxX <= slice.min || obs.x >= slice.max) continue;
+                }
+                const r = getProjectedRect(obs, viewMode);
                 if (wPos.x >= r.x && wPos.x <= r.x + r.w && wPos.y >= r.y && wPos.y <= r.y + r.h) {
                     found = i; break;
                 }
