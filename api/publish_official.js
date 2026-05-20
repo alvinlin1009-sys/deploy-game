@@ -10,9 +10,10 @@ export default async function handler(req, res) {
     // 1. 驗證管理員密碼 (預設密碼為 alvin1234，或由 Vercel 環境變數 ADMIN_PASSWORD 設定)
     const adminPassword = process.env.ADMIN_PASSWORD || "alvin1234";
 
-    if (!password || password !== adminPassword) {
-        return res.status(401).json({ error: '管理員密碼錯誤！您無權發布官方主線關卡。' });
-    }
+    // 暫時取消密碼驗證
+    // if (!password || password !== adminPassword) {
+    //     return res.status(401).json({ error: '管理員密碼錯誤！您無權發布官方主線關卡。' });
+    // }
 
     if (level_num === undefined || !name || !world || !obstacles) {
         return res.status(400).json({ error: '關卡參數不完整！' });

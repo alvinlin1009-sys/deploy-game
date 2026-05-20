@@ -1470,17 +1470,13 @@
         document.getElementById('admin-login-modal').style.display = 'none';
     }
     function verifyAdminLogin() {
-        const pw = document.getElementById('admin-login-password').value;
-        if (pw === "alvin1234") {
-            currentAdminPassword = pw;
-            alert("🔓 管理者模式已解鎖！您現在可以使用「👑 發布為主線關卡」與「🗑️ 管理社群關卡」功能。");
-            document.getElementById('admin-unlock-btn').style.display = 'none';
-            document.getElementById('official-publish-btn').style.display = 'flex';
-            document.getElementById('manage-community-btn').style.display = 'flex';
-            closeAdminLoginModal();
-        } else {
-            alert("❌ 密碼錯誤！您無權進入管理者模式。");
-        }
+        // 暫時取消密碼驗證
+        currentAdminPassword = "temp";
+        alert("🔓 管理者模式已解鎖！您現在可以使用「👑 發布為主線關卡」與「🗑️ 管理社群關卡」功能。");
+        document.getElementById('admin-unlock-btn').style.display = 'none';
+        document.getElementById('official-publish-btn').style.display = 'flex';
+        document.getElementById('manage-community-btn').style.display = 'flex';
+        closeAdminLoginModal();
     }
     async function openCommunityManageModal() {
         document.getElementById('community-manage-modal').style.display = 'flex';
@@ -1595,8 +1591,8 @@
 <div id="admin-login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 10002; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
     <div style="background: #1f1a0a; border: 2px solid #ffaa00; border-radius: 12px; padding: 30px; width: 400px; box-shadow: 0 0 40px rgba(255,170,0,0.4);">
         <h2 style="margin-top: 0; color: #ffaa00;">🔒 進入管理者模式</h2>
-        <p style="color: #aaa; font-size: 14px;">請輸入開發者專屬密碼，以解鎖主線關卡發布與管理權限：</p>
-        <div style="margin-bottom: 25px;">
+        <p style="color: #aaa; font-size: 14px;">點擊下方按鈕以解鎖主線關卡發布與管理權限：</p>
+        <div style="margin-bottom: 25px; display: none;">
             <input id="admin-login-password" type="password" placeholder="請輸入管理員密碼" style="width: 100%; padding: 12px; background: #0c0a05; border: 1px solid #555; color: #fff; border-radius: 6px; font-size: 16px; text-align: center;" onkeydown="if(event.key==='Enter') verifyAdminLogin()">
         </div>
         <div style="display: flex; gap: 10px; justify-content: flex-end;">
@@ -1631,9 +1627,9 @@
             <label style="display: block; margin-bottom: 5px; color: #fff;">🏷️ 關卡名稱</label>
             <input id="official-name" type="text" placeholder="例如：極限岩漿試煉" style="width: 100%; padding: 10px; background: #0c0507; border: 1px solid #555; color: #fff; border-radius: 6px;">
         </div>
-        <div style="margin-bottom: 25px;">
+        <div style="margin-bottom: 25px; display: none;">
             <label style="display: block; margin-bottom: 5px; color: #fff;">🔑 管理員密碼 (Admin Password)</label>
-            <input id="official-password" type="password" placeholder="請輸入管理員專屬密碼" style="width: 100%; padding: 10px; background: #0c0507; border: 1px solid #555; color: #fff; border-radius: 6px;">
+            <input id="official-password" type="password" placeholder="請輸入管理員專屬密碼" style="width: 100%; padding: 10px; background: #0c0507; border: 1px solid #555; color: #fff; border-radius: 6px;" value="temp">
         </div>
         <div style="display: flex; gap: 10px; justify-content: flex-end;">
             <button class="btn" style="padding: 10px 20px; background: #333; color: #fff; border: none; border-radius: 6px; cursor: pointer;" onclick="closeOfficialPublishModal()">取消</button>

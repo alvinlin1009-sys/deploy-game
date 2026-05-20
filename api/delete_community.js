@@ -11,9 +11,10 @@ export default async function handler(req, res) {
         // 1. 驗證管理員密碼
         const adminPassword = process.env.ADMIN_PASSWORD || "alvin1234";
 
-        if (!password || password !== adminPassword) {
-            return res.status(401).json({ error: '管理員密碼錯誤！您無權刪除社群關卡。' });
-        }
+        // 暫時取消密碼驗證
+        // if (!password || password !== adminPassword) {
+        //     return res.status(401).json({ error: '管理員密碼錯誤！您無權刪除社群關卡。' });
+        // }
 
         if (!level_id) {
             return res.status(400).json({ error: '缺少關卡 ID 參數！' });
