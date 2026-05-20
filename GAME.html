@@ -1068,9 +1068,9 @@
         }
 
         function respawnPlayer() {
-            const sp = world.spawnPoint || { x: world.x + world.width / 2, y: world.y + world.height - 35, z: 0 };
-            const startX = sp.x - player.width / 2;
-            const startY = sp.y - player.height / 2;
+            const spRel = world.spawnPoint || { x: world.width / 2, y: world.height - 35, z: 0 };
+            const startX = world.x + spRel.x - player.width / 2;
+            const startY = world.y + spRel.y - player.height / 2;
 
             if (viewMode === 'topdown') {
                 player.x = startX;
@@ -1078,8 +1078,8 @@
             } else {
                 // 在側面模式下，設定正確的 Z 軸視覺位置與鎖定位置 (X 軸)
                 player.lockedX = startX;
-                player.x = world.x + (world.height - (sp.y - world.y) - player.width);
-                player.y = world.y + world.height - (sp.z || 0) - player.height;
+                player.x = world.x + (world.height - spRel.y - player.width);
+                player.y = world.y + world.height - (spRel.z || 0) - player.height;
             }
 
             player.vy = 0;
@@ -1246,11 +1246,11 @@
 
             let ex, ey, ew, eh;
             const currentWidth = (viewMode === 'topdown') ? world.width : world.height;
-            const goal = world.goalPoint || { x: world.x + world.width / 2, width: 80, z: 0 };
+            const goalRel = world.goalPoint || { x: world.width / 2 - 40, width: 80, z: 0 };
             if (viewMode === 'topdown') {
-                ex = goal.x - goal.width / 2; ey = world.y - 20; ew = goal.width; eh = 20.5;
+                ex = world.x + goalRel.x; ey = world.y - 20; ew = goalRel.width; eh = 20.5;
             } else {
-                ex = world.x + world.height - 0.5; ey = world.y + world.height - (goal.z || 0) - 80; ew = 20; eh = 80;
+                ex = world.x + world.height - 0.5; ey = world.y + world.height - (goalRel.z || 0) - goalRel.width; ew = 20; eh = goalRel.width;
             }
 
             if (player.x < ex + ew && player.x + player.width > ex && player.y < ey + eh && player.y + player.height > ey) {
