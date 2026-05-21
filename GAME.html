@@ -1310,9 +1310,39 @@
                         player.y + player.height < o.y || player.y > o.y + o.h;
 
                     if (isOutside) {
-                        player.elevatedFromSide = false;
-                        player.standingOn = null;
-                        player.autoMove = null;
+                        // 尋找等高的相鄰/重疊平台
+                        let foundNewPlatform = false;
+                        const currentHeight = targetObs.baseHeight || 120;
+                        for (let j = 0; j < obstacles.length; j++) {
+                            if (j === player.standingOn) continue;
+                            const otherObs = obstacles[j];
+                            const otherHeight = otherObs.baseHeight || 120;
+                            // 判斷高度是否相同 (容許誤差 1 像素)
+                            if (Math.abs(otherHeight - currentHeight) < 1) {
+                                // 獲取該障礙物的 topdown 矩形 (直接從屬性讀取，避免 getObsRect 因 mode 變化或 sideview 判定影響)
+                                const oOther = { 
+                                    x: otherObs.x, 
+                                    y: otherObs.y, 
+                                    w: otherObs.baseWidth, 
+                                    h: otherObs.baseDepth 
+                                };
+                                // 檢查玩家是否重疊該平台
+                                const overlaps = player.x + player.width > oOther.x && 
+                                                 player.x < oOther.x + oOther.w && 
+                                                 player.y + player.height > oOther.y && 
+                                                 player.y < oOther.y + oOther.h;
+                                if (overlaps) {
+                                    player.standingOn = j;
+                                    foundNewPlatform = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!foundNewPlatform) {
+                            player.elevatedFromSide = false;
+                            player.standingOn = null;
+                            player.autoMove = null;
+                        }
                     }
                 } else {
                     player.elevatedFromSide = false;
@@ -1358,6 +1388,14 @@
                 if (viewMode === 'topdown' && player.elevatedFromSide && i === player.standingOn) {
                     continue;
                 }
+                // 如果玩家在上帝模式且在高台上，若目標障礙物高度與當前平台相同，則忽略碰撞阻擋
+                if (viewMode === 'topdown' && player.elevatedFromSide && player.standingOn !== null) {
+                    const currentHeight = obstacles[player.standingOn].baseHeight || 120;
+                    const otherHeight = obstacles[i].baseHeight || 120;
+                    if (Math.abs(otherHeight - currentHeight) < 1) {
+                        continue;
+                    }
+                }
                 if (player.x < o.x + o.w && player.x + player.width > o.x && oldPlayerY < o.y + o.h && oldPlayerY + oldPlayerHeight > o.y) {
                     if (oldPlayerX + player.width <= o.x) { player.x = o.x - player.width; player.touchingWallRight = true; }
                     else { player.x = o.x + o.w; player.touchingWallLeft = true; }
@@ -1373,6 +1411,14 @@
                 let o = getObsRect(obstacles[i]);
                 if (!o) continue;
                 if (viewMode === 'topdown' && player.elevatedFromSide && i === player.standingOn) continue;
+                // 如果玩家在上帝模式且在高台上，若目標障礙物高度與當前平台相同，則忽略碰撞阻擋
+                if (viewMode === 'topdown' && player.elevatedFromSide && player.standingOn !== null) {
+                    const currentHeight = obstacles[player.standingOn].baseHeight || 120;
+                    const otherHeight = obstacles[i].baseHeight || 120;
+                    if (Math.abs(otherHeight - currentHeight) < 1) {
+                        continue;
+                    }
+                }
                 if (player.y < o.y + o.h && player.y + player.height > o.y && player.x < o.x + o.w && player.x + player.width > o.x) {
                     if (viewMode === 'topdown') player.y = (oldPlayerY + oldPlayerHeight <= o.y) ? o.y - player.height : o.y + o.h;
                     else {
