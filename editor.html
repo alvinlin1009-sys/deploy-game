@@ -668,20 +668,20 @@
 
         if (viewMode === 'topdown') {
             // 上帝視角：使用相對座標 spawnPoint 與 goalPoint
+            // 設定出生點座標
             sx = world.x + spawnPoint.x;
             sy = world.y + spawnPoint.y;
-            // 終點在上邊 (world.y)
             ex = world.x + goalPoint.x;
-            ey = world.y - 20;
-            ew = goalPoint.width; eh = 20.5;
+            ey = world.y - 8;
+            ew = goalPoint.width; eh = 8;
         } else {
             // 側面視角：Screen X 對應 World Y (深度)，Screen Y 對應 World Z (高度)
             sx = world.x + world.height - spawnPoint.y - 40;
             sy = world.y + world.height - (spawnPoint.z || 0) - sh;
-            // 終點在地圖最右側中央 (對應 X 頂部)，Screen Y 對應 Z 高度
-            ex = world.x + world.height - 0.5;
+            // 終點在地圖最右側 (側面視角)
+            ex = world.x + world.height;
             ey = world.y + world.height - (goalPoint.z || 0) - goalPoint.width;
-            ew = 20; eh = goalPoint.width;
+            ew = 8; eh = goalPoint.width;
         }
 
         // 繪製出生點 (綠色光暈與文字)
@@ -696,9 +696,6 @@
         ctx.fillText("🚩 出生點", sx + sw / 2, sy - 8);
 
         // 繪製終點 (金黃色光暈與文字)
-        ctx.fillStyle = 'rgba(255, 204, 0, 0.3)';
-        ctx.strokeStyle = '#ffcc00';
-        ctx.lineWidth = 2 / camera.zoom;
         ctx.fillRect(ex, ey, ew, eh);
         ctx.strokeRect(ex, ey, ew, eh);
         ctx.fillStyle = '#ffcc00';

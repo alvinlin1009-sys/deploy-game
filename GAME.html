@@ -1560,15 +1560,16 @@
                 ctx.fillRect(o.x, o.y, o.w, o.h);
             }
 
-            const goal = world.goalPoint || { x: world.x + world.width / 2, width: 80, z: 0 };
-            const curGap = goal.width;
+            const goalRel = world.goalPoint || { x: world.width / 2 - 40, width: 80, z: 0 };
+            const curGap = goalRel.width;
+            const gx = world.x + goalRel.x;
+            const goalZ = goalRel.z || 0;
 
             ctx.strokeStyle = world.borderColor; ctx.lineWidth = world.borderWidth;
             ctx.beginPath();
             if (mode === 'topdown') {
                 ctx.moveTo(world.x, world.y + world.height);
                 ctx.lineTo(world.x, world.y);
-                const gx = goal.x - curGap / 2;
                 ctx.lineTo(gx, world.y); ctx.moveTo(gx + curGap, world.y);
                 ctx.lineTo(world.x + world.width, world.y);
                 ctx.lineTo(world.x + world.width, world.y + world.height);
@@ -1577,16 +1578,16 @@
                 ctx.moveTo(world.x, world.y);
                 ctx.lineTo(world.x, world.y + world.height);
                 ctx.lineTo(world.x + world.height, world.y + world.height);
-                const gy = world.y + world.height - (goal.z || 0) - 80;
-                ctx.lineTo(world.x + world.height, gy + 80); ctx.moveTo(world.x + world.height, gy);
+                const gy = world.y + world.height - goalZ - curGap;
+                ctx.lineTo(world.x + world.height, gy + curGap); ctx.moveTo(world.x + world.height, gy);
                 ctx.lineTo(world.x + world.height, world.y);
                 ctx.lineTo(world.x, world.y);
             }
             ctx.stroke();
 
             ctx.fillStyle = "#ffff00"; ctx.shadowBlur = 20; ctx.shadowColor = "#ffff00";
-            if (mode === 'topdown') ctx.fillRect(goal.x - curGap / 2, world.y - 8, curGap, 8);
-            else ctx.fillRect(world.x + world.height, world.y + world.height - (goal.z || 0) - 80, 8, 80);
+            if (mode === 'topdown') ctx.fillRect(gx, world.y - 8, curGap, 8);
+            else ctx.fillRect(world.x + world.height, world.y + world.height - goalZ - curGap, 8, curGap);
 
             ctx.fillStyle = pPos.color || player.color;
             ctx.shadowBlur = player.elevatedFromSide ? 30 : 15;
