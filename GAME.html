@@ -1310,16 +1310,18 @@
                         player.y + player.height < o.y || player.y > o.y + o.h;
 
                     if (isOutside) {
-                        // 尋找等高的相鄰/重疊平台
+                        // 尋找可以落腳的相鄰/重疊平台（等高或較低的）
+                        // 策略：在所有玩家重疊且高度 <= 當前平台的障礙物中，選擇最高的那個
                         let foundNewPlatform = false;
                         const currentHeight = targetObs.baseHeight || 120;
+                        let bestJ = null;
+                        let bestHeight = -1;
                         for (let j = 0; j < obstacles.length; j++) {
                             if (j === player.standingOn) continue;
                             const otherObs = obstacles[j];
                             const otherHeight = otherObs.baseHeight || 120;
-                            // 判斷高度是否相同 (容許誤差 1 像素)
-                            if (Math.abs(otherHeight - currentHeight) < 1) {
-                                // 獲取該障礙物的 topdown 矩形 (直接從屬性讀取，避免 getObsRect 因 mode 變化或 sideview 判定影響)
+                            // 只考慮高度 <= 當前平台的障礙物（等高或更矮）
+                            if (otherHeight <= currentHeight) {
                                 const oOther = { 
                                     x: otherObs.x, 
                                     y: otherObs.y, 
@@ -1331,12 +1333,15 @@
                                                  player.x < oOther.x + oOther.w && 
                                                  player.y + player.height > oOther.y && 
                                                  player.y < oOther.y + oOther.h;
-                                if (overlaps) {
-                                    player.standingOn = j;
-                                    foundNewPlatform = true;
-                                    break;
+                                if (overlaps && otherHeight > bestHeight) {
+                                    bestHeight = otherHeight;
+                                    bestJ = j;
                                 }
                             }
+                        }
+                        if (bestJ !== null) {
+                            player.standingOn = bestJ;
+                            foundNewPlatform = true;
                         }
                         if (!foundNewPlatform) {
                             player.elevatedFromSide = false;
@@ -1388,11 +1393,11 @@
                 if (viewMode === 'topdown' && player.elevatedFromSide && i === player.standingOn) {
                     continue;
                 }
-                // 如果玩家在上帝模式且在高台上，若目標障礙物高度與當前平台相同，則忽略碰撞阻擋
+                // 如果玩家在上帝模式且在高台上，若目標障礙物高度 <= 當前平台，則忽略碰撞阻擋（可走下去）；若更高則阻擋
                 if (viewMode === 'topdown' && player.elevatedFromSide && player.standingOn !== null) {
                     const currentHeight = obstacles[player.standingOn].baseHeight || 120;
                     const otherHeight = obstacles[i].baseHeight || 120;
-                    if (Math.abs(otherHeight - currentHeight) < 1) {
+                    if (otherHeight <= currentHeight) {
                         continue;
                     }
                 }
@@ -1411,11 +1416,11 @@
                 let o = getObsRect(obstacles[i]);
                 if (!o) continue;
                 if (viewMode === 'topdown' && player.elevatedFromSide && i === player.standingOn) continue;
-                // 如果玩家在上帝模式且在高台上，若目標障礙物高度與當前平台相同，則忽略碰撞阻擋
+                // 如果玩家在上帝模式且在高台上，若目標障礙物高度 <= 當前平台，則忽略碰撞阻擋（可走下去）；若更高則阻擋
                 if (viewMode === 'topdown' && player.elevatedFromSide && player.standingOn !== null) {
                     const currentHeight = obstacles[player.standingOn].baseHeight || 120;
                     const otherHeight = obstacles[i].baseHeight || 120;
-                    if (Math.abs(otherHeight - currentHeight) < 1) {
+                    if (otherHeight <= currentHeight) {
                         continue;
                     }
                 }
