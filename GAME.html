@@ -1611,7 +1611,7 @@
                 ctx.fillText("!", pPos.x + player.width / 2, pPos.y - 10);
                 ctx.restore();
             } else {
-                // 上帝模式下若角色在障礙物下方，畫虛線框標示位置
+                // 上帝模式下若角色在障礙物下方，只畫虛線框不填滿
                 if (mode === 'topdown' && player.underObstacle) {
                     ctx.save();
                     ctx.strokeStyle = player.color;
@@ -1620,8 +1620,9 @@
                     ctx.shadowBlur = 0;
                     ctx.strokeRect(pPos.x, pPos.y, player.width, player.height);
                     ctx.restore();
+                } else {
+                    ctx.fillRect(pPos.x, pPos.y, player.width, player.height);
                 }
-                ctx.fillRect(pPos.x, pPos.y, player.width, player.height);
             }
             ctx.shadowBlur = 0;
         }
