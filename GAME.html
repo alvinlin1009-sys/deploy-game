@@ -608,8 +608,10 @@
             }
         }
 
-        // 3. 最後才執行初始化呼叫
-        generateObstacles();
+        // 3. 最後才執行初始化呼叫（自訂關卡由 initCustomLevel 負責）
+        if (!location.search.includes('custom=true')) {
+            generateObstacles();
+        }
 
         function enterGame() {
             isStartScreen = false;
@@ -636,7 +638,11 @@
                 startScreen.classList.add('hidden');
                 dialogOverlay.classList.add('hidden');
                 isDialogOpen = false;
-                currentLevel = 1; // 直接進入第一關
+                if (currentLevel === -1) {
+                    // 自訂關卡不改變 currentLevel
+                } else {
+                    currentLevel = 1; // 直接進入第一關
+                }
                 setupLevelTransition();
             }, 500);
         }
