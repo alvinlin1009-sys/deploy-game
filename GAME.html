@@ -260,10 +260,6 @@
 
     <canvas id="gameCanvas"></canvas>
 
-    <button id="edit-level-btn" onclick="editCurrentLevel()"
-        style="position: absolute; top: 20px; right: 20px; z-index: 9999; padding: 12px 20px; background: #ffaa00; color: #000; border: 2px solid #000; cursor: pointer; border-radius: 8px; font-weight: bold; box-shadow: 0 4px #aa6600; display: none;">✏️
-        編輯本關 (按 M 鍵)</button>
-
     <script>
         // 診斷工具：捕捉執行期錯誤並顯示
         window.onerror = function (msg, url, line, col, error) {
@@ -555,8 +551,6 @@
                 dialogStep = 1; // 進入遊戲後，顯示第一階段教學
                 showDialogContent(); // 顯示對應的教學內容
                 dialogOverlay.classList.remove('hidden');
-                const editBtn = document.getElementById('edit-level-btn');
-                if (editBtn) editBtn.style.display = 'block';
             }, 500);
         }
 
@@ -774,17 +768,13 @@
                 return;
             }
 
-            // 4. 【測試用】按 L 直接進下一關；按 M 編輯本關
+            // 4. 【測試用】按 L 直接進下一關
             if (e.key === 'l' || e.key === 'L') {
                 if (!isStartScreen && !isVictory) {
                     currentLevel++;
                     if (currentLevel > maxLevel) currentLevel = maxLevel;
                     setupLevelTransition();
                 }
-                return;
-            }
-            if (e.key === 'm' || e.key === 'M') {
-                editCurrentLevel();
                 return;
             }
 
@@ -994,19 +984,9 @@
                 viewInfo.innerText = `目前視角：上帝視角 (按 E 切換)`;
             }
 
-            const editBtn = document.getElementById('edit-level-btn');
-            if (editBtn) editBtn.style.display = 'block';
-
             // 每一關都執行安全重生檢測
             respawnPlayer();
             isChangingLevel = false;
-        }
-
-        function editCurrentLevel() {
-            if (isStartScreen) return;
-            const levelData = JSON.stringify({ world, obstacles });
-            localStorage.setItem('customLevelData', levelData);
-            window.open('editor.html?loadCustom=true', '_blank');
         }
 
         function respawnPlayer() {
