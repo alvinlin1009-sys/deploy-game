@@ -1218,7 +1218,8 @@
     function testLevel() {
         syncToCampaign();
         const check = validateSpawnGoalAgainstLava();
-        if (!check.valid) { alert("⚠️ 目前關卡無法測試：\n" + check.reason + "\n請先將出生點或終點移離岩漿區域！"); return; }
+        if (!check.valid) { alert("⚠️ 目前關卡無法測試：\n" + check.reason + "\n請先將出生點或終點移離岩漿區！"); return; }
+        console.log("[editor testLevel] obstacles baseZ:", obstacles.map(o => ({ x: o.x, baseZ: o.baseZ, h: o.baseHeight })));
         const levelData = JSON.stringify({ world, obstacles, spawnPoint, goalPoint });
         localStorage.setItem('customLevelData', levelData);
         window.open('GAME.html?custom=true', '_blank');
