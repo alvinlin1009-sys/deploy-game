@@ -681,16 +681,13 @@
                         const parsed = JSON.parse(rawData);
                         // 相容舊版 editor 的 { campaignData } 格式
                         const data = parsed.campaignData ? parsed.campaignData[0] : parsed;
-                        console.log("[game initCustomLevel] parsed keys:", Object.keys(parsed));
                         if (data && data.world) {
-                            console.log("[game initCustomLevel] data.world:", data.world);
                             Object.assign(world, data.world);
                             obstacles.length = 0;
                             obstacles.push(...(data.obstacles || []));
                             if (data.spawnPoint) world.spawnPoint = data.spawnPoint;
                             if (data.goalPoint) world.goalPoint = data.goalPoint;
                         }
-                        console.log("[game initCustomLevel] loaded obstacles:", obstacles.map(o => ({ x: o.x, baseZ: o.baseZ, h: o.baseHeight })));
                         isStartScreen = false;
                         document.getElementById('start-screen').classList.add('hidden');
                         const overlay = document.getElementById('dialog-overlay');
@@ -704,8 +701,6 @@
                 }
             }
         }
-        // 偵測是否載入正確的檔案版本
-        console.log("GAME.html loaded (debug build)");
         window.addEventListener('DOMContentLoaded', initCustomLevel);
 
         const TUTORIAL_CHARACTER_NAME = "快龍";
@@ -1479,14 +1474,6 @@
                 ctx.translate((Math.random() - 0.5) * shakeAmount, (Math.random() - 0.5) * shakeAmount);
             }
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // debug: 在畫面上方顯示障礙物資訊
-            ctx.fillStyle = 'yellow'; ctx.font = '12px monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-            ctx.fillText('custom=' + location.search.includes('custom=true') + ' level=' + currentLevel + ' obs=' + obstacles.length, 10, 10);
-            if (obstacles.length > 0) {
-                obstacles.forEach((ob, i) => {
-                    ctx.fillText('[' + i + '] baseZ=' + (ob.baseZ ?? 'undef') + ' h=' + ob.baseHeight + ' y=' + ob.y, 10, 26 + i * 16);
-                });
-            }
 
             const t = isTransitioning ? transitionT : 1;
 
@@ -1613,9 +1600,6 @@
                 }
             }
 
-            if (mode === 'sideview' && obstacles.length > 0 && !window._logged) { window._logged = true;
-                obstacles.forEach((ob, i) => console.log(`[draw sideview] obs[${i}] baseZ=${ob.baseZ} baseH=${ob.baseHeight} drawY=${getVisualRectForMode(ob, 'sideview', currentLockedX)?.y}`));
-            }
             for (const obs of obstacles) {
                 let o = getVisualRectForMode(obs, mode, currentLockedX);
                 if (!o || o.x === undefined) continue;
