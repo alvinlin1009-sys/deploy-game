@@ -1191,7 +1191,7 @@
         syncToCampaign();
         const check = validateSpawnGoalAgainstLava();
         if (!check.valid) { alert("⚠️ 目前關卡無法測試：\n" + check.reason + "\n請先將出生點或終點移離岩漿區域！"); return; }
-        const levelData = JSON.stringify({ campaignData });
+        const levelData = JSON.stringify({ world, obstacles, spawnPoint, goalPoint });
         localStorage.setItem('customLevelData', levelData);
         window.open('GAME.html?custom=true', '_blank');
     }

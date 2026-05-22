@@ -672,11 +672,16 @@
                 const rawData = localStorage.getItem('customLevelData');
                 if (rawData) {
                     try {
-                        const data = JSON.parse(rawData);
-                        Object.assign(world, data.world);
-                        obstacles.length = 0;
-                        obstacles.push(...data.obstacles);
-
+                        const parsed = JSON.parse(rawData);
+                        // 相容舊版 editor 的 { campaignData } 格式
+                        const data = parsed.campaignData ? parsed.campaignData[0] : parsed;
+                        if (data && data.world) {
+                            Object.assign(world, data.world);
+                            obstacles.length = 0;
+                            obstacles.push(...(data.obstacles || []));
+                            if (data.spawnPoint) world.spawnPoint = data.spawnPoint;
+                            if (data.goalPoint) world.goalPoint = data.goalPoint;
+                        }
                         isStartScreen = false;
                         document.getElementById('start-screen').classList.add('hidden');
                         const overlay = document.getElementById('dialog-overlay');
