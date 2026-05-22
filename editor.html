@@ -755,6 +755,15 @@
 
     let backupBeforeDrag = null;
 
+    const PLAYER_HEIGHT = 30;
+
+    function validateObstacleHeight(baseZ, baseHeight) {
+        if (baseZ + baseHeight + PLAYER_HEIGHT > world.height) {
+            return { valid: false, reason: `障礙物最高點 (離地${baseZ}+高${baseHeight}) 加上主角高度 (${PLAYER_HEIGHT}) 不可超過地圖高 (${world.height})` };
+        }
+        return { valid: true };
+    }
+
     function validateSpawnGoalAgainstLava() {
         const sx = world.x + spawnPoint.x;
         const sy = world.y + spawnPoint.y;
@@ -959,6 +968,11 @@
                     const newZ = Math.min(curWZ, Z_top - 10);
                     obs.baseZ = newZ; obs.baseHeight = Z_top - newZ;
                 }
+                // 限制最高不可讓障礙物頂部+主角超過地圖高
+                const maxTop = world.height - PLAYER_HEIGHT;
+                if ((obs.baseZ || 0) + obs.baseHeight > maxTop) {
+                    obs.baseHeight = Math.max(10, maxTop - (obs.baseZ || 0));
+                }
             }
             updatePropertyPanel();
         } else if (isDragging && selectedIndex !== -1) {
@@ -973,6 +987,11 @@
                 const grid = parseInt(document.getElementById('grid-size').value) || 1;
                 obs.y = Math.round(obs.y / grid) * grid;
                 obs.baseZ = Math.round(obs.baseZ / grid) * grid;
+                // 限制最高不可讓障礙物頂部+主角超過地圖高
+                const maxTop = world.height - PLAYER_HEIGHT;
+                if ((obs.baseZ || 0) + obs.baseHeight > maxTop) {
+                    obs.baseHeight = Math.max(10, maxTop - (obs.baseZ || 0));
+                }
             }
             updatePropertyPanel();
         }
@@ -989,7 +1008,10 @@
             const d = Math.max(10, Math.abs(createStart.y - cur.y));
             const curType = document.getElementById('obj-type').value || 'obstacle';
             const curColor = (curType === 'lava') ? '#ff3300' : '#777777';
-            obstacles.push({ x, y, baseWidth: w, baseDepth: d, baseHeight: 120, baseZ: 0, color: curColor, type: curType });
+            const h = 120, z = 0;
+            const hc = validateObstacleHeight(z, h);
+            if (!hc.valid) { alert("⚠️ " + hc.reason); return; }
+            obstacles.push({ x, y, baseWidth: w, baseDepth: d, baseHeight: h, baseZ: z, color: curColor, type: curType });
             selectedIndex = obstacles.length - 1;
         } else if (isCreating && viewMode === 'sideview') {
             const cur = snap(screenToWorld(lastMouse.x, lastMouse.y));
@@ -1001,6 +1023,8 @@
             const baseZ = world.y + world.height - botY;
             const curType = document.getElementById('obj-type').value || 'obstacle';
             const curColor = (curType === 'lava') ? '#ff3300' : '#777777';
+            const hc2 = validateObstacleHeight(baseZ, baseHeight);
+            if (!hc2.valid) { alert("⚠️ " + hc2.reason); return; }
             obstacles.push({ x: world.x + world.width / 2 - 50, y: obY, baseWidth: 100, baseDepth, baseHeight, baseZ, color: curColor, type: curType });
             selectedIndex = obstacles.length - 1;
         }
@@ -1199,9 +1223,18 @@
         obs.baseHeight = parseFloat(document.getElementById('obj-h').value);
         obs.baseZ = parseFloat(document.getElementById('obj-z').value) || 0;
 
-        const check = validateSpawnGoalAgainstLava();
-        if (!check.valid) {
-            alert("⚠️ 關卡設計規範錯誤：\n" + check.reason + "\n系統已自動恢復至上一安全數值。");
+        let heightCheck = validateObstacleHeight(obs.baseZ, obs.baseHeight);
+        const lavaCheck = validateSpawnGoalAgainstLava();
+
+        if (!heightCheck.valid) {
+            alert("⚠️ 關卡設計規範錯誤：\n" + heightCheck.reason);
+            if (backupBeforeDrag) {
+                const restored = JSON.parse(backupBeforeDrag);
+                obstacles = restored.obstacles;
+                updatePropertyPanel();
+            }
+        } else if (!lavaCheck.valid) {
+            alert("⚠️ 關卡設計規範錯誤：\n" + lavaCheck.reason + "\n系統已自動恢復至上一安全數值。");
             if (backupBeforeDrag) {
                 const restored = JSON.parse(backupBeforeDrag);
                 spawnPoint = restored.spawnPoint; goalPoint = restored.goalPoint; obstacles = restored.obstacles;
@@ -1218,6 +1251,10 @@
     function newLevel() { if (confirm("確定清空嗎？")) { saveState(); obstacles = []; selectedIndex = -1; syncToCampaign(); updateUI(); draw(); } }
     function testLevel() {
         syncToCampaign();
+        for (const obs of obstacles) {
+            const hc = validateObstacleHeight(obs.baseZ || 0, obs.baseHeight || 120);
+            if (!hc.valid) { alert("⚠️ 目前關卡無法測試：\n" + hc.reason + "\n請調整障礙物高度。"); return; }
+        }
         const check = validateSpawnGoalAgainstLava();
         if (!check.valid) { alert("⚠️ 目前關卡無法測試：\n" + check.reason + "\n請先將出生點或終點移離岩漿區域！"); return; }
         const levelData = JSON.stringify({ world, obstacles, spawnPoint, goalPoint });
