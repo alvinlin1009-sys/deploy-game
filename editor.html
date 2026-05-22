@@ -714,6 +714,19 @@
             const d = Math.abs(createStart.y - cur.y);
             ctx.fillRect(x, y, w, d);
         }
+        if (isCreating && viewMode === 'sideview') {
+            const cur = snap(screenToWorld(lastMouse.x, lastMouse.y));
+            const L = Math.min(createStart.x, cur.x), R = Math.max(createStart.x, cur.x);
+            const topY = Math.min(createStart.y, cur.y), botY = Math.max(createStart.y, cur.y);
+            const baseDepth = Math.max(10, R - L);
+            const baseHeight = Math.max(10, botY - topY);
+            const baseZ = world.y + world.height - botY;
+            const obY = world.y + world.height + world.y - R;
+            const px = world.x + world.height - (obY - world.y) - baseDepth;
+            const py = world.y + world.height - baseZ - baseHeight;
+            ctx.fillStyle = 'rgba(0, 255, 204, 0.3)';
+            ctx.fillRect(px, py, baseDepth, baseHeight);
+        }
 
         ctx.restore();
     }
@@ -797,6 +810,9 @@
             if (activeTool === 'place') {
                 isCreating = true; createStart = snap(wPos); selectedIndex = -1; requestRender(); return;
             }
+        if (viewMode === 'sideview' && activeTool === 'place') {
+            isCreating = true; createStart = snap(wPos); selectedIndex = -1; requestRender(); return;
+        }
         } else if (viewMode === 'sideview' && activeTool === 'select') {
             // 檢查出生點 (側面)
             const sx = world.x + world.height - spawnPoint.y - 40;
@@ -972,7 +988,19 @@
             const d = Math.max(10, Math.abs(createStart.y - cur.y));
             const curType = document.getElementById('obj-type').value || 'obstacle';
             const curColor = (curType === 'lava') ? '#ff3300' : '#777777';
-            obstacles.push({ x, y, baseWidth: w, baseDepth: d, baseHeight: 120, color: curColor, type: curType });
+            obstacles.push({ x, y, baseWidth: w, baseDepth: d, baseHeight: 120, baseZ: 0, color: curColor, type: curType });
+            selectedIndex = obstacles.length - 1;
+        } else if (isCreating && viewMode === 'sideview') {
+            const cur = snap(screenToWorld(lastMouse.x, lastMouse.y));
+            const L = Math.min(createStart.x, cur.x), R = Math.max(createStart.x, cur.x);
+            const topY = Math.min(createStart.y, cur.y), botY = Math.max(createStart.y, cur.y);
+            const obY = world.y + world.height + world.y - R;
+            const baseDepth = Math.max(10, R - L);
+            const baseHeight = Math.max(10, botY - topY);
+            const baseZ = world.y + world.height - botY;
+            const curType = document.getElementById('obj-type').value || 'obstacle';
+            const curColor = (curType === 'lava') ? '#ff3300' : '#777777';
+            obstacles.push({ x: world.x + world.width / 2 - 50, y: obY, baseWidth: 100, baseDepth, baseHeight, baseZ, color: curColor, type: curType });
             selectedIndex = obstacles.length - 1;
         }
         isPanning = isDragging = isCreating = isResizing = isDraggingSpawn = isDraggingGoal = false;
