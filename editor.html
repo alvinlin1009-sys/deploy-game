@@ -814,7 +814,7 @@
         backupBeforeDrag = JSON.stringify({ spawnPoint, goalPoint, obstacles });
 
         if (viewMode === 'topdown') {
-            if (activeTool === 'drag' || activeTool === 'edit') {
+            if (activeTool === 'select') {
                 // 檢查出生點
                 const sx = world.x + spawnPoint.x, sy = world.y + spawnPoint.y;
                 if (wPos.x >= sx && wPos.x <= sx + 40 && wPos.y >= sy && wPos.y <= sy + 40) {
@@ -1261,7 +1261,7 @@
         draw();
     }
 
-    setTool('drag');
+    setTool('select');
     updateUI();
     centerCamera();
 
