@@ -514,6 +514,7 @@
 
     let undoStack = [];
     let redoStack = [];
+    let clipboardObstacle = null;
     const MAX_HISTORY = 50;
     let renderRequested = false;
 
@@ -574,6 +575,27 @@
         if (e.ctrlKey && (e.key === 'y' || e.key === 'Y' || (e.shiftKey && (e.key === 'z' || e.key === 'Z')))) {
             e.preventDefault();
             redo();
+        }
+        // 複製物件
+        if (e.ctrlKey && (e.key === 'c' || e.key === 'C')) {
+            if (selectedIndex !== -1 && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
+                e.preventDefault();
+                clipboardObstacle = JSON.parse(JSON.stringify(obstacles[selectedIndex]));
+            }
+        }
+        // 貼上物件
+        if (e.ctrlKey && (e.key === 'v' || e.key === 'V')) {
+            if (clipboardObstacle && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
+                e.preventDefault();
+                saveState();
+                const newObs = JSON.parse(JSON.stringify(clipboardObstacle));
+                newObs.x += 30;
+                newObs.y += 30;
+                obstacles.push(newObs);
+                selectedIndex = obstacles.length - 1;
+                updateUI();
+                draw();
+            }
         }
         // 刪除物件
         if (e.key === 'Delete' || e.key === 'Backspace') {
