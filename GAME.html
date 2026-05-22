@@ -284,14 +284,8 @@
 
         // 定義遊戲世界邊界與外觀屬性
         const world = {
-            x: 50,
-            y: 50,
-            width: 800,
-            height: 600,
-            borderColor: '#00ffcc',
-            borderWidth: 2
+            x: 50, y: 50, width: 800, height: 600, spawnPoint: { x: 380, y: 540, z: 0 }, goalPoint: { x: 360, width: 80, z: 0 }
         };
-
         const obstacles = [];
         const NUM_OBSTACLES = 8;
 
@@ -1008,22 +1002,19 @@
             player.elevatedFromSide = false;
             player.standingOn = null;
 
-            // 立即尋找起點平台 (getObsRect 會根據目前的 viewMode 回傳矩形)
-            for (let i = 0; i < obstacles.length; i++) {
-                let o = getObsRect(obstacles[i]);
-                if (o && player.x < o.x + o.w && player.x + player.width > o.x &&
-                    player.y < o.y + o.h && player.y + player.height > o.y) {
-                    player.elevatedFromSide = true;
-                    player.standingOn = i;
-
-                    // 【關鍵修復】如果是在側面模式且踏在平台上，強制將高度設為平台頂端
-                    // 否則在岩漿關卡會因為碰到「地板」而立即觸發死亡循環
-                    if (viewMode === 'sideview') {
+            // 僅在側面模式檢查起點平台，避免俯視模式誤將角色視為站在障礙物上
+            if (viewMode === 'sideview') {
+                for (let i = 0; i < obstacles.length; i++) {
+                    let o = getObsRect(obstacles[i]);
+                    if (o && player.x < o.x + o.w && player.x + player.width > o.x &&
+                        player.y < o.y + o.h && player.y + player.height > o.y) {
+                        player.elevatedFromSide = true;
+                        player.standingOn = i;
                         player.y = o.y - player.height;
                         player.onGround = true;
                         player.vy = 0;
+                        break;
                     }
-                    break;
                 }
             }
         }
@@ -1132,6 +1123,18 @@
                 if (isOnFloor) {
                     playerDie();
                     return;
+                }
+            }
+
+            // 檢查是否碰到岩漿障礙物
+            for (const obs of obstacles) {
+                if (obs.type === 'lava') {
+                    let o = getObsRect(obs);
+                    if (o && player.x < o.x + o.w && player.x + player.width > o.x &&
+                        player.y < o.y + o.h && player.y + player.height > o.y) {
+                        playerDie();
+                        return;
+                    }
                 }
             }
 
