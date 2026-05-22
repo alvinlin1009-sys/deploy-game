@@ -1295,6 +1295,11 @@
                 if (Math.abs(player.reboundX) < 0.1) player.reboundX = 0;
             }
 
+            // 計算角色當前高度（上帝模式用於判斷障礙物是否在頭頂上方）
+            const playerZ = player.elevatedFromSide && player.standingOn !== null
+                ? (obstacles[player.standingOn].baseZ || 0) + (obstacles[player.standingOn].baseHeight || 120)
+                : 0;
+
             for (let i = 0; i < obstacles.length; i++) {
                 let o = getObsRect(obstacles[i]);
                 if (!o) continue;
@@ -1310,6 +1315,8 @@
                         continue;
                     }
                 }
+                // 若障礙物懸空且高於角色頭頂，上帝模式可從下方穿過
+                if (viewMode === 'topdown' && (obstacles[i].baseZ || 0) > playerZ) continue;
                 if (player.x < o.x + o.w && player.x + player.width > o.x && oldPlayerY < o.y + o.h && oldPlayerY + oldPlayerHeight > o.y) {
                     if (obstacles[i].type === 'lava') { playerDie(); return; }
                     if (oldPlayerX + player.width <= o.x) { player.x = o.x - player.width; player.touchingWallRight = true; }
@@ -1334,6 +1341,8 @@
                         continue;
                     }
                 }
+                // 若障礙物懸空且高於角色頭頂，上帝模式可從下方穿過
+                if (viewMode === 'topdown' && (obstacles[i].baseZ || 0) > playerZ) continue;
                 if (player.y < o.y + o.h && player.y + player.height > o.y && player.x < o.x + o.w && player.x + player.width > o.x) {
                     if (obstacles[i].type === 'lava') { playerDie(); return; }
                     if (viewMode === 'topdown') player.y = (oldPlayerY + oldPlayerHeight <= o.y) ? o.y - player.height : o.y + o.h;
