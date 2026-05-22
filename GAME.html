@@ -958,7 +958,7 @@
                 // 處理高度 Y：如果原本是在箱子上，切換後應維持在該箱子的高度
                 if (player.elevatedFromSide && player.standingOn !== null) {
                     const obs = obstacles[player.standingOn];
-                    player.y = world.y + world.height - obs.baseHeight - player.height;
+                    player.y = world.y + world.height - (obs.baseZ || 0) - obs.baseHeight - player.height;
                 } else {
                     player.y = world.y + world.height - player.height;
                 }
@@ -1027,7 +1027,7 @@
                     return {
                         // 修正：側面投影寬度應對應上帝視角的高度 (Z軸)
                         x: world.x + world.height - (obs.y - world.y) - obs.baseDepth,
-                        y: world.y + world.height - obs.baseHeight,
+                        y: world.y + world.height - (obs.baseZ || 0) - obs.baseHeight,
                         w: obs.baseDepth,
                         h: obs.baseHeight
                     };
@@ -1310,18 +1310,16 @@
                         player.y + player.height < o.y || player.y > o.y + o.h;
 
                     if (isOutside) {
-                        // 尋找可以落腳的相鄰/重疊平台（等高或較低的）
-                        // 策略：在所有玩家重疊且高度 <= 當前平台的障礙物中，選擇最高的那個
+                        // 尋找等高的相鄰/重疊平台
                         let foundNewPlatform = false;
                         const currentHeight = targetObs.baseHeight || 120;
-                        let bestJ = null;
-                        let bestHeight = -1;
                         for (let j = 0; j < obstacles.length; j++) {
                             if (j === player.standingOn) continue;
                             const otherObs = obstacles[j];
                             const otherHeight = otherObs.baseHeight || 120;
-                            // 只考慮高度 <= 當前平台的障礙物（等高或更矮）
-                            if (otherHeight <= currentHeight) {
+                            // 判斷高度是否相同 (容許誤差 1 像素)
+                            if (Math.abs(otherHeight - currentHeight) < 1) {
+                                // 獲取該障礙物的 topdown 矩形 (直接從屬性讀取，避免 getObsRect 因 mode 變化或 sideview 判定影響)
                                 const oOther = { 
                                     x: otherObs.x, 
                                     y: otherObs.y, 
@@ -1333,15 +1331,12 @@
                                                  player.x < oOther.x + oOther.w && 
                                                  player.y + player.height > oOther.y && 
                                                  player.y < oOther.y + oOther.h;
-                                if (overlaps && otherHeight > bestHeight) {
-                                    bestHeight = otherHeight;
-                                    bestJ = j;
+                                if (overlaps) {
+                                    player.standingOn = j;
+                                    foundNewPlatform = true;
+                                    break;
                                 }
                             }
-                        }
-                        if (bestJ !== null) {
-                            player.standingOn = bestJ;
-                            foundNewPlatform = true;
                         }
                         if (!foundNewPlatform) {
                             player.elevatedFromSide = false;
@@ -1393,11 +1388,11 @@
                 if (viewMode === 'topdown' && player.elevatedFromSide && i === player.standingOn) {
                     continue;
                 }
-                // 如果玩家在上帝模式且在高台上，若目標障礙物高度 <= 當前平台，則忽略碰撞阻擋（可走下去）；若更高則阻擋
+                // 如果玩家在上帝模式且在高台上，若目標障礙物高度與當前平台相同，則忽略碰撞阻擋
                 if (viewMode === 'topdown' && player.elevatedFromSide && player.standingOn !== null) {
                     const currentHeight = obstacles[player.standingOn].baseHeight || 120;
                     const otherHeight = obstacles[i].baseHeight || 120;
-                    if (otherHeight <= currentHeight) {
+                    if (Math.abs(otherHeight - currentHeight) < 1) {
                         continue;
                     }
                 }
@@ -1416,11 +1411,11 @@
                 let o = getObsRect(obstacles[i]);
                 if (!o) continue;
                 if (viewMode === 'topdown' && player.elevatedFromSide && i === player.standingOn) continue;
-                // 如果玩家在上帝模式且在高台上，若目標障礙物高度 <= 當前平台，則忽略碰撞阻擋（可走下去）；若更高則阻擋
+                // 如果玩家在上帝模式且在高台上，若目標障礙物高度與當前平台相同，則忽略碰撞阻擋
                 if (viewMode === 'topdown' && player.elevatedFromSide && player.standingOn !== null) {
                     const currentHeight = obstacles[player.standingOn].baseHeight || 120;
                     const otherHeight = obstacles[i].baseHeight || 120;
-                    if (otherHeight <= currentHeight) {
+                    if (Math.abs(otherHeight - currentHeight) < 1) {
                         continue;
                     }
                 }
@@ -1686,7 +1681,7 @@
             if (pLockedX + player.width > obs.x && pLockedX < obs.x + obs.baseWidth) {
                 return {
                     x: world.x + world.height - (obs.y - world.y) - obs.baseDepth,
-                    y: world.y + world.height - obs.baseHeight,
+                    y: world.y + world.height - (obs.baseZ || 0) - obs.baseHeight,
                     w: obs.baseDepth,
                     h: obs.baseHeight
                 };
