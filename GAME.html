@@ -313,7 +313,8 @@
             coyoteTimer: 0, // 新增：土狼時間計時器
             tutorialJumped: false, // 教學：是否已跳躍
             isDying: false, // 新增：是否正在進行死亡動畫
-            deathAnimTimer: 0 // 新增：死亡動畫計時器
+            deathAnimTimer: 0, // 新增：死亡動畫計時器
+            underObstacle: null // 側面模式下記錄在哪些障礙物下方
         };
 
         let audioCtx = null; // 用於播放音效
@@ -1368,6 +1369,21 @@
                 }
             }
             if (player.onGround) player.lastWallSide = null;
+
+            // 側面模式下偵測角色是否在障礙物下方（跨影格保留，用於上帝模式虛線框）
+            if (viewMode === 'sideview') {
+                player.underObstacle = null;
+                for (const obs of obstacles) {
+                    if (obs.type !== 'lava') {
+                        let o = getObsRect(obs);
+                        if (o && player.x < o.x + o.w && player.x + player.width > o.x &&
+                            player.y + player.height <= o.y) {
+                            player.underObstacle = obs;
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         // 繪製畫面
@@ -1586,22 +1602,15 @@
                 ctx.fillText("!", pPos.x + player.width / 2, pPos.y - 10);
                 ctx.restore();
             } else {
-                // 若在上帝模式下且角色在障礙物下方，畫虛線框標示位置
-                if (mode === 'topdown') {
-                    for (const obs of obstacles) {
-                        if (player.x < obs.x + obs.baseWidth && player.x + player.width > obs.x &&
-                            player.y < obs.y + obs.baseDepth && player.y + player.height > obs.y &&
-                            !(player.elevatedFromSide && obstacles.indexOf(obs) === player.standingOn)) {
-                            ctx.save();
-                            ctx.strokeStyle = player.color;
-                            ctx.lineWidth = 2;
-                            ctx.setLineDash([6, 4]);
-                            ctx.shadowBlur = 0;
-                            ctx.strokeRect(pPos.x, pPos.y, player.width, player.height);
-                            ctx.restore();
-                            break;
-                        }
-                    }
+                // 上帝模式下若角色在障礙物下方，畫虛線框標示位置
+                if (mode === 'topdown' && player.underObstacle) {
+                    ctx.save();
+                    ctx.strokeStyle = player.color;
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([6, 4]);
+                    ctx.shadowBlur = 0;
+                    ctx.strokeRect(pPos.x, pPos.y, player.width, player.height);
+                    ctx.restore();
                 }
                 ctx.fillRect(pPos.x, pPos.y, player.width, player.height);
             }
