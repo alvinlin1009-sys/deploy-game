@@ -532,6 +532,7 @@
         }
 
         // 3. 最後才執行初始化呼叫（自訂關卡由 initCustomLevel 負責）
+        let supabaseClient = null;
         if (!location.search.includes('custom=true')) {
             generateObstacles();
         }
@@ -1654,7 +1655,6 @@
         // ==========================================
         // ☁️ Supabase 雲端社群關卡大廳 (支援 Vercel 環境變數 API)
         // ==========================================
-        let supabaseClient = null;
         async function initSupabase() {
             if (supabaseClient) return true;
 
