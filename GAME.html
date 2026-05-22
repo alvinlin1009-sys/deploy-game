@@ -1126,18 +1126,6 @@
                 }
             }
 
-            // 檢查是否碰到岩漿障礙物
-            for (const obs of obstacles) {
-                if (obs.type === 'lava') {
-                    let o = getObsRect(obs);
-                    if (o && player.x < o.x + o.w && player.x + player.width > o.x &&
-                        player.y < o.y + o.h && player.y + player.height > o.y) {
-                        playerDie();
-                        return;
-                    }
-                }
-            }
-
             // 更新土狼時間：若在地面則重置計時器，若在空中則遞減
             if (player.onGround) {
                 player.coyoteTimer = 8; // 給予 8 個影格的寬限期 (約 0.13 秒)
@@ -1322,6 +1310,7 @@
                     }
                 }
                 if (player.x < o.x + o.w && player.x + player.width > o.x && oldPlayerY < o.y + o.h && oldPlayerY + oldPlayerHeight > o.y) {
+                    if (obstacles[i].type === 'lava') { playerDie(); return; }
                     if (oldPlayerX + player.width <= o.x) { player.x = o.x - player.width; player.touchingWallRight = true; }
                     else { player.x = o.x + o.w; player.touchingWallLeft = true; }
                 }
@@ -1345,6 +1334,7 @@
                     }
                 }
                 if (player.y < o.y + o.h && player.y + player.height > o.y && player.x < o.x + o.w && player.x + player.width > o.x) {
+                    if (obstacles[i].type === 'lava') { playerDie(); return; }
                     if (viewMode === 'topdown') player.y = (oldPlayerY + oldPlayerHeight <= o.y) ? o.y - player.height : o.y + o.h;
                     else {
                         if (oldPlayerY + oldPlayerHeight <= o.y) { player.y = o.y - player.height; player.vy = 0; player.onGround = true; }
