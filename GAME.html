@@ -314,7 +314,8 @@
             tutorialJumped: false, // 教學：是否已跳躍
             isDying: false, // 新增：是否正在進行死亡動畫
             deathAnimTimer: 0, // 新增：死亡動畫計時器
-            underObstacle: null // 側面模式下記錄在哪些障礙物下方
+            underObstacle: null, // 側面模式下記錄在哪些障礙物下方
+            actualZ: 0 // 角色實際 Z 高度（跨視角追蹤）
         };
 
         let audioCtx = null; // 用於播放音效
@@ -918,6 +919,7 @@
                 if (heightAboveGround > 1) {
                     player.elevatedFromSide = true;
                     player.standingOn = null;
+                    player.actualZ = heightAboveGround;
                     // 【優化】重新掃描當前位置下方是哪個箱子，加入 2 像素的小誤差容許量
                     for (let i = 0; i < obstacles.length; i++) {
                         let o = getObsRect(obstacles[i]);
@@ -926,13 +928,15 @@
                             player.x < o.x + o.w + 2 && player.x + player.width > o.x - 2 &&
                             player.y < o.y + o.h + 2 && player.y + player.height > o.y - 2) {
                             player.standingOn = i;
+                            player.actualZ = obsTop;
                             break;
                         }
                     }
-                    if (player.standingOn === null) player.elevatedFromSide = false;
+                    if (player.standingOn === null) { player.elevatedFromSide = false; player.actualZ = 0; }
                 } else {
                     player.elevatedFromSide = false;
                     player.standingOn = null;
+                    player.actualZ = 0;
                 }
             }
 
@@ -1399,7 +1403,7 @@
             } else if (viewMode === 'topdown') {
                 player.underObstacle = null;
                 for (const obs of obstacles) {
-                    if (obs.type !== 'lava' && (obs.baseZ || 0) > playerZ &&
+                    if (obs.type !== 'lava' && (obs.baseZ || 0) > (player.actualZ || playerZ || 0) &&
                         player.x < obs.x + obs.baseWidth && player.x + player.width > obs.x &&
                         player.y < obs.y + obs.baseDepth && player.y + player.height > obs.y) {
                         player.underObstacle = obs;
