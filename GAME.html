@@ -921,7 +921,9 @@
                     // 【優化】重新掃描當前位置下方是哪個箱子，加入 2 像素的小誤差容許量
                     for (let i = 0; i < obstacles.length; i++) {
                         let o = getObsRect(obstacles[i]);
-                        if (o && player.x < o.x + o.w + 2 && player.x + player.width > o.x - 2 &&
+                        const obsTop = (obstacles[i].baseZ || 0) + (obstacles[i].baseHeight || 120);
+                        if (o && Math.abs(obsTop - heightAboveGround) < 5 &&
+                            player.x < o.x + o.w + 2 && player.x + player.width > o.x - 2 &&
                             player.y < o.y + o.h + 2 && player.y + player.height > o.y - 2) {
                             player.standingOn = i;
                             break;
