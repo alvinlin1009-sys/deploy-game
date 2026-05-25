@@ -999,6 +999,22 @@
             if (viewMode === 'topdown') {
                 player.x = startX;
                 player.y = startY;
+                // 若出生點有高度，在俯視模式下設定 elevated 狀態
+                if ((spRel.z || 0) > 1) {
+                    player.elevatedFromSide = true;
+                    player.actualZ = spRel.z;
+                    for (let i = 0; i < obstacles.length; i++) {
+                        let o = getObsRect(obstacles[i]);
+                        const obsTop = (obstacles[i].baseZ || 0) + (obstacles[i].baseHeight || 120);
+                        if (o && Math.abs(obsTop - spRel.z) < 5 &&
+                            player.x < o.x + o.w + 2 && player.x + player.width > o.x - 2 &&
+                            player.y < o.y + o.h + 2 && player.y + player.height > o.y - 2) {
+                            player.standingOn = i;
+                            player.onGround = true;
+                            break;
+                        }
+                    }
+                }
             } else {
                 // 在側面模式下，設定正確的 Z 軸視覺位置與鎖定位置 (X 軸)
                 player.lockedX = startX;
@@ -1007,17 +1023,18 @@
             }
 
             player.vy = 0;
-            player.elevatedFromSide = false;
-            player.standingOn = null;
 
             // 僅在側面模式檢查起點平台，避免俯視模式誤將角色視為站在障礙物上
             if (viewMode === 'sideview') {
+                player.elevatedFromSide = false;
+                player.standingOn = null;
                 for (let i = 0; i < obstacles.length; i++) {
                     let o = getObsRect(obstacles[i]);
                     if (o && player.x < o.x + o.w && player.x + player.width > o.x &&
                         player.y < o.y + o.h && player.y + player.height > o.y) {
                         player.elevatedFromSide = true;
                         player.standingOn = i;
+                        player.actualZ = (obstacles[i].baseZ || 0) + (obstacles[i].baseHeight || 120);
                         player.y = o.y - player.height;
                         player.onGround = true;
                         player.vy = 0;
@@ -1304,8 +1321,10 @@
             }
 
             // 計算角色當前高度（上帝模式用於判斷障礙物是否在頭頂上方）
-            const playerZ = player.elevatedFromSide && player.standingOn !== null
-                ? (obstacles[player.standingOn].baseZ || 0) + (obstacles[player.standingOn].baseHeight || 120)
+            const playerZ = player.elevatedFromSide
+                ? (player.standingOn !== null
+                    ? (obstacles[player.standingOn].baseZ || 0) + (obstacles[player.standingOn].baseHeight || 120)
+                    : player.actualZ || 0)
                 : 0;
 
             for (let i = 0; i < obstacles.length; i++) {
