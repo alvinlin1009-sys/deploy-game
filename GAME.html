@@ -1277,7 +1277,8 @@
                 } else if (player.isCrouching) {
                     let canStand = true;
                     const py = player.y - (player.baseHeight * 0.4);
-                    for (const obs of obstacles) {
+            const sortedObs = [...obstacles].sort((a, b) => (a.baseZ || 0) - (b.baseZ || 0));
+            for (const obs of sortedObs) {
                         let o = getObsRect(obs);
                         if (!o) continue;
                         if (player.x < o.x + o.w && player.x + player.width > o.x && py < o.y + o.h && py + player.baseHeight > o.y) canStand = false;
