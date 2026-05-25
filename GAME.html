@@ -1320,7 +1320,7 @@
                 // 若障礙物懸空且高於角色頭頂，上帝模式可從下方穿過；或在平台上時低於平台的岩漿不阻擋
                 if (viewMode === 'topdown' && ((obstacles[i].baseZ || 0) > playerZ || (obstacles[i].type === 'lava' && player.elevatedFromSide && (obstacles[i].baseZ || 0) < playerZ))) continue;
                 if (player.x < o.x + o.w && player.x + player.width > o.x && oldPlayerY < o.y + o.h && oldPlayerY + oldPlayerHeight > o.y) {
-                    if (obstacles[i].type === 'lava' && (!player.elevatedFromSide || (obstacles[i].baseZ || 0) >= playerZ)) { playerDie(); return; }
+                    if (obstacles[i].type === 'lava' && (viewMode !== 'topdown' || !player.elevatedFromSide || (obstacles[i].baseZ || 0) >= playerZ)) { playerDie(); return; }
                     if (oldPlayerX + player.width <= o.x) { player.x = o.x - player.width; player.touchingWallRight = true; }
                     else { player.x = o.x + o.w; player.touchingWallLeft = true; }
                 }
@@ -1346,7 +1346,7 @@
                 // 若障礙物懸空且高於角色頭頂，上帝模式可從下方穿過；或在平台上時低於平台的岩漿不阻擋
                 if (viewMode === 'topdown' && ((obstacles[i].baseZ || 0) > playerZ || (obstacles[i].type === 'lava' && player.elevatedFromSide && (obstacles[i].baseZ || 0) < playerZ))) continue;
                 if (player.y < o.y + o.h && player.y + player.height > o.y && player.x < o.x + o.w && player.x + player.width > o.x) {
-                    if (obstacles[i].type === 'lava' && (!player.elevatedFromSide || (obstacles[i].baseZ || 0) >= playerZ)) { playerDie(); return; }
+                    if (obstacles[i].type === 'lava' && (viewMode !== 'topdown' || !player.elevatedFromSide || (obstacles[i].baseZ || 0) >= playerZ)) { playerDie(); return; }
                     if (viewMode === 'topdown') player.y = (oldPlayerY + oldPlayerHeight <= o.y) ? o.y - player.height : o.y + o.h;
                     else {
                         if (oldPlayerY + oldPlayerHeight <= o.y) { player.y = o.y - player.height; player.vy = 0; player.onGround = true; }
