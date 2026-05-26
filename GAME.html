@@ -888,6 +888,8 @@
                 if (player.elevatedFromSide && player.standingOn !== null) {
                     const obs = obstacles[player.standingOn];
                     player.y = world.y + world.height - (obs.baseZ || 0) - obs.baseHeight - player.height;
+                } else if (player.elevatedFromSide && player.actualZ > 1) {
+                    player.y = world.y + world.height - player.actualZ - player.height;
                 } else {
                     player.y = world.y + world.height - player.height;
                 }
