@@ -1164,6 +1164,11 @@
                     player.vy = player.jumpPower;
                     player.onGround = false;
                     player.coyoteTimer = 0; // 觸發跳躍後立即歸零，防止二段跳
+                    // 跳躍時清除站立狀態，避免碰撞偵測誤判
+                    if (player.standingOn !== null) {
+                        player.actualZ = (obstacles[player.standingOn].baseZ || 0) + (obstacles[player.standingOn].baseHeight || 120);
+                        player.standingOn = null;
+                    }
                     // 教學特定邏輯：偵測跳躍 (已在上方處理)
                     player.lastWallSide = null;
                 } else if (player.touchingWallLeft && player.lastWallSide !== 'left') {
