@@ -1566,7 +1566,10 @@
                 }
             }
 
-            for (const obs of obstacles) {
+            const sortedObs = mode === 'topdown'
+                ? [...obstacles].sort((a, b) => (a.baseZ || 0) - (b.baseZ || 0))
+                : obstacles;
+            for (const obs of sortedObs) {
                 let o = getVisualRectForMode(obs, mode, currentLockedX);
                 if (!o || o.x === undefined) continue;
                 
