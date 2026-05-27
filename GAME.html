@@ -904,32 +904,33 @@
 
                 // 如果在側視圖時有高度，切換後標記為「站在箱子上」
                 if (heightAboveGround > 1) {
-                    player.elevatedFromSide = true;
-                    player.standingOn = null;
-                    player.actualZ = heightAboveGround;
-                    // 找出同 X 軸上低於角色且最高的平台
-                    let bestIdx = null, bestTop = -1;
-                    for (let i = 0; i < obstacles.length; i++) {
-                        let o = getObsRect(obstacles[i]);
-                        const obsTop = (obstacles[i].baseZ || 0) + (obstacles[i].baseHeight || 120);
-                        if (o && obsTop <= heightAboveGround + 5 &&
-                            player.x < o.x + o.w + 2 && player.x + player.width > o.x - 2 &&
-                            obsTop > bestTop) {
-                            bestIdx = i;
-                            bestTop = obsTop;
+                    // 貼牆跳躍時直接落地，避免傳送到錯誤位置
+                    if (oldX <= world.x + 5 || oldX + player.width >= world.x + world.height - 5) {
+                        player.elevatedFromSide = false;
+                        player.standingOn = null;
+                        player.actualZ = 0;
+                    } else {
+                        player.elevatedFromSide = true;
+                        player.standingOn = null;
+                        player.actualZ = heightAboveGround;
+                        // 找出同 X 軸上低於角色且最高的平台
+                        let bestIdx = null, bestTop = -1;
+                        for (let i = 0; i < obstacles.length; i++) {
+                            let o = getObsRect(obstacles[i]);
+                            const obsTop = (obstacles[i].baseZ || 0) + (obstacles[i].baseHeight || 120);
+                            if (o && obsTop <= heightAboveGround + 5 &&
+                                player.x < o.x + o.w + 2 && player.x + player.width > o.x - 2 &&
+                                obsTop > bestTop) {
+                                bestIdx = i;
+                                bestTop = obsTop;
+                            }
                         }
-                    }
-                    if (bestIdx !== null) {
-                        player.standingOn = bestIdx;
-                        player.actualZ = bestTop;
-                        // 僅在非貼牆狀態才調整 Z 軸位置，避免傳送到錯誤深度
-                        if (!(oldX <= world.x + 5 || oldX + player.width >= world.x + world.height - 5)) {
-                            const obs = obstacles[bestIdx];
-                            let o = getObsRect(obs);
-                            if (o) player.y = o.y + Math.min(o.h - player.height, Math.max(0, (o.h - player.height) / 2));
+                        if (bestIdx !== null) {
+                            player.standingOn = bestIdx;
+                            player.actualZ = bestTop;
                         }
+                        if (player.standingOn === null) { player.elevatedFromSide = false; player.actualZ = 0; }
                     }
-                    if (player.standingOn === null) { player.elevatedFromSide = false; player.actualZ = 0; }
                 } else {
                     player.elevatedFromSide = false;
                     player.standingOn = null;
