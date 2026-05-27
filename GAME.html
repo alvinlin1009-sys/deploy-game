@@ -1385,6 +1385,19 @@
                 }
             }
 
+            // 側面視角：若走出站立障礙物的水平範圍，清除站立狀態
+            if (viewMode === 'sideview' && player.elevatedFromSide && player.standingOn !== null) {
+                const obs = obstacles[player.standingOn];
+                if (obs) {
+                    const obsLeft = world.x + world.height - (obs.y - world.y) - obs.baseDepth;
+                    const obsRight = obsLeft + obs.baseDepth;
+                    if (player.x + player.width <= obsLeft || player.x >= obsRight) {
+                        player.actualZ = (obs.baseZ || 0) + (obs.baseHeight || 120);
+                        player.standingOn = null;
+                    }
+                }
+            }
+
             if (player.x < world.x) { player.x = world.x; player.touchingWallLeft = true; }
             if (player.x + player.width > world.x + currentWidth) { player.x = world.x + currentWidth - player.width; player.touchingWallRight = true; }
             if (player.y < world.y) player.y = world.y;
