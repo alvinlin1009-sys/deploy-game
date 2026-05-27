@@ -902,36 +902,29 @@
                 // 逆推 Z 軸位置 (Topdown 的 Y)
                 player.y = world.y + (world.height - sideRelX - player.width);
 
-                // 【修復】貼牆跳躍時修正 Z 軸位置，定位到高度相符的障礙物上
-                if ((oldX <= world.x + 5 || oldX + player.width >= world.x + world.height - 5) && heightAboveGround > 1) {
-                    for (let i = 0; i < obstacles.length; i++) {
-                        let o = getObsRect(obstacles[i]);
-                        const obsTop = (obstacles[i].baseZ || 0) + (obstacles[i].baseHeight || 120);
-                        if (o && obsTop <= heightAboveGround + 5 &&
-                            player.x < o.x + o.w + 2 && player.x + player.width > o.x - 2) {
-                            // 將角色定位到該障礙物的 Z 範圍內
-                            player.y = o.y + Math.min(o.h - player.height, Math.max(0, (o.h - player.height) / 2));
-                            break;
-                        }
-                    }
-                }
-
                 // 如果在側視圖時有高度，切換後標記為「站在箱子上」
                 if (heightAboveGround > 1) {
                     player.elevatedFromSide = true;
                     player.standingOn = null;
                     player.actualZ = heightAboveGround;
-                    // 【優化】重新掃描當前位置下方是哪個箱子，若角色在障礙物上方就定位上去
+                    // 找出同 X 軸上低於角色且最高的平台
+                    let bestIdx = null, bestTop = -1;
                     for (let i = 0; i < obstacles.length; i++) {
                         let o = getObsRect(obstacles[i]);
                         const obsTop = (obstacles[i].baseZ || 0) + (obstacles[i].baseHeight || 120);
                         if (o && obsTop <= heightAboveGround + 5 &&
                             player.x < o.x + o.w + 2 && player.x + player.width > o.x - 2 &&
-                            player.y < o.y + o.h + 2 && player.y + player.height > o.y - 2) {
-                            player.standingOn = i;
-                            player.actualZ = obsTop;
-                            break;
+                            obsTop > bestTop) {
+                            bestIdx = i;
+                            bestTop = obsTop;
                         }
+                    }
+                    if (bestIdx !== null) {
+                        player.standingOn = bestIdx;
+                        player.actualZ = bestTop;
+                        const obs = obstacles[bestIdx];
+                        let o = getObsRect(obs);
+                        if (o) player.y = o.y + Math.min(o.h - player.height, Math.max(0, (o.h - player.height) / 2));
                     }
                     if (player.standingOn === null && player.actualZ <= 1) { player.elevatedFromSide = false; player.actualZ = 0; }
                 } else {
