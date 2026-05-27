@@ -1223,6 +1223,12 @@
             if (keys['w'] || keys['W'] || keys['ArrowUp']) moveY = -1;
             if (keys['s'] || keys['S'] || keys['ArrowDown']) moveY = 1;
 
+            // 確保斜向移動速度與軸向一致
+            if (moveX !== 0 && moveY !== 0) {
+                moveX *= 0.7071;
+                moveY *= 0.7071;
+            }
+
             if (moveX === 0 && moveY === 0 && player.autoMove) {
                 moveX = player.autoMove.x; moveY = player.autoMove.y;
             }
