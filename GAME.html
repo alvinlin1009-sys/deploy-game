@@ -902,18 +902,17 @@
                 // 逆推 Z 軸位置 (Topdown 的 Y)
                 player.y = world.y + (world.height - sideRelX - player.width);
 
-                // 【修復】原本的攀附邏輯會誤將碰到箱子邊緣的玩家傳送到世界邊界，現在改為僅限世界邊界
-                if (player.touchingWallLeft || player.touchingWallRight) {
-                    // 檢查是否真的接近世界邊界 (左右各 5 像素內)
-                    const isAtWorldLeft = (viewMode === 'sideview' && oldX <= world.x + 5);
-                    const isAtWorldRight = (viewMode === 'sideview' && oldX + player.width >= world.x + world.height - 5);
-
-                    if (isAtWorldLeft || isAtWorldRight) {
-                        player.isClinging = true;
-                        player.clingSide = isAtWorldLeft ? 'bottom' : 'top';
-                        player.clingingX = player.x;
-                        player.clingingY = (player.clingSide === 'bottom') ? (world.y + world.height - player.height) : world.y;
-                        player.reboundX = 0;
+                // 【修復】貼牆跳躍時修正 Z 軸位置，定位到高度相符的障礙物上
+                if ((oldX <= world.x + 5 || oldX + player.width >= world.x + world.height - 5) && heightAboveGround > 1) {
+                    for (let i = 0; i < obstacles.length; i++) {
+                        let o = getObsRect(obstacles[i]);
+                        const obsTop = (obstacles[i].baseZ || 0) + (obstacles[i].baseHeight || 120);
+                        if (o && obsTop <= heightAboveGround + 5 &&
+                            player.x < o.x + o.w + 2 && player.x + player.width > o.x - 2) {
+                            // 將角色定位到該障礙物的 Z 範圍內
+                            player.y = o.y + Math.min(o.h - player.height, Math.max(0, (o.h - player.height) / 2));
+                            break;
+                        }
                     }
                 }
 
