@@ -922,11 +922,14 @@
                     if (bestIdx !== null) {
                         player.standingOn = bestIdx;
                         player.actualZ = bestTop;
-                        const obs = obstacles[bestIdx];
-                        let o = getObsRect(obs);
-                        if (o) player.y = o.y + Math.min(o.h - player.height, Math.max(0, (o.h - player.height) / 2));
+                        // 僅在非貼牆狀態才調整 Z 軸位置，避免傳送到錯誤深度
+                        if (!(oldX <= world.x + 5 || oldX + player.width >= world.x + world.height - 5)) {
+                            const obs = obstacles[bestIdx];
+                            let o = getObsRect(obs);
+                            if (o) player.y = o.y + Math.min(o.h - player.height, Math.max(0, (o.h - player.height) / 2));
+                        }
                     }
-                    if (player.standingOn === null && player.actualZ <= 1) { player.elevatedFromSide = false; player.actualZ = 0; }
+                    if (player.standingOn === null) { player.elevatedFromSide = false; player.actualZ = 0; }
                 } else {
                     player.elevatedFromSide = false;
                     player.standingOn = null;
