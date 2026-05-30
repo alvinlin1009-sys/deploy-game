@@ -1458,8 +1458,12 @@
         document.getElementById('admin-login-modal').style.display = 'none';
     }
     function verifyAdminLogin() {
-        // 暫時取消密碼驗證
-        currentAdminPassword = "temp";
+        const pwd = document.getElementById('admin-login-password').value;
+        if (pwd !== 'alvin67') {
+            alert("❌ 密碼錯誤！");
+            return;
+        }
+        currentAdminPassword = "alvin67";
         alert("🔓 管理者模式已解鎖！您現在可以使用「👑 發布為主線關卡」與「🗑️ 管理社群關卡」功能。");
         document.getElementById('admin-unlock-btn').style.display = 'none';
         document.getElementById('official-publish-btn').style.display = 'flex';
