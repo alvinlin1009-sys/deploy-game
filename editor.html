@@ -777,33 +777,7 @@
 
     let backupBeforeDrag = null;
 
-    function validateSpawnGoalAgainstLava() {
-        const sx = world.x + spawnPoint.x;
-        const sy = world.y + spawnPoint.y;
-        const gx = world.x + goalPoint.x;
-        const gy = world.y; // 終點出口貼著頂部邊界往下延伸
-
-        for (let i = 0; i < obstacles.length; i++) {
-            const obs = obstacles[i];
-            if (obs.type === 'lava') {
-                // 檢查出生點 (40x40) 是否與岩漿重疊 (2D 平面 X-Y)
-                const spawnOverlaps = (sx < obs.x + obs.baseWidth && sx + 40 > obs.x &&
-                                       sy < obs.y + obs.baseDepth && sy + 40 > obs.y);
-                
-                // 檢查終點出口 (width x 20) 是否與岩漿重疊 (2D 平面 X-Y)
-                const goalOverlaps = (gx < obs.x + obs.baseWidth && gx + goalPoint.width > obs.x &&
-                                      gy < obs.y + obs.baseDepth && gy + 20 > obs.y);
-
-                if (spawnOverlaps || goalOverlaps) {
-                    return {
-                        valid: false,
-                        reason: spawnOverlaps ? "出生點不可設置於岩漿上方！" : "終點出口不可設置於岩漿上方！"
-                    };
-                }
-            }
-        }
-        return { valid: true };
-    }
+    // validateSpawnGoalAgainstLava removed — 出口可設計在岩漿上
 
     canvas.onmousedown = (e) => {
         lastMouse = { x: e.clientX, y: e.clientY };
@@ -1029,16 +1003,6 @@
         }
         isPanning = isDragging = isCreating = isResizing = isDraggingSpawn = isDraggingGoal = false;
         
-        const check = validateSpawnGoalAgainstLava();
-        if (!check.valid) {
-            alert("⚠️ 關卡設計規範錯誤：\n" + check.reason + "\n系統已自動恢復至上一安全位置。");
-            if (backupBeforeDrag) {
-                const restored = JSON.parse(backupBeforeDrag);
-                spawnPoint = restored.spawnPoint; goalPoint = restored.goalPoint; obstacles = restored.obstacles;
-                syncWorldSpawnGoal();
-            }
-        }
-
         updateUI();
         requestRender();
     };
@@ -1064,16 +1028,6 @@
             goalPoint.z = parseFloat(document.getElementById('goal-z').value) || 0;
             syncWorldSpawnGoal();
 
-            const check = validateSpawnGoalAgainstLava();
-            if (!check.valid) {
-                alert("⚠️ 關卡設計規範錯誤：\n" + check.reason + "\n系統已自動恢復至上一安全數值。");
-                if (backupBeforeDrag) {
-                    const restored = JSON.parse(backupBeforeDrag);
-                    spawnPoint = restored.spawnPoint; goalPoint = restored.goalPoint; obstacles = restored.obstacles;
-                    syncWorldSpawnGoal();
-                    initSpawnGoalUI();
-                }
-            }
             draw();
         }
     }
@@ -1222,18 +1176,6 @@
         obs.baseHeight = parseFloat(document.getElementById('obj-h').value);
         obs.baseZ = parseFloat(document.getElementById('obj-z').value) || 0;
 
-        const lavaCheck = validateSpawnGoalAgainstLava();
-
-        if (!lavaCheck.valid) {
-            alert("⚠️ 關卡設計規範錯誤：\n" + lavaCheck.reason + "\n系統已自動恢復至上一安全數值。");
-            if (backupBeforeDrag) {
-                const restored = JSON.parse(backupBeforeDrag);
-                spawnPoint = restored.spawnPoint; goalPoint = restored.goalPoint; obstacles = restored.obstacles;
-                syncWorldSpawnGoal();
-                updatePropertyPanel();
-            }
-        }
-
         updateUI();
         draw();
     }
@@ -1242,8 +1184,6 @@
     function newLevel() { if (confirm("確定清空嗎？")) { saveState(); obstacles = []; selectedIndex = -1; syncToCampaign(); updateUI(); draw(); } }
     function testLevel() {
         syncToCampaign();
-        const check = validateSpawnGoalAgainstLava();
-        if (!check.valid) { alert("⚠️ 目前關卡無法測試：\n" + check.reason + "\n請先將出生點或終點移離岩漿區域！"); return; }
         const levelData = JSON.stringify({ world, obstacles, spawnPoint, goalPoint });
         localStorage.setItem('customLevelData', levelData);
         window.open('GAME.html?custom=true', '_blank');
@@ -1417,8 +1357,6 @@
 
     async function openPublishModal() {
         syncWorldSpawnGoal();
-        const check = validateSpawnGoalAgainstLava();
-        if (!check.valid) { alert("⚠️ 無法發布：\n" + check.reason + "\n請先將出生點或終點移離岩漿區域！"); return; }
         const connected = await initSupabase();
         if (!connected) {
             openSupabaseConfig();
@@ -1587,8 +1525,6 @@
     }
     function openOfficialPublishModal() {
         syncWorldSpawnGoal();
-        const check = validateSpawnGoalAgainstLava();
-        if (!check.valid) { alert("⚠️ 無法發布主線：\n" + check.reason + "\n請先將出生點或終點移離岩漿區域！"); return; }
         document.getElementById('official-publish-modal').style.display = 'flex';
         if (currentAdminPassword) {
             document.getElementById('official-password').value = currentAdminPassword;
