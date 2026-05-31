@@ -1262,8 +1262,8 @@
                             if (typeof showCustomVictoryScreen === 'function') showCustomVictoryScreen();
                             else { alert("🎉 太神啦！您已完全通關此關卡包！"); window.location.reload(); }
                         }
-                    } else if (currentLevel < maxLevel) {
-                        // 記錄通關時間
+                    } else {
+                        // 記錄通關時間（含最後一關）
                         const elapsed = currentLevelTime;
                         levelTimes[currentLevel] = elapsed;
                         totalTime += elapsed;
@@ -1282,12 +1282,14 @@
                             localStorage.setItem('speedrunRecords', JSON.stringify(fastestRecords));
                             timeMsg += ` 🏆`;
                         }
-                        if (viewInfo) viewInfo.innerText = `目前視角：上帝視角 (按 E 切換) | ${timeMsg}`;
-                        currentLevel++;
-                        setupLevelTransition();
-                    } else if (!isVictory) {
-                        if (typeof showVictoryScreen === 'function') showVictoryScreen();
-                        else { alert("恭喜通關！"); window.location.reload(); }
+                        if (viewInfo && currentLevel < maxLevel) viewInfo.innerText = `目前視角：上帝視角 (按 E 切換) | ${timeMsg}`;
+                        if (currentLevel < maxLevel) {
+                            currentLevel++;
+                            setupLevelTransition();
+                        } else if (!isVictory) {
+                            if (typeof showVictoryScreen === 'function') showVictoryScreen();
+                            else { alert("恭喜通關！"); window.location.reload(); }
+                        }
                     }
                     return; // 換關後不繼續處理當前影格
                 }
