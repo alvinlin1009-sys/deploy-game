@@ -372,6 +372,7 @@
         let totalTime = 0;
         const levelTimes = {};
         let fastestRecords = JSON.parse(localStorage.getItem('speedrunRecords') || '{}');
+        let oldRecords = {}; // 開局前的紀錄快照，用於比對差異
 
         let dialogStep = 0; // 0: 無對話框, 1: 冒險者指南, 2: 視角切換教學
         let viewMode = 'topdown';
@@ -570,6 +571,7 @@
                 if (currentLevel === -1) {
                     // 自訂關卡不改變 currentLevel
                 } else {
+                    oldRecords = JSON.parse(JSON.stringify(fastestRecords));
                     currentLevel = 1; // 直接進入第一關
                 }
                 setupLevelTransition();
@@ -711,10 +713,10 @@
             for (let lv = 1; lv <= maxLevel; lv++) {
                 const t = levelTimes[lv];
                 if (t === undefined) continue;
-                const prev = fastestRecords[lv];
+                const oldPrev = oldRecords[lv];
                 let diff = '';
-                if (prev && prev.time > 0) {
-                    const d = t - prev.time;
+                if (oldPrev && oldPrev.time > 0) {
+                    const d = t - oldPrev.time;
                     if (d > 0.01) diff = `<span style="color:#ff6b6b;">+${d.toFixed(1)}s</span>`;
                     else if (d < -0.01) diff = `<span style="color:#00ffcc;">-${Math.abs(d).toFixed(1)}s</span> (新紀錄！)`;
                     else diff = `<span style="color:#888;">±0s</span>`;
@@ -1028,6 +1030,7 @@
             respawnPlayer();
             // 開始計時 (排除教學關 0)
             if (currentLevel >= 1) {
+                if (levelStartTime === 0) oldRecords = JSON.parse(JSON.stringify(fastestRecords));
                 levelStartTime = performance.now();
                 currentLevelTime = 0;
             }
@@ -1264,8 +1267,8 @@
                         const elapsed = currentLevelTime;
                         levelTimes[currentLevel] = elapsed;
                         totalTime += elapsed;
-                        const prev = fastestRecords[currentLevel];
-                        const isRecord = !prev || elapsed < prev.time;
+                        const prevRecord = fastestRecords[currentLevel];
+                        const isRecord = !prevRecord || elapsed < prevRecord.time;
                         if (isRecord) {
                             fastestRecords[currentLevel] = { time: elapsed, name: fastestRecords[currentLevel]?.name || '玩家' };
                             localStorage.setItem('speedrunRecords', JSON.stringify(fastestRecords));
@@ -1624,9 +1627,9 @@
                 ctx.font = '15px monospace';
                 ctx.fillText(`累計 ${totalTime.toFixed(1)}s`, canvas.width - 20, canvas.height - th + 42);
                 // 顯示與最速紀錄的時間差
-                const prev = fastestRecords[currentLevel];
-                if (prev && prev.time > 0) {
-                    const diff = currentLevelTime - prev.time;
+                const oldPrev = oldRecords[currentLevel];
+                if (oldPrev && oldPrev.time > 0) {
+                    const diff = currentLevelTime - oldPrev.time;
                     ctx.font = 'bold 14px monospace';
                     if (diff > 0.01) { ctx.fillStyle = '#ff6b6b'; ctx.fillText(`+${diff.toFixed(1)}s`, canvas.width - 20, canvas.height - th + 65); }
                     else if (diff < -0.01) { ctx.fillStyle = '#00ffcc'; ctx.fillText(`-${Math.abs(diff).toFixed(1)}s`, canvas.width - 20, canvas.height - th + 65); }
