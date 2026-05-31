@@ -1604,7 +1604,7 @@
             if (currentLevel >= 1 && levelStartTime > 0 && !isVictory) {
                 ctx.save();
                 ctx.fillStyle = 'rgba(0,0,0,0.7)';
-                const tw = 270, th = 95;
+                const tw = 260, th = 95;
                 ctx.fillRect(canvas.width - tw - 15, canvas.height - th - 15, tw, th);
                 ctx.strokeStyle = 'rgba(0,255,204,0.3)';
                 ctx.lineWidth = 1;
@@ -1614,32 +1614,26 @@
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'top';
                 ctx.fillText(`第 ${currentLevel} 關`, canvas.width - tw + 10, canvas.height - th + 8);
-                ctx.font = 'bold 26px monospace';
+                ctx.font = 'bold 28px monospace';
                 ctx.textAlign = 'right';
                 const mins = Math.floor(currentLevelTime / 60);
                 const secs = currentLevelTime % 60;
                 const timeStr = mins > 0 ? `${mins}:${secs.toFixed(1).padStart(4,'0')}` : `${secs.toFixed(1)}s`;
-                ctx.fillText(`⏱ ${timeStr}`, canvas.width - 20, canvas.height - th + 5);
+                ctx.fillText(`⏱ ${timeStr}`, canvas.width - 20, canvas.height - th + 3);
                 ctx.fillStyle = 'rgba(255,255,255,0.6)';
-                ctx.font = '14px monospace';
-                ctx.fillText(`累計 ${totalTime.toFixed(1)}s`, canvas.width - 20, canvas.height - th + 40);
-                // 與最速紀錄的差距
+                ctx.font = '15px monospace';
+                ctx.fillText(`累計 ${totalTime.toFixed(1)}s`, canvas.width - 20, canvas.height - th + 42);
+                // 顯示與最速紀錄的時間差
                 const prev = fastestRecords[currentLevel];
                 if (prev && prev.time > 0) {
                     const diff = currentLevelTime - prev.time;
-                    let diffStr = '';
-                    if (diff > 0.01) { ctx.fillStyle = '#ff6b6b'; diffStr = `+${diff.toFixed(1)}s`; }
-                    else if (diff < -0.01) { ctx.fillStyle = '#00ffcc'; diffStr = `-${Math.abs(diff).toFixed(1)}s`; }
-                    else { ctx.fillStyle = '#888'; diffStr = '±0s'; }
-                    ctx.font = '13px monospace';
-                    ctx.textAlign = 'left';
-                    ctx.fillText(`紀錄 ${prev.name || '玩家'}: ${prev.time.toFixed(1)}s (${diffStr})`, canvas.width - tw + 10, canvas.height - th + 65);
-                } else {
-                    ctx.fillStyle = 'rgba(255,255,255,0.3)';
-                    ctx.font = '13px monospace';
-                    ctx.textAlign = 'left';
-                    ctx.fillText('尚無紀錄', canvas.width - tw + 10, canvas.height - th + 65);
+                    ctx.font = 'bold 14px monospace';
+                    if (diff > 0.01) { ctx.fillStyle = '#ff6b6b'; ctx.fillText(`+${diff.toFixed(1)}s`, canvas.width - 20, canvas.height - th + 65); }
+                    else if (diff < -0.01) { ctx.fillStyle = '#00ffcc'; ctx.fillText(`-${Math.abs(diff).toFixed(1)}s`, canvas.width - 20, canvas.height - th + 65); }
+                    else { ctx.fillStyle = '#888'; ctx.fillText(`±0s`, canvas.width - 20, canvas.height - th + 65); }
                 }
+                ctx.restore();
+            }
                 ctx.restore();
             }
             ctx.restore();
