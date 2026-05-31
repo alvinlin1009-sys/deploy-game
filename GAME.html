@@ -689,7 +689,7 @@
         }
 
         // 根據 dialogStep 顯示不同的教學內容
-        function showVictoryScreen() {
+        async function showVictoryScreen() {
             isVictory = true;
             isDialogOpen = true;
             dialogOverlay.classList.remove('hidden');
@@ -697,20 +697,13 @@
             const totalSecs = totalTime % 60;
             const totalStr = totalMins > 0 ? `${totalMins}分${totalSecs.toFixed(0)}秒` : `${totalSecs.toFixed(1)}秒`;
 
-            // 總時間排行榜
-            let totalRankings = [];
-            try { totalRankings = JSON.parse(localStorage.getItem('speedrunTotalRanking') || '[]'); } catch(e) {}
-            // 檢查是否刷新紀錄
-            const bestTotal = totalRankings.length > 0 ? totalRankings[0].totalTime : Infinity;
-            const isNewBest = totalTime < bestTotal;
-
-            const name = prompt(`🏆 恭喜全部通關！總時間 ${totalStr}${isNewBest ? '\n🎉 新世界紀錄！' : ''}\n請輸入暱稱：`, localStorage.getItem('speedrunNickname') || '玩家');
+            const name = prompt(`🏆 恭喜全部通關！總時間 ${totalStr}\n請輸入暱稱：`, localStorage.getItem('speedrunNickname') || '玩家');
             const nick = (name || '玩家').trim();
-
-            // 儲存暱稱
             if (nick) localStorage.setItem('speedrunNickname', nick);
 
-            // 寫入排行榜
+            // 寫入本地排行榜
+            let totalRankings = [];
+            try { totalRankings = JSON.parse(localStorage.getItem('speedrunTotalRanking') || '[]'); } catch(e) {}
             totalRankings.push({ name: nick, totalTime, date: new Date().toISOString().slice(0,10) });
             totalRankings.sort((a, b) => a.totalTime - b.totalTime);
             if (totalRankings.length > 10) totalRankings = totalRankings.slice(0, 10);
@@ -724,6 +717,25 @@
                 if (recordNames[lv]) recordNames[lv].name = nick;
             }
             localStorage.setItem('speedrunRecords', JSON.stringify(recordNames));
+
+            // 上傳到 Supabase 雲端排行榜
+            let globalTop = null;
+            try {
+                await initSupabase();
+                if (supabaseClient) {
+                    await supabaseClient.from('speedrun_rankings').insert({
+                        name: nick,
+                        total_time: totalTime,
+                        level_times: levelTimes
+                    });
+                    const { data: topData } = await supabaseClient
+                        .from('speedrun_rankings')
+                        .select('name, total_time')
+                        .order('total_time', { ascending: true })
+                        .limit(1);
+                    if (topData && topData.length > 0) globalTop = topData[0];
+                }
+            } catch (e) { console.warn('無法更新雲端排行榜', e); }
 
             // 各關卡時間明細
             let detailHtml = '';
@@ -743,18 +755,24 @@
 
             // 第一名資訊
             let topHtml = '';
-            if (totalRankings.length > 0) {
+            if (globalTop) {
+                const t = globalTop.total_time;
+                const mins = Math.floor(t / 60);
+                const secs = t % 60;
+                const str = mins > 0 ? `${mins}分${secs.toFixed(0)}秒` : `${secs.toFixed(1)}秒`;
+                topHtml = `<p style="margin-top:12px;font-size:16px;color:#ffcc00;">🌍 世界最快紀錄：<b>${globalTop.name}</b> — ${str}</p>`;
+            } else if (totalRankings.length > 0) {
                 const top = totalRankings[0];
-                const topMins = Math.floor(top.totalTime / 60);
-                const topSecs = top.totalTime % 60;
-                const topStr = topMins > 0 ? `${topMins}分${topSecs.toFixed(0)}秒` : `${topSecs.toFixed(1)}秒`;
-                topHtml = `<p style="margin-top:12px;font-size:16px;color:#ffcc00;">👑 最快紀錄：<b>${top.name}</b> — ${topStr}</p>`;
+                const mins = Math.floor(top.totalTime / 60);
+                const secs = top.totalTime % 60;
+                const str = mins > 0 ? `${mins}分${secs.toFixed(0)}秒` : `${secs.toFixed(1)}秒`;
+                topHtml = `<p style="margin-top:12px;font-size:16px;color:#ffcc00;">👑 個人最快紀錄：<b>${top.name}</b> — ${str}</p>`;
             }
 
             dialogContent.innerHTML = `
             <h2 style="color: #ffcc00; font-size: 2em; margin-bottom: 15px;">🏆 恭喜征服全部 10 關！</h2>
             <p>你已熟練地在<b>上帝視角</b>與<b>側面視角</b>之間切換，穿越迷宮、躍過岩漿、攀登高台。</p>
-            <p style="font-size: 1.3em; margin: 15px 0;">⏱ 總通關時間：<b style="color:#00ffcc;">${totalStr}</b>${isNewBest ? ' 🎉 新世界紀錄！' : ''}</p>
+            <p style="font-size: 1.3em; margin: 15px 0;">⏱ 總通關時間：<b style="color:#00ffcc;">${totalStr}</b></p>
             ${topHtml}
             <table style="margin:10px auto;font-size:15px;border-collapse:collapse;">${detailHtml}</table>
             <p>整個次元世界的秘密都已盡在你掌握之中！感謝遊玩 🌀</p>
