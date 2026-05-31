@@ -761,12 +761,6 @@
                 const secs = t % 60;
                 const str = mins > 0 ? `${mins}分${secs.toFixed(0)}秒` : `${secs.toFixed(1)}秒`;
                 topHtml = `<p style="margin-top:12px;font-size:16px;color:#ffcc00;">🌍 世界最快紀錄：<b>${globalTop.name}</b> — ${str}</p>`;
-            } else if (totalRankings.length > 0) {
-                const top = totalRankings[0];
-                const mins = Math.floor(top.totalTime / 60);
-                const secs = top.totalTime % 60;
-                const str = mins > 0 ? `${mins}分${secs.toFixed(0)}秒` : `${secs.toFixed(1)}秒`;
-                topHtml = `<p style="margin-top:12px;font-size:16px;color:#ffcc00;">👑 個人最快紀錄：<b>${top.name}</b> — ${str}</p>`;
             }
 
             dialogContent.innerHTML = `
