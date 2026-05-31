@@ -366,6 +366,13 @@
         let isVictory = false; // 是否已通關
         let isChangingLevel = false; // 是否正在進行非同步換關載入
 
+        // 計時系統
+        let levelStartTime = 0;
+        let currentLevelTime = 0;
+        let totalTime = 0;
+        const levelTimes = {};
+        let fastestRecords = JSON.parse(localStorage.getItem('speedrunRecords') || '{}');
+
         let dialogStep = 0; // 0: 無對話框, 1: 冒險者指南, 2: 視角切換教學
         let viewMode = 'topdown';
         const gravity = 0.6;
@@ -684,9 +691,13 @@
             isVictory = true;
             isDialogOpen = true;
             dialogOverlay.classList.remove('hidden');
+            const totalMins = Math.floor(totalTime / 60);
+            const totalSecs = totalTime % 60;
+            const totalStr = totalMins > 0 ? `${totalMins}分${totalSecs.toFixed(0)}秒` : `${totalSecs.toFixed(1)}秒`;
             dialogContent.innerHTML = `
             <h2 style="color: #ffcc00; font-size: 2em; margin-bottom: 15px;">🏆 恭喜征服全部 10 關！</h2>
             <p>你已熟練地在<b>上帝視角</b>與<b>側面視角</b>之間切換，穿越迷宮、躍過岩漿、攀登高台。</p>
+            <p style="font-size: 1.3em; margin: 15px 0;">⏱ 總通關時間：<b style="color:#00ffcc;">${totalStr}</b></p>
             <p>整個次元世界的秘密都已盡在你掌握之中！感謝遊玩 🌀</p>
         `;
             dialogFooter.innerHTML = '<button onclick="location.reload()" style="padding:10px 30px;background:#ffcc00;color:#000;border:none;border-radius:8px;font-size:18px;cursor:pointer;font-weight:bold;">再玩一次</button>';
@@ -986,6 +997,11 @@
 
             // 每一關都執行安全重生檢測
             respawnPlayer();
+            // 開始計時 (排除教學關 0)
+            if (currentLevel >= 1) {
+                levelStartTime = performance.now();
+                currentLevelTime = 0;
+            }
             isChangingLevel = false;
         }
 
@@ -1045,6 +1061,11 @@
         // 更新邏輯
         function update(dt) {
             if (isStartScreen || isChangingLevel) return;
+
+            // 計時
+            if (currentLevel >= 1 && levelStartTime > 0) {
+                currentLevelTime += dt;
+            }
 
             // 【新增】處理螢幕震動與紅閃冷卻
             if (shakeAmount > 0) {
@@ -1210,6 +1231,21 @@
                             else { alert("🎉 太神啦！您已完全通關此關卡包！"); window.location.reload(); }
                         }
                     } else if (currentLevel < maxLevel) {
+                        // 記錄通關時間
+                        const elapsed = currentLevelTime;
+                        levelTimes[currentLevel] = elapsed;
+                        totalTime += elapsed;
+                        const prev = fastestRecords[currentLevel];
+                        const isRecord = !prev || elapsed < prev.time;
+                        let timeMsg = `第 ${currentLevel} 關：${elapsed.toFixed(1)} 秒`;
+                        if (prev) timeMsg += ` (紀錄 ${prev.time.toFixed(1)} 秒，差距 ${(elapsed - prev.time).toFixed(1)} 秒)`;
+                        if (isRecord) {
+                            const name = prompt(`🏆 新紀錄！${elapsed.toFixed(1)} 秒！輸入暱稱：`, fastestRecords[currentLevel]?.name || '玩家');
+                            fastestRecords[currentLevel] = { time: elapsed, name: name || '玩家' };
+                            localStorage.setItem('speedrunRecords', JSON.stringify(fastestRecords));
+                            timeMsg += ` 🏆 新紀錄！`;
+                        }
+                        if (viewInfo) viewInfo.innerText += ` | ${timeMsg}`;
                         currentLevel++;
                         setupLevelTransition();
                     } else if (!isVictory) {
@@ -1538,6 +1574,25 @@
             if (deathFlashOpacity > 0) {
                 ctx.fillStyle = `rgba(255, 0, 0, ${deathFlashOpacity})`;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // 繪製計時器
+            if (currentLevel >= 1 && levelStartTime > 0 && !isVictory) {
+                ctx.save();
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.fillRect(canvas.width - 180, 10, 170, 50);
+                ctx.fillStyle = '#00ffcc';
+                ctx.font = 'bold 18px monospace';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'top';
+                const mins = Math.floor(currentLevelTime / 60);
+                const secs = currentLevelTime % 60;
+                const timeStr = mins > 0 ? `${mins}:${secs.toFixed(1).padStart(4,'0')}` : `${secs.toFixed(1)}s`;
+                ctx.fillText(`⏱ ${timeStr}`, canvas.width - 15, 18);
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.font = '12px monospace';
+                ctx.fillText(`總 ${totalTime.toFixed(1)}s`, canvas.width - 15, 42);
+                ctx.restore();
             }
             ctx.restore();
         }
