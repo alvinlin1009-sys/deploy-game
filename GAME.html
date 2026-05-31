@@ -697,11 +697,28 @@
             const totalSecs = totalTime % 60;
             const totalStr = totalMins > 0 ? `${totalMins}分${totalSecs.toFixed(0)}秒` : `${totalSecs.toFixed(1)}秒`;
 
-            // 檢查是否有新紀錄，提示輸入暱稱
+            // 總時間排行榜
+            let totalRankings = [];
+            try { totalRankings = JSON.parse(localStorage.getItem('speedrunTotalRanking') || '[]'); } catch(e) {}
+            // 檢查是否刷新紀錄
+            const bestTotal = totalRankings.length > 0 ? totalRankings[0].totalTime : Infinity;
+            const isNewBest = totalTime < bestTotal;
+
+            const name = prompt(`🏆 恭喜全部通關！總時間 ${totalStr}${isNewBest ? '\n🎉 新世界紀錄！' : ''}\n請輸入暱稱：`, localStorage.getItem('speedrunNickname') || '玩家');
+            const nick = (name || '玩家').trim();
+
+            // 儲存暱稱
+            if (nick) localStorage.setItem('speedrunNickname', nick);
+
+            // 寫入排行榜
+            totalRankings.push({ name: nick, totalTime, date: new Date().toISOString().slice(0,10) });
+            totalRankings.sort((a, b) => a.totalTime - b.totalTime);
+            if (totalRankings.length > 10) totalRankings = totalRankings.slice(0, 10);
+            localStorage.setItem('speedrunTotalRanking', JSON.stringify(totalRankings));
+
+            // 更新各關卡記錄的暱稱
             let recordNames = {};
             try { recordNames = JSON.parse(localStorage.getItem('speedrunRecords') || '{}'); } catch(e) {}
-            const name = prompt(`🏆 恭喜全部通關！總時間 ${totalStr}\n請輸入暱稱以記錄你的成績：`, recordNames['_nickname'] || '玩家');
-            const nick = name || '玩家';
             recordNames['_nickname'] = nick;
             for (let lv = 1; lv <= maxLevel; lv++) {
                 if (recordNames[lv]) recordNames[lv].name = nick;
@@ -724,10 +741,21 @@
                 detailHtml += `<tr><td>第 ${lv} 關</td><td style="text-align:right;">${t.toFixed(1)}s</td><td style="text-align:right;padding-left:12px;">${diff}</td></tr>`;
             }
 
+            // 第一名資訊
+            let topHtml = '';
+            if (totalRankings.length > 0) {
+                const top = totalRankings[0];
+                const topMins = Math.floor(top.totalTime / 60);
+                const topSecs = top.totalTime % 60;
+                const topStr = topMins > 0 ? `${topMins}分${topSecs.toFixed(0)}秒` : `${topSecs.toFixed(1)}秒`;
+                topHtml = `<p style="margin-top:12px;font-size:16px;color:#ffcc00;">👑 最快紀錄：<b>${top.name}</b> — ${topStr}</p>`;
+            }
+
             dialogContent.innerHTML = `
             <h2 style="color: #ffcc00; font-size: 2em; margin-bottom: 15px;">🏆 恭喜征服全部 10 關！</h2>
             <p>你已熟練地在<b>上帝視角</b>與<b>側面視角</b>之間切換，穿越迷宮、躍過岩漿、攀登高台。</p>
-            <p style="font-size: 1.3em; margin: 15px 0;">⏱ 總通關時間：<b style="color:#00ffcc;">${totalStr}</b></p>
+            <p style="font-size: 1.3em; margin: 15px 0;">⏱ 總通關時間：<b style="color:#00ffcc;">${totalStr}</b>${isNewBest ? ' 🎉 新世界紀錄！' : ''}</p>
+            ${topHtml}
             <table style="margin:10px auto;font-size:15px;border-collapse:collapse;">${detailHtml}</table>
             <p>整個次元世界的秘密都已盡在你掌握之中！感謝遊玩 🌀</p>
         `;
