@@ -1269,10 +1269,20 @@
                         totalTime += elapsed;
                         const prevRecord = fastestRecords[currentLevel];
                         const isRecord = !prevRecord || elapsed < prevRecord.time;
+                        const totalMins = Math.floor(totalTime / 60);
+                        const totalSecs = totalTime % 60;
+                        const totalStr = totalMins > 0 ? `${totalMins}分${totalSecs.toFixed(1)}秒` : `${totalSecs.toFixed(1)}秒`;
+                        let timeMsg = `第 ${currentLevel} 關：${elapsed.toFixed(1)} 秒 | 累計 ${totalStr}`;
+                        if (prevRecord) {
+                            const d = elapsed - prevRecord.time;
+                            timeMsg += ` (紀錄 ${prevRecord.time.toFixed(1)} 秒，${d > 0.01 ? '+' : ''}${d.toFixed(1)})`;
+                        }
                         if (isRecord) {
                             fastestRecords[currentLevel] = { time: elapsed, name: fastestRecords[currentLevel]?.name || '玩家' };
                             localStorage.setItem('speedrunRecords', JSON.stringify(fastestRecords));
+                            timeMsg += ` 🏆`;
                         }
+                        if (viewInfo) viewInfo.innerText = `目前視角：上帝視角 (按 E 切換) | ${timeMsg}`;
                         currentLevel++;
                         setupLevelTransition();
                     } else if (!isVictory) {
@@ -1625,7 +1635,7 @@
                 ctx.fillText(`⏱ ${timeStr}`, canvas.width - 20, canvas.height - th + 3);
                 ctx.fillStyle = 'rgba(255,255,255,0.6)';
                 ctx.font = '15px monospace';
-                ctx.fillText(`累計 ${totalTime.toFixed(1)}s`, canvas.width - 20, canvas.height - th + 42);
+                ctx.fillText(`累計 ${(totalTime + currentLevelTime).toFixed(1)}s`, canvas.width - 20, canvas.height - th + 42);
                 // 顯示與最速紀錄的時間差
                 const oldPrev = oldRecords[currentLevel];
                 if (oldPrev && oldPrev.time > 0) {
