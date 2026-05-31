@@ -694,6 +694,18 @@
             const totalMins = Math.floor(totalTime / 60);
             const totalSecs = totalTime % 60;
             const totalStr = totalMins > 0 ? `${totalMins}分${totalSecs.toFixed(0)}秒` : `${totalSecs.toFixed(1)}秒`;
+
+            // 檢查是否有新紀錄，提示輸入暱稱
+            let recordNames = {};
+            try { recordNames = JSON.parse(localStorage.getItem('speedrunRecords') || '{}'); } catch(e) {}
+            const name = prompt(`🏆 恭喜全部通關！總時間 ${totalStr}\n請輸入暱稱以記錄你的成績：`, recordNames['_nickname'] || '玩家');
+            const nick = name || '玩家';
+            recordNames['_nickname'] = nick;
+            for (let lv = 1; lv <= maxLevel; lv++) {
+                if (recordNames[lv]) recordNames[lv].name = nick;
+            }
+            localStorage.setItem('speedrunRecords', JSON.stringify(recordNames));
+
             dialogContent.innerHTML = `
             <h2 style="color: #ffcc00; font-size: 2em; margin-bottom: 15px;">🏆 恭喜征服全部 10 關！</h2>
             <p>你已熟練地在<b>上帝視角</b>與<b>側面視角</b>之間切換，穿越迷宮、躍過岩漿、攀登高台。</p>
@@ -1237,15 +1249,10 @@
                         totalTime += elapsed;
                         const prev = fastestRecords[currentLevel];
                         const isRecord = !prev || elapsed < prev.time;
-                        let timeMsg = `第 ${currentLevel} 關：${elapsed.toFixed(1)} 秒`;
-                        if (prev) timeMsg += ` (紀錄 ${prev.time.toFixed(1)} 秒，差距 ${(elapsed - prev.time).toFixed(1)} 秒)`;
                         if (isRecord) {
-                            const name = prompt(`🏆 新紀錄！${elapsed.toFixed(1)} 秒！輸入暱稱：`, fastestRecords[currentLevel]?.name || '玩家');
-                            fastestRecords[currentLevel] = { time: elapsed, name: name || '玩家' };
+                            fastestRecords[currentLevel] = { time: elapsed, name: fastestRecords[currentLevel]?.name || '玩家' };
                             localStorage.setItem('speedrunRecords', JSON.stringify(fastestRecords));
-                            timeMsg += ` 🏆 新紀錄！`;
                         }
-                        if (viewInfo) viewInfo.innerText += ` | ${timeMsg}`;
                         currentLevel++;
                         setupLevelTransition();
                     } else if (!isVictory) {
@@ -1579,19 +1586,23 @@
             // 繪製計時器
             if (currentLevel >= 1 && levelStartTime > 0 && !isVictory) {
                 ctx.save();
-                ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                ctx.fillRect(canvas.width - 180, 10, 170, 50);
+                ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                const tw = 190, th = 55;
+                ctx.fillRect(canvas.width - tw - 15, canvas.height - th - 15, tw, th);
+                ctx.strokeStyle = 'rgba(0,255,204,0.3)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(canvas.width - tw - 15, canvas.height - th - 15, tw, th);
                 ctx.fillStyle = '#00ffcc';
-                ctx.font = 'bold 18px monospace';
+                ctx.font = 'bold 20px monospace';
                 ctx.textAlign = 'right';
                 ctx.textBaseline = 'top';
                 const mins = Math.floor(currentLevelTime / 60);
                 const secs = currentLevelTime % 60;
                 const timeStr = mins > 0 ? `${mins}:${secs.toFixed(1).padStart(4,'0')}` : `${secs.toFixed(1)}s`;
-                ctx.fillText(`⏱ ${timeStr}`, canvas.width - 15, 18);
-                ctx.fillStyle = 'rgba(255,255,255,0.4)';
-                ctx.font = '12px monospace';
-                ctx.fillText(`總 ${totalTime.toFixed(1)}s`, canvas.width - 15, 42);
+                ctx.fillText(`⏱ ${timeStr}`, canvas.width - 25, canvas.height - th + 5);
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.font = '13px monospace';
+                ctx.fillText(`總 ${totalTime.toFixed(1)}s`, canvas.width - 25, canvas.height - th + 30);
                 ctx.restore();
             }
             ctx.restore();
